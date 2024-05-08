@@ -1,0 +1,68 @@
+import libCpuTransformers  # type: ignore
+import numpy as np
+import onnxruntime
+import os
+import unittest
+
+
+class ModelTest(unittest.TestCase):
+    def test_bert(self):
+        parser = libCpuTransformers.Parser()
+        converter = libCpuTransformers.Converter()
+        context = libCpuTransformers.Context.Make()
+        builder = libCpuTransformers.NaiveBuilder("bert", context)
+        lower = libCpuTransformers.Lower(context)
+        runner = libCpuTransformers.Runner(context)
+        model_path = os.environ.get("BERT_MODEL_PATH")
+        self.assertIsNotNone(model_path)
+        graph = parser.Run(model_path)
+        flow = converter.Run(graph)
+        planner = libCpuTransformers.GreedyPlanner()
+        sequence = planner.FlowToSequence(flow)
+        index = planner.Run(sequence)
+        builder.Run(sequence, index)
+        lower.Run()
+        input_ids = np.random.randint(0, 30522, (1, 128)).astype(np.int64)
+        attention_mask = np.random.randint(0, 2, (1, 128)).astype(np.float32)
+        output0 = np.zeros((1, 128, 768), dtype=np.float32)
+        output1 = np.zeros((1, 768), dtype=np.float32)
+        session_options = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session = onnxruntime.InferenceSession(model_path, session_options)
+        session.run(
+            ["onnx::Gather_1269", "1272"],
+            {
+                "input_ids": input_ids,
+                "attention_mask": attention_mask,
+            },
+        )
+        runner.Run(
+            {
+                "input_ids": input_ids,
+                "attention_mask": attention_mask,
+                "onnx::Gather_1269": output0,
+                "1272": output1,
+            }
+        )
+
+    def test_gpt2(self):
+        parser = libCpuTransformers.Parser()
+        converter = libCpuTransformers.Converter()
+        context = libCpuTransformers.Context.Make()
+        builder = libCpuTransformers.NaiveBuilder("bert", context)
+        lower = libCpuTransformers.Lower(context)
+        runner = libCpuTransformers.Runner(context)
+        model_path = os.environ.get("GPT2_MODEL_PATH")
+        self.assertIsNotNone(model_path)
+        graph = parser.Run(model_path)
+        flow = converter.Run(graph)
+        planner = libCpuTransformers.GreedyPlanner()
+        sequence = planner.FlowToSequence(flow)
+        index = planner.Run(sequence)
+        builder.Run(sequence, index)
+        lower.Run()
+
+
+if __name__ == "__main__":
+    unittest.main()

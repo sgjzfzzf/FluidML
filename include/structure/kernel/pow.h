@@ -1,0 +1,24 @@
+#ifndef CPU_TRANSFORMERS_STRUCTURE_KERNEL_POW_H_
+#define CPU_TRANSFORMERS_STRUCTURE_KERNEL_POW_H_
+
+#include "structure/kernel/kernel.h"
+#include "utils/float.h"
+#include "utils/type.h"
+
+namespace cpu_transformers {
+namespace kernel {
+class PowKernel : public Kernel {
+public:
+  PowKernel(Type type, float64_t exp);
+  PowKernel(const PowKernel &other) = delete;
+  PowKernel(PowKernel &&other) = default;
+  void Run(mlir::OpBuilder &builder, mlir::Value &input, mlir::Value &output);
+
+private:
+  Type type_;
+  float64_t exp_;
+};
+} // namespace kernel
+} // namespace cpu_transformers
+
+#endif
