@@ -45,10 +45,10 @@ add_executable(node_test node_test.cpp)
 add_custom_target(NodeOnnxDepsTarget DEPENDS ${OpModels})
 add_dependencies(node_test NodeOnnxDepsTarget)
 target_link_libraries(node_test ${GTEST_BOTH_LIBRARIES} ${PROJECT_NAME}Static)
-add_test(NAME NodeTest COMMAND node_test)
+add_test(NAME NodeTest COMMAND node_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 add_custom_target(PyNodeOnnxDepsTarget DEPENDS ${OpModels})
-add_test(NAME PyNodeTest COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/node_test.py)
+add_test(NAME PyNodeTest COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/node_test.py WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(PyNodeTest
     PROPERTIES
     ENVIRONMENT "PYTHONPATH=${CMAKE_BINARY_DIR}/src:$ENV{PYTHONPATH};${PyEnvStr}"
@@ -56,4 +56,4 @@ set_tests_properties(PyNodeTest
 
 add_executable(graph_test graph_test.cpp)
 target_link_libraries(graph_test ${GTEST_BOTH_LIBRARIES} ${PROJECT_NAME}Static)
-add_test(NAME GraphTest COMMAND ./graph_test)
+add_test(NAME GraphTest COMMAND ./graph_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

@@ -1,11 +1,21 @@
 import libCpuTransformers  # type: ignore
+import logging
 import numpy as np
 import onnxruntime
 import os
+import time
 import unittest
 
 
 class NodeTest(unittest.TestCase):
+    def setUp(self):
+        logging.basicConfig(
+            filename="node_test.log",
+            filemode="w",
+            level=logging.INFO,
+        )
+        self.logger = logging.getLogger(__name__)
+
     def test_add0(self):
         add0_onnx_path = os.environ.get("ONNX_add0_PATH")
         self.assertIsNotNone(add0_onnx_path)
@@ -13,6 +23,7 @@ class NodeTest(unittest.TestCase):
         input0 = np.random.random((1, 128, 768)).astype(np.float32)
         input1 = np.random.random((1, 128, 768)).astype(np.float32)
         output = np.zeros((1, 128, 768)).astype(np.float32)
+        start = time.time_ns()
         (onnx_output,) = session.run(
             ["output"],
             {
@@ -20,6 +31,7 @@ class NodeTest(unittest.TestCase):
                 "input1": input1,
             },
         )
+        end = time.time_ns()
         parser = libCpuTransformers.Parser()
         converter = libCpuTransformers.Converter()
         context = libCpuTransformers.Context.Make()
@@ -33,7 +45,7 @@ class NodeTest(unittest.TestCase):
         index = planner.Run(sequence)
         builder.Run(sequence, index)
         lower.Run()
-        runner.Run(
+        timecost = runner.Run(
             {
                 "input0": input0,
                 "input1": input1,
@@ -41,6 +53,9 @@ class NodeTest(unittest.TestCase):
             }
         )
         self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"add0, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
 
     def test_add1(self):
         add1_onnx_path = os.environ.get("ONNX_add1_PATH")
@@ -48,12 +63,14 @@ class NodeTest(unittest.TestCase):
         session = onnxruntime.InferenceSession(add1_onnx_path)
         input = np.random.random((1, 128, 768)).astype(np.float32)
         output = np.zeros((1, 128, 768)).astype(np.float32)
+        start = time.time_ns()
         (onnx_output,) = session.run(
             ["output"],
             {
                 "input": input,
             },
         )
+        end = time.time_ns()
         parser = libCpuTransformers.Parser()
         converter = libCpuTransformers.Converter()
         context = libCpuTransformers.Context.Make()
@@ -67,13 +84,16 @@ class NodeTest(unittest.TestCase):
         index = planner.Run(sequence)
         builder.Run(sequence, index)
         lower.Run()
-        runner.Run(
+        timecost = runner.Run(
             {
                 "input": input,
                 "output": output,
             }
         )
         self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"add1, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
 
     def test_div(self):
         div_onnx_path = os.environ.get("ONNX_div_PATH")
@@ -81,12 +101,14 @@ class NodeTest(unittest.TestCase):
         session = onnxruntime.InferenceSession(div_onnx_path)
         input = np.random.random((1, 12, 128, 128)).astype(np.float32)
         output = np.zeros((1, 12, 128, 128)).astype(np.float32)
+        start = time.time_ns()
         (onnx_output,) = session.run(
             ["output"],
             {
                 "input": input,
             },
         )
+        end = time.time_ns()
         parser = libCpuTransformers.Parser()
         converter = libCpuTransformers.Converter()
         context = libCpuTransformers.Context.Make()
@@ -100,13 +122,16 @@ class NodeTest(unittest.TestCase):
         index = planner.Run(sequence)
         builder.Run(sequence, index)
         lower.Run()
-        runner.Run(
+        timecost = runner.Run(
             {
                 "input": input,
                 "output": output,
             }
         )
         self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"div, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
 
     def test_erf(self):
         erf_onnx_path = os.environ.get("ONNX_erf_PATH")
@@ -114,12 +139,14 @@ class NodeTest(unittest.TestCase):
         session = onnxruntime.InferenceSession(erf_onnx_path)
         input = np.random.random((1, 128, 3072)).astype(np.float32)
         output = np.zeros((1, 128, 3072)).astype(np.float32)
+        start = time.time_ns()
         (onnx_output,) = session.run(
             ["output"],
             {
                 "input": input,
             },
         )
+        end = time.time_ns()
         parser = libCpuTransformers.Parser()
         converter = libCpuTransformers.Converter()
         context = libCpuTransformers.Context.Make()
@@ -133,13 +160,16 @@ class NodeTest(unittest.TestCase):
         index = planner.Run(sequence)
         builder.Run(sequence, index)
         lower.Run()
-        runner.Run(
+        timecost = runner.Run(
             {
                 "input": input,
                 "output": output,
             }
         )
         self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"erf, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
 
     def test_gather0(self):
         gather0_onnx_path = os.environ.get("ONNX_gather0_PATH")
@@ -147,12 +177,14 @@ class NodeTest(unittest.TestCase):
         session = onnxruntime.InferenceSession(gather0_onnx_path)
         indices = np.random.randint(0, 30522, (1, 128)).astype(np.int64)
         output = np.zeros((1, 128, 768)).astype(np.float32)
+        start = time.time_ns()
         (onnx_output,) = session.run(
             ["output"],
             {
                 "indices": indices,
             },
         )
+        end = time.time_ns()
         parser = libCpuTransformers.Parser()
         converter = libCpuTransformers.Converter()
         context = libCpuTransformers.Context.Make()
@@ -166,13 +198,16 @@ class NodeTest(unittest.TestCase):
         index = planner.Run(sequence)
         builder.Run(sequence, index)
         lower.Run()
-        runner.Run(
+        timecost = runner.Run(
             {
                 "indices": indices,
                 "output": output,
             }
         )
         self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"gather0, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
 
     def test_gather1(self):
         gather1_onnx_path = os.environ.get("ONNX_gather1_PATH")
@@ -180,12 +215,14 @@ class NodeTest(unittest.TestCase):
         session = onnxruntime.InferenceSession(gather1_onnx_path)
         data = np.random.random((1, 128, 768)).astype(np.float32)
         output = np.zeros((1, 768)).astype(np.float32)
+        start = time.time_ns()
         (onnx_output,) = session.run(
             ["output"],
             {
                 "data": data,
             },
         )
+        end = time.time_ns()
         parser = libCpuTransformers.Parser()
         converter = libCpuTransformers.Converter()
         context = libCpuTransformers.Context.Make()
@@ -199,13 +236,16 @@ class NodeTest(unittest.TestCase):
         index = planner.Run(sequence)
         builder.Run(sequence, index)
         lower.Run()
-        runner.Run(
+        timecost = runner.Run(
             {
                 "data": data,
                 "output": output,
             }
         )
         self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"gather1, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
 
     def test_gemm(self):
         gemm_onnx_path = os.environ.get("ONNX_gemm_PATH")
@@ -213,12 +253,14 @@ class NodeTest(unittest.TestCase):
         session = onnxruntime.InferenceSession(gemm_onnx_path)
         input = np.random.random((1, 768)).astype(np.float32)
         output = np.zeros((1, 768)).astype(np.float32)
+        start = time.time_ns()
         (onnx_output,) = session.run(
             ["output"],
             {
                 "input": input,
             },
         )
+        end = time.time_ns()
         parser = libCpuTransformers.Parser()
         converter = libCpuTransformers.Converter()
         context = libCpuTransformers.Context.Make()
@@ -232,13 +274,16 @@ class NodeTest(unittest.TestCase):
         index = planner.Run(sequence)
         builder.Run(sequence, index)
         lower.Run()
-        runner.Run(
+        timecost = runner.Run(
             {
                 "input": input,
                 "output": output,
             }
         )
         self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"gemm, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
 
     def test_layer_normalization(self):
         layer_normalization_onnx_path = os.environ.get("ONNX_layer_normalization_PATH")
@@ -246,12 +291,14 @@ class NodeTest(unittest.TestCase):
         session = onnxruntime.InferenceSession(layer_normalization_onnx_path)
         input = np.random.random((1, 128, 768)).astype(np.float32)
         output = np.zeros((1, 128, 768)).astype(np.float32)
+        start = time.time_ns()
         (onnx_output,) = session.run(
             ["output"],
             {
                 "input": input,
             },
         )
+        end = time.time_ns()
         parser = libCpuTransformers.Parser()
         converter = libCpuTransformers.Converter()
         context = libCpuTransformers.Context.Make()
@@ -265,13 +312,16 @@ class NodeTest(unittest.TestCase):
         index = planner.Run(sequence)
         builder.Run(sequence, index)
         lower.Run()
-        runner.Run(
+        timecost = runner.Run(
             {
                 "input": input,
                 "output": output,
             }
         )
         self.assertTrue(np.allclose(onnx_output, output, rtol=1e-5))
+        self.logger.info(
+            f"layer_normalization, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
 
     def test_matmul0(self):
         matmul0_onnx_path = os.environ.get("ONNX_matmul0_PATH")
@@ -280,6 +330,7 @@ class NodeTest(unittest.TestCase):
         input0 = np.random.random((1, 12, 128, 64)).astype(np.float32)
         input1 = np.random.random((1, 12, 64, 128)).astype(np.float32)
         output = np.zeros((1, 12, 128, 128)).astype(np.float32)
+        start = time.time_ns()
         (onnx_output,) = session.run(
             ["output"],
             {
@@ -287,6 +338,7 @@ class NodeTest(unittest.TestCase):
                 "input1": input1,
             },
         )
+        end = time.time_ns()
         parser = libCpuTransformers.Parser()
         converter = libCpuTransformers.Converter()
         context = libCpuTransformers.Context.Make()
@@ -300,7 +352,7 @@ class NodeTest(unittest.TestCase):
         index = planner.Run(sequence)
         builder.Run(sequence, index)
         lower.Run()
-        runner.Run(
+        timecost = runner.Run(
             {
                 "input0": input0,
                 "input1": input1,
@@ -308,6 +360,9 @@ class NodeTest(unittest.TestCase):
             }
         )
         self.assertTrue(np.allclose(onnx_output, output, rtol=1e-5))
+        self.logger.info(
+            f"matmul0, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
 
     def test_matmul1(self):
         matmul1_onnx_path = os.environ.get("ONNX_matmul1_PATH")
@@ -315,12 +370,14 @@ class NodeTest(unittest.TestCase):
         session = onnxruntime.InferenceSession(matmul1_onnx_path)
         input = np.random.random((1, 128, 768)).astype(np.float32)
         output = np.zeros((1, 128, 768)).astype(np.float32)
+        start = time.time_ns()
         (onnx_output,) = session.run(
             ["output"],
             {
                 "input": input,
             },
         )
+        end = time.time_ns()
         parser = libCpuTransformers.Parser()
         converter = libCpuTransformers.Converter()
         context = libCpuTransformers.Context.Make()
@@ -334,13 +391,16 @@ class NodeTest(unittest.TestCase):
         index = planner.Run(sequence)
         builder.Run(sequence, index)
         lower.Run()
-        runner.Run(
+        timecost = runner.Run(
             {
                 "input": input,
                 "output": output,
             }
         )
         self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"matmul1, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
 
     def test_mul0(self):
         mul0_onnx_path = os.environ.get("ONNX_mul0_PATH")
@@ -349,6 +409,7 @@ class NodeTest(unittest.TestCase):
         input0 = np.random.random((1, 128, 3072)).astype(np.float32)
         input1 = np.random.random((1, 128, 3072)).astype(np.float32)
         output = np.zeros((1, 128, 3072)).astype(np.float32)
+        start = time.time_ns()
         (onnx_output,) = session.run(
             ["output"],
             {
@@ -356,6 +417,7 @@ class NodeTest(unittest.TestCase):
                 "input1": input1,
             },
         )
+        end = time.time_ns()
         parser = libCpuTransformers.Parser()
         converter = libCpuTransformers.Converter()
         context = libCpuTransformers.Context.Make()
@@ -369,7 +431,7 @@ class NodeTest(unittest.TestCase):
         index = planner.Run(sequence)
         builder.Run(sequence, index)
         lower.Run()
-        runner.Run(
+        timecost = runner.Run(
             {
                 "input0": input0,
                 "input1": input1,
@@ -377,6 +439,9 @@ class NodeTest(unittest.TestCase):
             }
         )
         self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"mul0, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
 
     def test_mul1(self):
         mul1_onnx_path = os.environ.get("ONNX_mul1_PATH")
@@ -384,12 +449,14 @@ class NodeTest(unittest.TestCase):
         session = onnxruntime.InferenceSession(mul1_onnx_path)
         input = np.random.random((1, 1, 1, 128)).astype(np.float32)
         output = np.zeros((1, 1, 1, 128)).astype(np.float32)
+        start = time.time_ns()
         (onnx_output,) = session.run(
             ["output"],
             {
                 "input": input,
             },
         )
+        end = time.time_ns()
         parser = libCpuTransformers.Parser()
         converter = libCpuTransformers.Converter()
         context = libCpuTransformers.Context.Make()
@@ -403,13 +470,16 @@ class NodeTest(unittest.TestCase):
         index = planner.Run(sequence)
         builder.Run(sequence, index)
         lower.Run()
-        runner.Run(
+        timecost = runner.Run(
             {
                 "input": input,
                 "output": output,
             }
         )
         self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"mul1, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
 
     def test_pow(self):
         pow_onnx_path = os.environ.get("ONNX_pow_PATH")
@@ -417,12 +487,14 @@ class NodeTest(unittest.TestCase):
         session = onnxruntime.InferenceSession(pow_onnx_path)
         input = np.random.random((1, 128, 3072)).astype(np.float32)
         output = np.zeros((1, 128, 3072)).astype(np.float32)
+        start = time.time_ns()
         (onnx_output,) = session.run(
             ["output"],
             {
                 "input": input,
             },
         )
+        end = time.time_ns()
         parser = libCpuTransformers.Parser()
         converter = libCpuTransformers.Converter()
         context = libCpuTransformers.Context.Make()
@@ -436,13 +508,16 @@ class NodeTest(unittest.TestCase):
         index = planner.Run(sequence)
         builder.Run(sequence, index)
         lower.Run()
-        runner.Run(
+        timecost = runner.Run(
             {
                 "input": input,
                 "output": output,
             }
         )
         self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"pow, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
 
     def test_reshape(self):
         reshape_onnx_path = os.environ.get("ONNX_reshape_PATH")
@@ -450,12 +525,14 @@ class NodeTest(unittest.TestCase):
         session = onnxruntime.InferenceSession(reshape_onnx_path)
         data = np.random.random((1, 128, 768)).astype(np.float32)
         output = np.zeros((1, 128, 12, 64)).astype(np.float32)
+        start = time.time_ns()
         (onnx_output,) = session.run(
             ["output"],
             {
                 "data": data,
             },
         )
+        end = time.time_ns()
         parser = libCpuTransformers.Parser()
         converter = libCpuTransformers.Converter()
         context = libCpuTransformers.Context.Make()
@@ -469,13 +546,16 @@ class NodeTest(unittest.TestCase):
         index = planner.Run(sequence)
         builder.Run(sequence, index)
         lower.Run()
-        runner.Run(
+        timecost = runner.Run(
             {
                 "data": data,
                 "output": output,
             }
         )
         self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"reshape, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
 
     def test_softmax(self):
         softmax_onnx_path = os.environ.get("ONNX_softmax_PATH")
@@ -483,12 +563,14 @@ class NodeTest(unittest.TestCase):
         session = onnxruntime.InferenceSession(softmax_onnx_path)
         input = np.random.random((1, 12, 128, 768)).astype(np.float32)
         output = np.zeros((1, 12, 128, 768)).astype(np.float32)
+        start = time.time_ns()
         (onnx_output,) = session.run(
             ["output"],
             {
                 "input": input,
             },
         )
+        end = time.time_ns()
         parser = libCpuTransformers.Parser()
         converter = libCpuTransformers.Converter()
         context = libCpuTransformers.Context.Make()
@@ -502,13 +584,16 @@ class NodeTest(unittest.TestCase):
         index = planner.Run(sequence)
         builder.Run(sequence, index)
         lower.Run()
-        runner.Run(
+        timecost = runner.Run(
             {
                 "input": input,
                 "output": output,
             }
         )
         self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"softmax, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
 
     # TODO: bugs in the runner.Run, remember to check the reason
     def test_split(self):
@@ -556,12 +641,14 @@ class NodeTest(unittest.TestCase):
         session = onnxruntime.InferenceSession(sub_onnx_path)
         input0 = np.random.random((1, 1, 1, 128)).astype(np.float32)
         output = np.zeros((1, 1, 1, 128)).astype(np.float32)
+        start = time.time_ns()
         (onnx_output,) = session.run(
             ["output"],
             {
                 "input": input0,
             },
         )
+        end = time.time_ns()
         parser = libCpuTransformers.Parser()
         converter = libCpuTransformers.Converter()
         context = libCpuTransformers.Context.Make()
@@ -575,13 +662,16 @@ class NodeTest(unittest.TestCase):
         index = planner.Run(sequence)
         builder.Run(sequence, index)
         lower.Run()
-        runner.Run(
+        timecost = runner.Run(
             {
                 "input": input0,
                 "output": output,
             }
         )
         self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"sub, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
 
     def test_tanh(self):
         tanh_onnx_path = os.environ.get("ONNX_tanh_PATH")
@@ -589,12 +679,14 @@ class NodeTest(unittest.TestCase):
         session = onnxruntime.InferenceSession(tanh_onnx_path)
         input = np.random.random((1, 768)).astype(np.float32)
         output = np.zeros((1, 768)).astype(np.float32)
+        start = time.time_ns()
         (onnx_output,) = session.run(
             ["output"],
             {
                 "input": input,
             },
         )
+        end = time.time_ns()
         parser = libCpuTransformers.Parser()
         converter = libCpuTransformers.Converter()
         context = libCpuTransformers.Context.Make()
@@ -608,13 +700,16 @@ class NodeTest(unittest.TestCase):
         index = planner.Run(sequence)
         builder.Run(sequence, index)
         lower.Run()
-        runner.Run(
+        timecost = runner.Run(
             {
                 "input": input,
                 "output": output,
             }
         )
         self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"tanh, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
 
     def test_transpose(self):
         transpose_onnx_path = os.environ.get("ONNX_transpose_PATH")
@@ -622,12 +717,14 @@ class NodeTest(unittest.TestCase):
         session = onnxruntime.InferenceSession(transpose_onnx_path)
         input = np.random.random((1, 128, 12, 64)).astype(np.float32)
         output = np.zeros((1, 12, 128, 64)).astype(np.float32)
+        start = time.time_ns()
         (onnx_output,) = session.run(
             ["output"],
             {
                 "input": input,
             },
         )
+        end = time.time_ns()
         parser = libCpuTransformers.Parser()
         converter = libCpuTransformers.Converter()
         context = libCpuTransformers.Context.Make()
@@ -641,13 +738,16 @@ class NodeTest(unittest.TestCase):
         index = planner.Run(sequence)
         builder.Run(sequence, index)
         lower.Run()
-        runner.Run(
+        timecost = runner.Run(
             {
                 "input": input,
                 "output": output,
             }
         )
         self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"transpose, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
 
     def test_unsqueeze(self):
         unsqueeze_onnx_path = os.environ.get("ONNX_unsqueeze_PATH")
@@ -655,12 +755,14 @@ class NodeTest(unittest.TestCase):
         session = onnxruntime.InferenceSession(unsqueeze_onnx_path)
         input = np.random.random((1, 128)).astype(np.float32)
         output = np.zeros((1, 1, 1, 128)).astype(np.float32)
+        start = time.time_ns()
         (onnx_output,) = session.run(
             ["output"],
             {
                 "input": input,
             },
         )
+        end = time.time_ns()
         parser = libCpuTransformers.Parser()
         converter = libCpuTransformers.Converter()
         context = libCpuTransformers.Context.Make()
@@ -674,13 +776,16 @@ class NodeTest(unittest.TestCase):
         index = planner.Run(sequence)
         builder.Run(sequence, index)
         lower.Run()
-        runner.Run(
+        timecost = runner.Run(
             {
                 "input": input,
                 "output": output,
             }
         )
         self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"unsqueeze, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
 
     def test_where0(self):
         where_onnx_path = os.environ.get("ONNX_where_PATH")
@@ -688,12 +793,14 @@ class NodeTest(unittest.TestCase):
         session = onnxruntime.InferenceSession(where_onnx_path)
         input = np.random.random((1, 12, 128, 128)).astype(np.float32)
         output = np.zeros((1, 12, 128, 128)).astype(np.float32)
+        start = time.time_ns()
         (onnx_output,) = session.run(
             ["output"],
             {
                 "input": input,
             },
         )
+        end = time.time_ns()
         parser = libCpuTransformers.Parser()
         converter = libCpuTransformers.Converter()
         context = libCpuTransformers.Context.Make()
@@ -707,13 +814,16 @@ class NodeTest(unittest.TestCase):
         index = planner.Run(sequence)
         builder.Run(sequence, index)
         lower.Run()
-        runner.Run(
+        timecost = runner.Run(
             {
                 "input": input,
                 "output": output,
             }
         )
         self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"where, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
 
 
 if __name__ == "__main__":
