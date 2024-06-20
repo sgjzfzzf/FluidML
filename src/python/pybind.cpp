@@ -24,7 +24,8 @@ PYBIND11_MODULE(libCpuTransformers, m) {
 #ifdef DEBUG
       .def("DumpModule", &cpu_transformers::context::Context::DumpModule)
 #endif
-      ;
+      .def("ExportHeaderFile",
+           &cpu_transformers::context::Context::ExportHeaderFile);
 
   /* NOLINT(bugprone-unused-raii) */ pybind11::class_<
       cpu_transformers::graph::Graph>(m, "Graph");

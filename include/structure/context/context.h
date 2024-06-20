@@ -27,6 +27,7 @@ public:
   void SetModule(mlir::ModuleOp module);
   void SetFuncAttr(FuncAttr &&func_attr);
   std::unique_ptr<mlir::ExecutionEngine> MakeExecutionEngine();
+  std::string ExportHeaderFile();
 
 private:
   mlir::MLIRContext mlir_context_;
