@@ -10,11 +10,11 @@ TEST(GraphTest, BasicTest) {
   using namespace cpu_transformers::graph;
 
   std::unique_ptr<Graph> graph = std::make_unique<Graph>();
-  ASSERT_TRUE(graph->AddEdge(std::make_shared<PureEdge>(
+  ASSERT_TRUE(graph->PutEdge(std::make_shared<PureEdge>(
       "edge0", Type::FLOAT32, std::vector<int64_t>{1, 2, 3})));
-  ASSERT_TRUE(graph->AddEdge(std::make_shared<PureEdge>(
+  ASSERT_TRUE(graph->PutEdge(std::make_shared<PureEdge>(
       "edge1", Type::FLOAT32, std::vector<int64_t>{1, 2})));
-  ASSERT_TRUE(graph->AddEdge(std::make_shared<PureEdge>(
+  ASSERT_TRUE(graph->PutEdge(std::make_shared<PureEdge>(
       "edge2", Type::FLOAT32, std::vector<int64_t>{1})));
   ASSERT_TRUE(graph->ExistEdge("edge0"));
   ASSERT_TRUE(graph->ExistEdge("edge1"));

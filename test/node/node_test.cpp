@@ -1,6 +1,7 @@
 #include "structure/graph/attribute.h"
 #include "structure/graph/edge.h"
 #include "structure/graph/graph.h"
+#include "structure/graph/node.h"
 #include "utils/isa.hpp"
 #include "worker/parser.h"
 #include "gtest/gtest.h"

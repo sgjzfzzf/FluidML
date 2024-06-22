@@ -5,6 +5,7 @@
 #include "structure/graph/attribute.h"
 #include "structure/graph/edge.h"
 #include "structure/graph/graph.h"
+#include "structure/graph/node.h"
 #include "utils/float.h"
 #include "utils/type.h"
 #include <cstddef>
@@ -37,7 +38,13 @@ void createEdge(Graph &graph, const onnx::ValueInfoProto &proto) {
   }
   std::shared_ptr<E> edge =
       std::make_shared<E>(std::move(name), type, std::move(shape));
-  graph.AddEdge(std::move(edge));
+#ifdef DEBUG
+  std::shared_ptr<E> holder = edge;
+#endif
+  graph.PutEdge(std::move(edge));
+#ifdef DEBUG
+  assert(holder->GetGraph() == &graph);
+#endif
 }
 
 template <typename T>
@@ -150,7 +157,13 @@ void createNode(Graph &graph, const onnx::NodeProto &nodeProto, Node::Op op) {
   }
   std::shared_ptr<Node> node =
       std::make_shared<Node>(std::move(name), op, std::move(attributes));
+#ifdef DEBUG
+  std::shared_ptr<Node> holder = node;
+#endif
   graph.PutNode(std::move(node));
+#ifdef DEBUG
+  assert(holder->GetGraph() == &graph);
+#endif
   for (const std::string &input : nodeProto.input()) {
     graph.EdgeToNode(input, nodeProto.name());
   }
@@ -221,7 +234,13 @@ Graph Parser::Run(onnx::ModelProto &model_proto) {
       edge =
           std::make_shared<ConstantScalarEdge>(std::move(name), type, data[0]);
     }
-    graph.AddEdge(std::move(edge));
+#ifdef DEBUG
+    std::shared_ptr<ConstantEdge> holder = edge;
+#endif
+    graph.PutEdge(std::move(edge));
+#ifdef DEBUG
+    assert(holder->GetGraph() == &graph);
+#endif
   }
 
   for (const onnx::NodeProto &node : graph_proto.node()) {
@@ -273,7 +292,9 @@ Graph Parser::Run(onnx::ModelProto &model_proto) {
 #endif
     }
   }
-
+#ifdef DEBUG
+  assert(graph.Check());
+#endif
   return graph;
 }
 } // namespace worker

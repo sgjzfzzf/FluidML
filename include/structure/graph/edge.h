@@ -1,6 +1,7 @@
 #ifndef CPU_TRANSFORMERS_STRUCTURE_GRAPH_EDGE_H_
 #define CPU_TRANSFORMERS_STRUCTURE_GRAPH_EDGE_H_
 
+#include "structure/graph/def.h"
 #include "structure/tensor/meta.h"
 #include "structure/tensor/tensor.h"
 #include "utils/type.h"
@@ -9,19 +10,29 @@
 
 namespace cpu_transformers {
 namespace graph {
-class Edge {
 
+class Edge {
 public:
-  Edge(std::string &&name);
+  Edge(std::string &&name, Graph *graph = nullptr);
   Edge(const Edge &edge) = delete;
   Edge(Edge &&edge) = default;
   virtual ~Edge() = default;
   const std::string &GetName() const;
   virtual Type GetType() const = 0;
   virtual const std::vector<int64_t> &GetShape() const = 0;
+  Graph *GetGraph() const;
+  std::shared_ptr<Node> GetInputNode() const;
+  std::vector<std::shared_ptr<Node>> GetOutputNodes() const;
+  void Delete();
+  void ClearInputs();
+  void ClearOutputs();
+  void PutInput(Node &node);
+  void PutOutput(Node &node);
+  friend class Graph;
 
 protected:
   std::string name_;
+  Graph *graph_;
 };
 
 class ConstantEdge : public Edge {

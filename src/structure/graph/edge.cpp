@@ -1,12 +1,61 @@
 #include "structure/graph/edge.h"
+#include "structure/graph/graph.h"
 #include "structure/tensor/meta.h"
 #include "utils/type.h"
 
 namespace cpu_transformers {
 namespace graph {
-Edge::Edge(std::string &&name) : name_(name) {}
+
+Edge::Edge(std::string &&name, Graph *graph) : name_(name), graph_(graph) {}
 
 const std::string &Edge::GetName() const { return name_; }
+
+Graph *Edge::GetGraph() const { return graph_; }
+
+std::shared_ptr<Node> Edge::GetInputNode() const {
+  return graph_->GetEdgeFrom(*this);
+}
+
+std::vector<std::shared_ptr<Node>> Edge::GetOutputNodes() const {
+  return graph_->GetEdgeTo(*this);
+}
+
+void Edge::Delete() {
+  if (graph_) {
+#ifdef DEBUG
+    assert(
+#endif
+        graph_->DeleteEdge(*this)
+#ifdef DEBUG
+    )
+#endif
+        ;
+  }
+}
+
+void Edge::ClearInputs() {
+  if (graph_) {
+    graph_->ClearEdgeFrom(*this);
+  }
+}
+
+void Edge::ClearOutputs() {
+  if (graph_) {
+    graph_->ClearEdgeTos(*this);
+  }
+}
+
+void Edge::PutInput(Node &node) {
+  if (graph_) {
+    graph_->NodeToEdge(node, *this);
+  }
+}
+
+void Edge::PutOutput(Node &node) {
+  if (graph_) {
+    graph_->EdgeToNode(*this, node);
+  }
+}
 
 ConstantEdge::ConstantEdge(std::string &&name) : Edge(std::move(name)) {}
 
@@ -57,5 +106,6 @@ InputEdge::InputEdge(std::string &&name, Type type,
 OutputEdge::OutputEdge(std::string &&name, Type type,
                        std::vector<int64_t> &&shape)
     : NonConstantEdge(std::move(name), type, std::move(shape)) {}
+
 } // namespace graph
 } // namespace cpu_transformers
