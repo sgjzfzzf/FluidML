@@ -22,6 +22,8 @@ private:
                       const graph::Node &node);
   void convertGatherNode(flow::Flow &flow, const graph::Graph &graph,
                          const graph::Node &node);
+  void convertGatherAddAddNode(flow::Flow &flow, const graph::Graph &graph,
+                               const graph::Node &node);
   void convertGemmNode(flow::Flow &flow, const graph::Graph &graph,
                        const graph::Node &node);
   void convertLayerNormalizationNode(flow::Flow &flow,

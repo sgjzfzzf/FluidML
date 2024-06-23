@@ -4,6 +4,7 @@
 #include "structure/kernel/div.h"
 #include "structure/kernel/erf.h"
 #include "structure/kernel/gather.h"
+#include "structure/kernel/gather_add_add.h"
 #include "structure/kernel/gemm.h"
 #include "structure/kernel/layernormalization.h"
 #include "structure/kernel/matmul.h"
@@ -117,6 +118,23 @@ void NaiveScheduler::Run(
       mlir::Value &output = symbol_table.at(output_name);
       kernel::GatherConstantDataTensorKernel kernel;
       kernel.Run(builder, lhs, rhs, output);
+    } else if (
+        std::shared_ptr<
+            flow::GatherConstantDataTensorAddTensorLhsAddTensorLhsNode>
+            ptr = std::dynamic_pointer_cast<
+                flow::GatherConstantDataTensorAddTensorLhsAddTensorLhsNode>(
+                node)) {
+      const Tensor &data = ptr->GetData();
+      const Tensor &add0_weight = ptr->GetAdd0Weight();
+      const Tensor &add1_weight = ptr->GetAdd1Weight();
+      std::shared_ptr<flow::Edge> input_edge = ptr->GetInput();
+      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
+      const std::string &input_name = input_edge->GetName();
+      const std::string &output_name = output_edge->GetName();
+      mlir::Value &input = symbol_table.at(input_name);
+      mlir::Value &output = symbol_table.at(output_name);
+      kernel::GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel kernel;
+      kernel.Run(builder, data, add0_weight, add1_weight, input, output);
     } else if (std::shared_ptr<flow::GemmConstantWeightsBiasNode> ptr =
                    std::dynamic_pointer_cast<flow::GemmConstantWeightsBiasNode>(
                        node)) {

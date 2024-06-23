@@ -205,6 +205,45 @@ std::shared_ptr<Edge> GatherConstantDataTensorNode::GetRhs() const noexcept {
   return rhs_;
 }
 
+GatherConstantDataTensorAddTensorLhsAddTensorLhsNode::
+    GatherConstantDataTensorAddTensorLhsAddTensorLhsNode(
+        std::string &&name, Tensor &&data, Tensor &&add0_weight,
+        Tensor &&add1_weight, std::shared_ptr<Edge> &&input,
+        std::shared_ptr<Edge> &&output)
+    : Node(std::move(name)), data_(std::move(data)),
+      add0_weight_(std::move(add0_weight)),
+      add1_weight_(std::move(add1_weight)), input_(std::move(input)),
+      output_(std::move(output)) {}
+
+const Tensor &
+GatherConstantDataTensorAddTensorLhsAddTensorLhsNode::GetData() const noexcept {
+  return data_;
+}
+
+const Tensor &
+GatherConstantDataTensorAddTensorLhsAddTensorLhsNode::GetAdd0Weight()
+    const noexcept {
+  return add0_weight_;
+}
+
+const Tensor &
+GatherConstantDataTensorAddTensorLhsAddTensorLhsNode::GetAdd1Weight()
+    const noexcept {
+  return add1_weight_;
+}
+
+std::shared_ptr<Edge>
+GatherConstantDataTensorAddTensorLhsAddTensorLhsNode::GetInput()
+    const noexcept {
+  return input_;
+}
+
+std::shared_ptr<Edge>
+GatherConstantDataTensorAddTensorLhsAddTensorLhsNode::GetOutput()
+    const noexcept {
+  return output_;
+}
+
 GemmNode::GemmNode(std::string &&name, float64_t alpha = GemmNode::kAlpha,
                    float64_t beta = GemmNode::kBeta,
                    bool transA = GemmNode::kTransA,

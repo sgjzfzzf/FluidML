@@ -21,73 +21,75 @@ namespace worker {
 flow::Flow Converter::Run(const graph::Graph &graph) {
   flow::Flow flow;
   for (std::shared_ptr<graph::Edge> edge : graph.GetAllEdges()) {
-    if (std::shared_ptr<graph::InputEdge> inputEdge =
+    if (std::shared_ptr<graph::InputEdge> input_edge =
             std::dynamic_pointer_cast<graph::InputEdge>(edge)) {
-      std::string name = inputEdge->GetName();
+      std::string name = input_edge->GetName();
       std::vector<std::shared_ptr<graph::Node>> tos =
-          graph.GetEdgeTo(*inputEdge);
+          graph.GetEdgeTo(*input_edge);
 #ifdef DEBUG
       assert(tos.size() == 1);
 #endif
       std::shared_ptr<graph::Node> to = tos[0];
-      std::string toName = to->GetName();
-      Meta meta = inputEdge->GetMeta();
-      name = inputEdge->GetName();
-      std::string fromName = name;
+      std::string to_name = to->GetName();
+      Meta meta = input_edge->GetMeta();
+      name = input_edge->GetName();
+      std::string from_name = name;
       std::shared_ptr<flow::InputRegion> region =
           std::make_shared<flow::InputRegion>(std::move(name), std::move(meta));
-      std::shared_ptr<flow::InputRegion> regionClone = region;
+      std::shared_ptr<flow::InputRegion> region_clone = region;
       std::shared_ptr<flow::InputEdge> ptr = std::make_shared<flow::InputEdge>(
-          std::move(regionClone), std::move(toName));
+          std::move(region_clone), std::move(to_name));
       flow.PutEdge(std::move(ptr));
       flow.PutRegion(std::move(region));
-    } else if (std::shared_ptr<graph::OutputEdge> outputEdge =
+    } else if (std::shared_ptr<graph::OutputEdge> output_edge =
                    std::dynamic_pointer_cast<graph::OutputEdge>(edge)) {
-      std::string name = outputEdge->GetName();
-      std::shared_ptr<graph::Node> from = graph.GetEdgeFrom(*outputEdge);
-      std::string fromName = from->GetName();
-      Meta meta = outputEdge->GetMeta();
-      name = outputEdge->GetName();
-      std::string toName = name;
+      std::string name = output_edge->GetName();
+      std::shared_ptr<graph::Node> from = graph.GetEdgeFrom(*output_edge);
+      std::string from_name = from->GetName();
+      Meta meta = output_edge->GetMeta();
+      name = output_edge->GetName();
+      std::string to_name = name;
       std::shared_ptr<flow::OutputRegion> region =
           std::make_shared<flow::OutputRegion>(std::move(name),
                                                std::move(meta));
-      std::shared_ptr<flow::OutputRegion> regionClone = region;
-      std::shared_ptr<flow::OutputEdge> outputPtr =
-          std::make_shared<flow::OutputEdge>(std::move(regionClone),
-                                             std::move(fromName));
-      flow.PutEdge(std::move(outputPtr));
-      regionClone = region;
-      flow.PutRegion(std::move(regionClone));
+      std::shared_ptr<flow::OutputRegion> region_clone = region;
+      std::shared_ptr<flow::OutputEdge> output_ptr =
+          std::make_shared<flow::OutputEdge>(std::move(region_clone),
+                                             std::move(from_name));
+      flow.PutEdge(std::move(output_ptr));
+      region_clone = region;
+      flow.PutRegion(std::move(region_clone));
       std::vector<std::shared_ptr<graph::Node>> tos =
-          graph.GetEdgeTo(*outputEdge);
+          graph.GetEdgeTo(*output_edge);
       for (std::shared_ptr<graph::Node> to : tos) {
-        fromName = from->GetName();
-        toName = to->GetName();
-        regionClone = region;
-        std::shared_ptr<flow::MemoryEdge> memoryPtr =
-            std::make_shared<flow::MemoryEdge>(
-                std::move(regionClone), std::move(fromName), std::move(toName));
-        flow.PutEdge(std::move(memoryPtr));
+        from_name = from->GetName();
+        to_name = to->GetName();
+        region_clone = region;
+        std::shared_ptr<flow::MemoryEdge> memory_ptr =
+            std::make_shared<flow::MemoryEdge>(std::move(region_clone),
+                                               std::move(from_name),
+                                               std::move(to_name));
+        flow.PutEdge(std::move(memory_ptr));
       }
-    } else if (std::shared_ptr<graph::PureEdge> pureEdge =
+    } else if (std::shared_ptr<graph::PureEdge> pure_edge =
                    std::dynamic_pointer_cast<graph::PureEdge>(edge)) {
-      std::string name = pureEdge->GetName();
-      Meta meta = pureEdge->GetMeta();
+      std::string name = pure_edge->GetName();
+      Meta meta = pure_edge->GetMeta();
       std::shared_ptr<flow::InnerRegion> region =
           std::make_shared<flow::InnerRegion>(std::move(name), std::move(meta));
-      std::shared_ptr<flow::InnerRegion> regionClone = region;
-      flow.PutRegion(std::move(regionClone));
-      std::shared_ptr<graph::Node> from = graph.GetEdgeFrom(*pureEdge);
+      std::shared_ptr<flow::InnerRegion> region_clone = region;
+      flow.PutRegion(std::move(region_clone));
+      std::shared_ptr<graph::Node> from = graph.GetEdgeFrom(*pure_edge);
       std::vector<std::shared_ptr<graph::Node>> tos =
-          graph.GetEdgeTo(*pureEdge);
+          graph.GetEdgeTo(*pure_edge);
       for (const std::shared_ptr<graph::Node> &to : tos) {
-        std::string fromName = from->GetName();
-        std::string toName = to->GetName();
-        regionClone = region;
+        std::string from_name = from->GetName();
+        std::string to_name = to->GetName();
+        region_clone = region;
         std::shared_ptr<flow::MemoryEdge> ptr =
-            std::make_shared<flow::MemoryEdge>(
-                std::move(regionClone), std::move(fromName), std::move(toName));
+            std::make_shared<flow::MemoryEdge>(std::move(region_clone),
+                                               std::move(from_name),
+                                               std::move(to_name));
         flow.PutEdge(std::move(ptr));
       }
     }
@@ -106,6 +108,9 @@ flow::Flow Converter::Run(const graph::Graph &graph) {
       break;
     case graph::Node::Op::Gather:
       convertGatherNode(flow, graph, *node);
+      break;
+    case graph::Node::Op::GatherAddAdd:
+      convertGatherAddAddNode(flow, graph, *node);
       break;
     case graph::Node::Op::Gemm:
       convertGemmNode(flow, graph, *node);
@@ -169,71 +174,73 @@ void Converter::convertAddNode(flow::Flow &flow, const graph::Graph &graph,
   assert(inputs.size() == 2);
   assert(outputs.size() == 1);
 #endif
-  std::shared_ptr<graph::Edge> inputLhs = inputs[0];
-  std::shared_ptr<graph::Edge> inputRhs = inputs[1];
+  std::shared_ptr<graph::Edge> input_lhs = inputs[0];
+  std::shared_ptr<graph::Edge> input_rhs = inputs[1];
   std::shared_ptr<graph::Edge> output = outputs[0];
 #ifdef DEBUG
-  assert(inputLhs != nullptr);
-  assert(inputRhs != nullptr);
+  assert(input_lhs != nullptr);
+  assert(input_rhs != nullptr);
   assert(output != nullptr);
 #endif
   std::shared_ptr<flow::AddNode> ptr = nullptr;
-  std::shared_ptr<graph::ConstantEdge> inputLhsAsConstant =
-      std::dynamic_pointer_cast<graph::ConstantEdge>(inputLhs);
-  std::shared_ptr<graph::ConstantEdge> inputRhsAsConstant =
-      std::dynamic_pointer_cast<graph::ConstantEdge>(inputRhs);
-  std::shared_ptr<graph::NonConstantEdge> outputAsNonConstant =
+  std::shared_ptr<graph::ConstantEdge> input_lhs_as_constant =
+      std::dynamic_pointer_cast<graph::ConstantEdge>(input_lhs);
+  std::shared_ptr<graph::ConstantEdge> input_rhs_as_constant =
+      std::dynamic_pointer_cast<graph::ConstantEdge>(input_rhs);
+  std::shared_ptr<graph::NonConstantEdge> output_as_non_constant =
       std::dynamic_pointer_cast<graph::NonConstantEdge>(output);
 #ifdef DEBUG
-  assert(outputAsNonConstant != nullptr);
+  assert(output_as_non_constant != nullptr);
 #endif
-  Meta outputMeta = outputAsNonConstant->GetMeta();
-  if (inputLhsAsConstant == nullptr && inputRhsAsConstant == nullptr) {
-    std::shared_ptr<graph::NonConstantEdge> inputLhsAsNonConstant =
-        std::dynamic_pointer_cast<graph::NonConstantEdge>(inputLhs);
-    std::shared_ptr<graph::NonConstantEdge> inputRhsAsNonConstant =
-        std::dynamic_pointer_cast<graph::NonConstantEdge>(inputRhs);
+  Meta output_meta = output_as_non_constant->GetMeta();
+  if (input_lhs_as_constant == nullptr && input_rhs_as_constant == nullptr) {
+    std::shared_ptr<graph::NonConstantEdge> input_lhs_as_non_constant =
+        std::dynamic_pointer_cast<graph::NonConstantEdge>(input_lhs);
+    std::shared_ptr<graph::NonConstantEdge> input_rhs_as_non_constant =
+        std::dynamic_pointer_cast<graph::NonConstantEdge>(input_rhs);
 #ifdef DEBUG
-    assert(inputLhsAsNonConstant != nullptr);
-    assert(inputRhsAsNonConstant != nullptr);
+    assert(input_lhs_as_non_constant != nullptr);
+    assert(input_rhs_as_non_constant != nullptr);
 #endif
-    const std::string &inputLhsName = inputLhsAsNonConstant->GetName();
-    const std::string &inputRhsName = inputRhsAsNonConstant->GetName();
-    const std::string &outputName = output->GetName();
-    std::shared_ptr<flow::Edge> inputLhsPtr = flow.GetEdge(inputLhsName);
-    std::shared_ptr<flow::Edge> inputRhsPtr = flow.GetEdge(inputRhsName);
-    std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+    const std::string &input_lhs_name = input_lhs_as_non_constant->GetName();
+    const std::string &input_rhs_name = input_rhs_as_non_constant->GetName();
+    const std::string &output_name = output->GetName();
+    std::shared_ptr<flow::Edge> input_lhs_tr = flow.GetEdge(input_lhs_name);
+    std::shared_ptr<flow::Edge> input_rhs_ptr = flow.GetEdge(input_rhs_name);
+    std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-    assert(inputLhsPtr != nullptr);
-    assert(inputRhsPtr != nullptr);
-    assert(outputPtr != nullptr);
-    Meta inputLhsMeta = inputLhsPtr->GetMeta();
-    Meta inputRhsMeta = inputRhsPtr->GetMeta();
-    std::optional<Meta> outputMetaOpt =
-        BroadcastShape(inputLhsMeta, inputRhsMeta, outputMeta.GetType());
-    assert(outputMetaOpt.has_value());
-    assert(*outputMetaOpt == outputMeta);
+    assert(input_lhs_tr != nullptr);
+    assert(input_rhs_ptr != nullptr);
+    assert(output_ptr != nullptr);
+    Meta input_lhs_meta = input_lhs_tr->GetMeta();
+    Meta input_rhs_meta = input_rhs_ptr->GetMeta();
+    std::optional<Meta> output_meta_opt =
+        BroadcastShape(input_lhs_meta, input_rhs_meta, output_meta.GetType());
+    assert(output_meta_opt.has_value());
+    assert(*output_meta_opt == output_meta);
 #endif
     ptr = std::make_shared<flow::AddCommonNode>(
-        std::move(name), std::move(inputLhsPtr), std::move(inputRhsPtr),
-        std::move(outputPtr));
+        std::move(name), std::move(input_lhs_tr), std::move(input_rhs_ptr),
+        std::move(output_ptr));
   }
 #ifdef DEBUG
-  else if (inputLhsAsConstant != nullptr && inputRhsAsConstant != nullptr) {
+  else if (input_lhs_as_constant != nullptr &&
+           input_rhs_as_constant != nullptr) {
     throw UnreachableException();
   }
 #endif
   else {
-    std::shared_ptr<graph::ConstantEdge> inputConstant = nullptr;
-    std::shared_ptr<graph::NonConstantEdge> inputNonConstant = nullptr;
-    if (inputLhsAsConstant != nullptr && inputRhsAsConstant == nullptr) {
-      inputConstant = inputLhsAsConstant;
-      inputNonConstant =
-          std::dynamic_pointer_cast<graph::NonConstantEdge>(inputRhs);
-    } else if (inputLhsAsConstant == nullptr && inputRhsAsConstant != nullptr) {
-      inputConstant = inputRhsAsConstant;
-      inputNonConstant =
-          std::dynamic_pointer_cast<graph::NonConstantEdge>(inputLhs);
+    std::shared_ptr<graph::ConstantEdge> input_constant = nullptr;
+    std::shared_ptr<graph::NonConstantEdge> input_non_constant = nullptr;
+    if (input_lhs_as_constant != nullptr && input_rhs_as_constant == nullptr) {
+      input_constant = input_lhs_as_constant;
+      input_non_constant =
+          std::dynamic_pointer_cast<graph::NonConstantEdge>(input_rhs);
+    } else if (input_lhs_as_constant == nullptr &&
+               input_rhs_as_constant != nullptr) {
+      input_constant = input_rhs_as_constant;
+      input_non_constant =
+          std::dynamic_pointer_cast<graph::NonConstantEdge>(input_lhs);
     } else {
 #ifdef DEBUG
       throw UnreachableException();
@@ -242,39 +249,40 @@ void Converter::convertAddNode(flow::Flow &flow, const graph::Graph &graph,
 #endif
     }
 #ifdef DEBUG
-    assert(inputConstant != nullptr);
-    assert(inputNonConstant != nullptr);
+    assert(input_constant != nullptr);
+    assert(input_non_constant != nullptr);
 #endif
-    if (std::shared_ptr<graph::ConstantScalarEdge> inputConstantScalar =
+    if (std::shared_ptr<graph::ConstantScalarEdge> input_constant_scalar =
             std::dynamic_pointer_cast<graph::ConstantScalarEdge>(
-                inputConstant)) {
-      const std::string &inputName = inputNonConstant->GetName();
-      const std::string &outputName = output->GetName();
-      std::shared_ptr<flow::Edge> inputPtr = flow.GetEdge(inputName);
-      std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+                input_constant)) {
+      const std::string &input_name = input_non_constant->GetName();
+      const std::string &output_name = output->GetName();
+      std::shared_ptr<flow::Edge> input_ptr = flow.GetEdge(input_name);
+      std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-      assert(inputPtr != nullptr);
-      assert(outputPtr != nullptr);
+      assert(input_ptr != nullptr);
+      assert(output_ptr != nullptr);
 #endif
       ptr = std::make_shared<flow::AddConstantScalarNode>(
-          std::move(name), inputConstantScalar->GetType(),
-          inputConstantScalar->GetValue(), std::move(inputPtr),
-          std::move(outputPtr));
-    } else if (std::shared_ptr<graph::ConstantTensorEdge> inputConstantTensor =
-                   std::dynamic_pointer_cast<graph::ConstantTensorEdge>(
-                       inputConstant)) {
-      Tensor tensor = inputConstantTensor->GetValue();
-      const std::string &inputName = inputNonConstant->GetName();
-      const std::string &outputName = output->GetName();
-      std::shared_ptr<flow::Edge> inputPtr = flow.GetEdge(inputName);
-      std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+          std::move(name), input_constant_scalar->GetType(),
+          input_constant_scalar->GetValue(), std::move(input_ptr),
+          std::move(output_ptr));
+    } else if (std::shared_ptr<graph::ConstantTensorEdge>
+                   input_constant_tensor =
+                       std::dynamic_pointer_cast<graph::ConstantTensorEdge>(
+                           input_constant)) {
+      Tensor tensor = input_constant_tensor->GetValue();
+      const std::string &input_name = input_non_constant->GetName();
+      const std::string &output_name = output->GetName();
+      std::shared_ptr<flow::Edge> input_ptr = flow.GetEdge(input_name);
+      std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-      assert(inputPtr != nullptr);
-      assert(outputPtr != nullptr);
+      assert(input_ptr != nullptr);
+      assert(output_ptr != nullptr);
 #endif
       ptr = std::make_shared<flow::AddConstantTensorNode>(
-          std::move(name), std::move(tensor), std::move(inputPtr),
-          std::move(outputPtr));
+          std::move(name), std::move(tensor), std::move(input_ptr),
+          std::move(output_ptr));
     } else {
 #ifdef DEBUG
       throw UnreachableException();
@@ -298,39 +306,39 @@ void Converter::convertDivNode(flow::Flow &flow, const graph::Graph &graph,
   assert(inputs.size() == 2);
   assert(outputs.size() == 1);
 #endif
-  std::shared_ptr<graph::Edge> inputLhs = inputs[0];
-  std::shared_ptr<graph::Edge> inputRhs = inputs[1];
+  std::shared_ptr<graph::Edge> input_lhs = inputs[0];
+  std::shared_ptr<graph::Edge> input_rhs = inputs[1];
   std::shared_ptr<graph::Edge> output = outputs[0];
 #ifdef DEBUG
-  assert(inputLhs != nullptr);
-  assert(inputRhs != nullptr);
+  assert(input_lhs != nullptr);
+  assert(input_rhs != nullptr);
 #endif
   std::shared_ptr<flow::DivNode> ptr = nullptr;
   // The support format of Div operator is limited to the following:
   // the left operator is a tensor, and it's a non-constant edge
   // the right operator is a scalar, and it's a constant scalar edge
   // If new formats occur, the code should be updated.
-  std::shared_ptr<graph::ConstantScalarEdge> inputRhsAsConstantScalar =
-      std::dynamic_pointer_cast<graph::ConstantScalarEdge>(inputRhs);
+  std::shared_ptr<graph::ConstantScalarEdge> input_rhs_as_constant_scalar =
+      std::dynamic_pointer_cast<graph::ConstantScalarEdge>(input_rhs);
 #ifdef DEBUG
-  assert(isa<graph::NonConstantEdge>(inputLhs));
-  assert(inputRhsAsConstantScalar != nullptr);
+  assert(isa<graph::NonConstantEdge>(input_lhs));
+  assert(input_rhs_as_constant_scalar != nullptr);
   assert(isa<graph::NonConstantEdge>(output));
 #endif
-  const std::string &inputName = inputLhs->GetName();
-  const std::string &outputName = output->GetName();
-  std::shared_ptr<flow::Edge> inputPtr = flow.GetEdge(inputName);
-  std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+  const std::string &input_name = input_lhs->GetName();
+  const std::string &output_name = output->GetName();
+  std::shared_ptr<flow::Edge> input_ptr = flow.GetEdge(input_name);
+  std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-  assert(inputPtr != nullptr);
-  assert(outputPtr != nullptr);
-  Meta meta = inputPtr->GetMeta();
-  assert(meta == outputPtr->GetMeta());
+  assert(input_ptr != nullptr);
+  assert(output_ptr != nullptr);
+  Meta meta = input_ptr->GetMeta();
+  assert(meta == output_ptr->GetMeta());
 #endif
   ptr = std::make_shared<flow::DivConstantScalarNode>(
-      std::move(name), inputRhsAsConstantScalar->GetType(),
-      inputRhsAsConstantScalar->GetValue(), std::move(inputPtr),
-      std::move(outputPtr));
+      std::move(name), input_rhs_as_constant_scalar->GetType(),
+      input_rhs_as_constant_scalar->GetValue(), std::move(input_ptr),
+      std::move(output_ptr));
   flow.PutNode(std::move(ptr));
 }
 
@@ -357,19 +365,19 @@ void Converter::convertErfNode(flow::Flow &flow, const graph::Graph &graph,
   assert(isa<graph::NonConstantEdge>(input));
   assert(isa<graph::NonConstantEdge>(output));
 #endif
-  const std::string &inputName = input->GetName();
-  const std::string &outputName = output->GetName();
-  std::shared_ptr<flow::Edge> inputPtr = flow.GetEdge(inputName);
-  std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+  const std::string &input_name = input->GetName();
+  const std::string &output_name = output->GetName();
+  std::shared_ptr<flow::Edge> input_ptr = flow.GetEdge(input_name);
+  std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-  assert(inputPtr != nullptr);
-  assert(outputPtr != nullptr);
-  Meta inputMeta = inputPtr->GetMeta();
-  const Meta &outputMeta = outputPtr->GetMeta();
-  assert(inputMeta == outputMeta);
+  assert(input_ptr != nullptr);
+  assert(output_ptr != nullptr);
+  Meta input_meta = input_ptr->GetMeta();
+  const Meta &output_meta = output_ptr->GetMeta();
+  assert(input_meta == output_meta);
 #endif
-  ptr = std::make_shared<flow::ErfNode>(std::move(name), std::move(inputPtr),
-                                        std::move(outputPtr));
+  ptr = std::make_shared<flow::ErfNode>(std::move(name), std::move(input_ptr),
+                                        std::move(output_ptr));
   flow.PutNode(std::move(ptr));
 }
 
@@ -391,37 +399,39 @@ void Converter::convertGatherNode(flow::Flow &flow, const graph::Graph &graph,
   assert(inputs.size() == 2);
   assert(outputs.size() == 1);
 #endif
-  std::shared_ptr<graph::Edge> inputLhs = inputs[0];
-  std::shared_ptr<graph::Edge> inputRhs = inputs[1];
+  std::shared_ptr<graph::Edge> input_lhs = inputs[0];
+  std::shared_ptr<graph::Edge> input_rhs = inputs[1];
   std::shared_ptr<graph::Edge> output = outputs[0];
   size_t axis = 0;
   if (node.HasAttribute(flow::GatherNode::kAxisAttrName)) {
     axis = node.GetAttribute(flow::GatherNode::kAxisAttrName).GetInt64();
   }
 #ifdef DEBUG
-  assert(inputLhs != nullptr);
-  assert(inputRhs != nullptr);
+  assert(input_lhs != nullptr);
+  assert(input_rhs != nullptr);
   assert(output != nullptr);
 #endif
   std::shared_ptr<flow::GatherNode> ptr = nullptr;
-  std::shared_ptr<graph::NonConstantEdge> outputAsNonConstant =
+  std::shared_ptr<graph::NonConstantEdge> output_as_non_constant =
       std::dynamic_pointer_cast<graph::NonConstantEdge>(output);
-  if (std::shared_ptr<graph::NonConstantEdge> inputLhsAsNonConstant =
-          std::dynamic_pointer_cast<graph::NonConstantEdge>(inputLhs)) {
-    if (std::shared_ptr<graph::ConstantScalarEdge> inputRhsAsConstantScalar =
-            std::dynamic_pointer_cast<graph::ConstantScalarEdge>(inputRhs)) {
-      const std::string &inputName = inputLhsAsNonConstant->GetName();
-      const std::string &outputName = output->GetName();
-      std::shared_ptr<flow::Edge> inputPtr = flow.GetEdge(inputName);
-      std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+  if (std::shared_ptr<graph::NonConstantEdge> input_lhs_as_non_constant =
+          std::dynamic_pointer_cast<graph::NonConstantEdge>(input_lhs)) {
+    if (std::shared_ptr<graph::ConstantScalarEdge>
+            input_rhs_as_constant_scalar =
+                std::dynamic_pointer_cast<graph::ConstantScalarEdge>(
+                    input_rhs)) {
+      const std::string &input_name = input_lhs_as_non_constant->GetName();
+      const std::string &output_name = output->GetName();
+      std::shared_ptr<flow::Edge> input_ptr = flow.GetEdge(input_name);
+      std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-      assert(inputPtr != nullptr);
-      assert(outputPtr != nullptr);
+      assert(input_ptr != nullptr);
+      assert(output_ptr != nullptr);
 #endif
       ptr = std::make_shared<flow::GatherConstantIndexScalarNode>(
-          std::move(name), std::move(inputPtr),
-          std::lround(inputRhsAsConstantScalar->GetValue()),
-          std::move(outputPtr), axis);
+          std::move(name), std::move(input_ptr),
+          std::lround(input_rhs_as_constant_scalar->GetValue()),
+          std::move(output_ptr), axis);
     } else {
 #ifdef DEBUG
       throw UnreachableException();
@@ -430,23 +440,23 @@ void Converter::convertGatherNode(flow::Flow &flow, const graph::Graph &graph,
 #endif
     }
   } else if (std::shared_ptr<graph::ConstantTensorEdge>
-                 inputLhsAsConstantTensor =
+                 inputLhs_as_constant_tensor =
                      std::dynamic_pointer_cast<graph::ConstantTensorEdge>(
-                         inputLhs)) {
-    if (std::shared_ptr<graph::NonConstantEdge> inputRhsAsNonConstant =
-            std::dynamic_pointer_cast<graph::NonConstantEdge>(inputRhs)) {
-      Tensor tensor = inputLhsAsConstantTensor->GetValue();
-      const std::string &inputName = inputRhsAsNonConstant->GetName();
-      const std::string &outputName = output->GetName();
-      std::shared_ptr<flow::Edge> inputPtr = flow.GetEdge(inputName);
-      std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+                         input_lhs)) {
+    if (std::shared_ptr<graph::NonConstantEdge> input_rhs_as_non_constant =
+            std::dynamic_pointer_cast<graph::NonConstantEdge>(input_rhs)) {
+      Tensor tensor = inputLhs_as_constant_tensor->GetValue();
+      const std::string &input_name = input_rhs_as_non_constant->GetName();
+      const std::string &output_name = output->GetName();
+      std::shared_ptr<flow::Edge> input_ptr = flow.GetEdge(input_name);
+      std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-      assert(inputPtr != nullptr);
-      assert(outputPtr != nullptr);
+      assert(input_ptr != nullptr);
+      assert(output_ptr != nullptr);
 #endif
       ptr = std::make_shared<flow::GatherConstantDataTensorNode>(
-          std::move(name), std::move(tensor), std::move(inputPtr),
-          std::move(outputPtr), axis);
+          std::move(name), std::move(tensor), std::move(input_ptr),
+          std::move(output_ptr), axis);
     } else {
 #ifdef DEBUG
       throw UnreachableException();
@@ -461,6 +471,69 @@ void Converter::convertGatherNode(flow::Flow &flow, const graph::Graph &graph,
     __builtin_unreachable();
 #endif
   }
+  flow.PutNode(std::move(ptr));
+}
+
+void Converter::convertGatherAddAddNode(flow::Flow &flow,
+                                        const graph::Graph &graph,
+                                        const graph::Node &node) {
+#ifdef DEBUG
+  assert(node.GetOp() == graph::Node::Op::GatherAddAdd);
+#endif
+  std::string name = node.GetName();
+  std::vector<std::shared_ptr<graph::Edge>> inputs = graph.GetNodeFrom(node);
+  std::vector<std::shared_ptr<graph::Edge>> outputs = graph.GetNodeTo(node);
+#ifdef DEBUG
+  assert(inputs.size() == 4);
+  assert(outputs.size() == 1);
+#endif
+  std::shared_ptr<graph::Edge> gather_data = inputs[0];
+  std::shared_ptr<graph::Edge> add0_weight = inputs[1];
+  std::shared_ptr<graph::Edge> add1_weight = inputs[2];
+  std::shared_ptr<graph::Edge> input = inputs[3];
+  std::shared_ptr<graph::Edge> output = outputs[0];
+#ifdef DEBUG
+  assert(gather_data != nullptr);
+  assert(add0_weight != nullptr);
+  assert(add1_weight != nullptr);
+  assert(input != nullptr);
+  assert(output != nullptr);
+#endif
+  std::shared_ptr<flow::GatherConstantDataTensorAddTensorLhsAddTensorLhsNode>
+      ptr = nullptr;
+  std::shared_ptr<graph::ConstantTensorEdge> gather_data_as_constant_tensor =
+      std::dynamic_pointer_cast<graph::ConstantTensorEdge>(gather_data);
+  std::shared_ptr<graph::ConstantTensorEdge> add0_weight_as_constant_tensor =
+      std::dynamic_pointer_cast<graph::ConstantTensorEdge>(add0_weight);
+  std::shared_ptr<graph::ConstantTensorEdge> add1_weight_as_constant_tensor =
+      std::dynamic_pointer_cast<graph::ConstantTensorEdge>(add1_weight);
+  std::shared_ptr<graph::NonConstantEdge> input_as_non_constant =
+      std::dynamic_pointer_cast<graph::NonConstantEdge>(input);
+  std::shared_ptr<graph::NonConstantEdge> output_as_non_constant =
+      std::dynamic_pointer_cast<graph::NonConstantEdge>(output);
+#ifdef DEBUG
+  assert(gather_data_as_constant_tensor != nullptr);
+  assert(add0_weight_as_constant_tensor != nullptr);
+  assert(add1_weight_as_constant_tensor != nullptr);
+  assert(input_as_non_constant != nullptr);
+  assert(output_as_non_constant != nullptr);
+#endif
+  const std::string &input_name = input_as_non_constant->GetName();
+  const std::string &output_name = output_as_non_constant->GetName();
+  std::shared_ptr<flow::Edge> input_ptr = flow.GetEdge(input_name);
+  std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
+#ifdef DEBUG
+  assert(input_ptr != nullptr);
+  assert(output_ptr != nullptr);
+#endif
+  Tensor gather_data_tensor = gather_data_as_constant_tensor->GetValue();
+  Tensor add0_weight_tensor = add0_weight_as_constant_tensor->GetValue();
+  Tensor add1_weight_tensor = add1_weight_as_constant_tensor->GetValue();
+  ptr = std::make_shared<
+      flow::GatherConstantDataTensorAddTensorLhsAddTensorLhsNode>(
+      std::move(name), std::move(gather_data_tensor),
+      std::move(add0_weight_tensor), std::move(add1_weight_tensor),
+      std::move(input_ptr), std::move(output_ptr));
   flow.PutNode(std::move(ptr));
 }
 
@@ -487,19 +560,19 @@ void Converter::convertGemmNode(flow::Flow &flow, const graph::Graph &graph,
   assert(output != nullptr);
 #endif
   std::shared_ptr<flow::GemmNode> ptr = nullptr;
-  std::shared_ptr<graph::NonConstantEdge> inputAsNonConstant =
+  std::shared_ptr<graph::NonConstantEdge> input_as_non_constant =
       std::dynamic_pointer_cast<graph::NonConstantEdge>(input);
-  std::shared_ptr<graph::ConstantTensorEdge> weightsAsConstantTensor =
+  std::shared_ptr<graph::ConstantTensorEdge> weights_as_constant_tensor =
       std::dynamic_pointer_cast<graph::ConstantTensorEdge>(weights);
-  std::shared_ptr<graph::ConstantTensorEdge> biasAsConstantTensor =
+  std::shared_ptr<graph::ConstantTensorEdge> bias_as_constant_tensor =
       std::dynamic_pointer_cast<graph::ConstantTensorEdge>(bias);
-  std::shared_ptr<graph::NonConstantEdge> outputAsNonConstant =
+  std::shared_ptr<graph::NonConstantEdge> output_as_non_constant =
       std::dynamic_pointer_cast<graph::NonConstantEdge>(output);
 #ifdef DEBUG
-  assert(inputAsNonConstant != nullptr);
-  assert(weightsAsConstantTensor != nullptr);
-  assert(biasAsConstantTensor != nullptr);
-  assert(outputAsNonConstant != nullptr);
+  assert(input_as_non_constant != nullptr);
+  assert(weights_as_constant_tensor != nullptr);
+  assert(bias_as_constant_tensor != nullptr);
+  assert(output_as_non_constant != nullptr);
 #endif
   float64_t alpha = 0;
   float64_t beta = 0;
@@ -517,15 +590,16 @@ void Converter::convertGemmNode(flow::Flow &flow, const graph::Graph &graph,
   if (node.HasAttribute(flow::GemmNode::kTransBAttrName)) {
     transB = node.GetAttribute(flow::GemmNode::kTransBAttrName).GetInt64();
   }
-  const std::string &inputName = inputAsNonConstant->GetName();
-  const std::string &outputName = outputAsNonConstant->GetName();
-  std::shared_ptr<flow::Edge> inputPtr = flow.GetEdge(inputName);
-  std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
-  Tensor weightsTensor = weightsAsConstantTensor->GetValue();
-  Tensor biasTensor = biasAsConstantTensor->GetValue();
+  const std::string &input_name = input_as_non_constant->GetName();
+  const std::string &output_name = output_as_non_constant->GetName();
+  std::shared_ptr<flow::Edge> input_ptr = flow.GetEdge(input_name);
+  std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
+  Tensor weights_tensor = weights_as_constant_tensor->GetValue();
+  Tensor biasTensor = bias_as_constant_tensor->GetValue();
   ptr = std::make_shared<flow::GemmConstantWeightsBiasNode>(
-      std::move(name), std::move(inputPtr), std::move(weightsTensor),
-      std::move(biasTensor), std::move(outputPtr), alpha, beta, transA, transB);
+      std::move(name), std::move(input_ptr), std::move(weights_tensor),
+      std::move(biasTensor), std::move(output_ptr), alpha, beta, transA,
+      transB);
   flow.PutNode(std::move(ptr));
 }
 
@@ -553,19 +627,19 @@ void Converter::convertLayerNormalizationNode(flow::Flow &flow,
   assert(output != nullptr);
 #endif
   std::shared_ptr<flow::LayerNormalizationNode> ptr = nullptr;
-  std::shared_ptr<graph::NonConstantEdge> inputAsNonConstant =
+  std::shared_ptr<graph::NonConstantEdge> input_as_non_constant =
       std::dynamic_pointer_cast<graph::NonConstantEdge>(input);
-  std::shared_ptr<graph::ConstantTensorEdge> scaleAsConstantTensor =
+  std::shared_ptr<graph::ConstantTensorEdge> scale_as_constant_tensor =
       std::dynamic_pointer_cast<graph::ConstantTensorEdge>(scale);
-  std::shared_ptr<graph::ConstantTensorEdge> biasAsConstantTensor =
+  std::shared_ptr<graph::ConstantTensorEdge> bias_as_constant_tensor =
       std::dynamic_pointer_cast<graph::ConstantTensorEdge>(bias);
-  std::shared_ptr<graph::NonConstantEdge> outputAsNonConstant =
+  std::shared_ptr<graph::NonConstantEdge> output_as_non_constant =
       std::dynamic_pointer_cast<graph::NonConstantEdge>(output);
 #ifdef DEBUG
-  assert(inputAsNonConstant != nullptr);
-  assert(scaleAsConstantTensor != nullptr);
-  assert(biasAsConstantTensor != nullptr);
-  assert(outputAsNonConstant != nullptr);
+  assert(input_as_non_constant != nullptr);
+  assert(scale_as_constant_tensor != nullptr);
+  assert(bias_as_constant_tensor != nullptr);
+  assert(output_as_non_constant != nullptr);
 #endif
   int64_t axis = flow::LayerNormalizationNode::kAxis;
   float64_t epsilon = flow::LayerNormalizationNode::kEpsilon;
@@ -577,19 +651,19 @@ void Converter::convertLayerNormalizationNode(flow::Flow &flow,
     epsilon = node.GetAttribute(flow::LayerNormalizationNode::kEpsilonAttrName)
                   .GetFloat32();
   }
-  const std::string &inputName = inputAsNonConstant->GetName();
-  const std::string &outputName = outputAsNonConstant->GetName();
-  std::shared_ptr<flow::Edge> inputPtr = flow.GetEdge(inputName);
-  std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+  const std::string &input_name = input_as_non_constant->GetName();
+  const std::string &output_name = output_as_non_constant->GetName();
+  std::shared_ptr<flow::Edge> input_ptr = flow.GetEdge(input_name);
+  std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-  assert(inputPtr != nullptr);
-  assert(outputPtr != nullptr);
+  assert(input_ptr != nullptr);
+  assert(output_ptr != nullptr);
 #endif
-  Tensor scaleTensor = scaleAsConstantTensor->GetValue();
-  Tensor biasTensor = biasAsConstantTensor->GetValue();
+  Tensor scale_tensor = scale_as_constant_tensor->GetValue();
+  Tensor biasTensor = bias_as_constant_tensor->GetValue();
   ptr = std::make_shared<flow::LayerNormalizationConstantScaleBiasNode>(
-      std::move(name), std::move(inputPtr), std::move(scaleTensor),
-      std::move(biasTensor), std::move(outputPtr), axis, epsilon);
+      std::move(name), std::move(input_ptr), std::move(scale_tensor),
+      std::move(biasTensor), std::move(output_ptr), axis, epsilon);
   flow.PutNode(std::move(ptr));
 }
 
@@ -613,15 +687,15 @@ void Converter::convertMatMulNode(flow::Flow &flow, const graph::Graph &graph,
   assert(rhs != nullptr);
   assert(output != nullptr);
 #endif
-  std::shared_ptr<graph::NonConstantEdge> outputAsNonConstant =
+  std::shared_ptr<graph::NonConstantEdge> output_as_non_constant =
       std::dynamic_pointer_cast<graph::NonConstantEdge>(output);
 #ifdef DEBUG
-  assert(outputAsNonConstant != nullptr);
+  assert(output_as_non_constant != nullptr);
 #endif
   std::shared_ptr<flow::MatMulNode> ptr = nullptr;
-  if (std::shared_ptr<graph::ConstantTensorEdge> lhsAsConstantEdge =
+  if (std::shared_ptr<graph::ConstantTensorEdge> lhs_as_constant_edge =
           std::dynamic_pointer_cast<graph::ConstantTensorEdge>(lhs)) {
-    if (std::shared_ptr<graph::ConstantTensorEdge> rhsAsConstantEdge =
+    if (std::shared_ptr<graph::ConstantTensorEdge> rhs_as_constant_edge =
             std::dynamic_pointer_cast<graph::ConstantTensorEdge>(rhs)) {
 // TODO: Currently, this code isn't expected to be reached, because such a case
 // is expected to be optimized by the ONNX simplifier.
@@ -630,20 +704,20 @@ void Converter::convertMatMulNode(flow::Flow &flow, const graph::Graph &graph,
 #else
       __builtin_unreachable();
 #endif
-    } else if (std::shared_ptr<graph::NonConstantEdge> rhsAsNonConstantEdge =
+    } else if (std::shared_ptr<graph::NonConstantEdge> rhs_as_non_constantEdge =
                    std::dynamic_pointer_cast<graph::NonConstantEdge>(rhs)) {
-      Tensor lhsTensor = lhsAsConstantEdge->GetValue();
-      const std::string &rhsName = rhsAsNonConstantEdge->GetName();
-      const std::string &outputName = output->GetName();
-      std::shared_ptr<flow::Edge> rhsPtr = flow.GetEdge(rhsName);
-      std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+      Tensor lhs_tensor = lhs_as_constant_edge->GetValue();
+      const std::string &rhs_name = rhs_as_non_constantEdge->GetName();
+      const std::string &output_name = output->GetName();
+      std::shared_ptr<flow::Edge> rhs_ptr = flow.GetEdge(rhs_name);
+      std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-      assert(rhsPtr != nullptr);
-      assert(outputPtr != nullptr);
+      assert(rhs_ptr != nullptr);
+      assert(output_ptr != nullptr);
 #endif
       ptr = std::make_shared<flow::MatMulConstantLhsNode>(
-          std::move(name), std::move(lhsTensor), std::move(rhsPtr),
-          std::move(outputPtr));
+          std::move(name), std::move(lhs_tensor), std::move(rhs_ptr),
+          std::move(output_ptr));
     } else {
 #ifdef DEBUG
       throw UnreachableException();
@@ -651,38 +725,38 @@ void Converter::convertMatMulNode(flow::Flow &flow, const graph::Graph &graph,
       __builtin_unreachable();
 #endif
     }
-  } else if (std::shared_ptr<graph::NonConstantEdge> lhsAsNonConstantEdge =
+  } else if (std::shared_ptr<graph::NonConstantEdge> lhs_as_non_constantEdge =
                  std::dynamic_pointer_cast<graph::NonConstantEdge>(lhs)) {
-    if (std::shared_ptr<graph::ConstantTensorEdge> rhsAsConstantEdge =
+    if (std::shared_ptr<graph::ConstantTensorEdge> rhs_as_constant_edge =
             std::dynamic_pointer_cast<graph::ConstantTensorEdge>(rhs)) {
-      Tensor rhsTensor = rhsAsConstantEdge->GetValue();
-      const std::string &lhsName = lhsAsNonConstantEdge->GetName();
-      const std::string &outputName = output->GetName();
-      std::shared_ptr<flow::Edge> lhsPtr = flow.GetEdge(lhsName);
-      std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+      Tensor rhs_tensor = rhs_as_constant_edge->GetValue();
+      const std::string &lhs_name = lhs_as_non_constantEdge->GetName();
+      const std::string &output_name = output->GetName();
+      std::shared_ptr<flow::Edge> lhs_ptr = flow.GetEdge(lhs_name);
+      std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-      assert(lhsPtr != nullptr);
-      assert(outputPtr != nullptr);
+      assert(lhs_ptr != nullptr);
+      assert(output_ptr != nullptr);
 #endif
       ptr = std::make_shared<flow::MatMulConstantRhsNode>(
-          std::move(name), std::move(lhsPtr), std::move(rhsTensor),
-          std::move(outputPtr));
-    } else if (std::shared_ptr<graph::NonConstantEdge> rhsAsNonConstantEdge =
+          std::move(name), std::move(lhs_ptr), std::move(rhs_tensor),
+          std::move(output_ptr));
+    } else if (std::shared_ptr<graph::NonConstantEdge> rhs_as_non_constantEdge =
                    std::dynamic_pointer_cast<graph::NonConstantEdge>(rhs)) {
-      const std::string &lhsName = lhsAsNonConstantEdge->GetName();
-      const std::string &rhsName = rhsAsNonConstantEdge->GetName();
-      const std::string &outputName = output->GetName();
-      std::shared_ptr<flow::Edge> lhsPtr = flow.GetEdge(lhsName);
-      std::shared_ptr<flow::Edge> rhsPtr = flow.GetEdge(rhsName);
-      std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+      const std::string &lhs_name = lhs_as_non_constantEdge->GetName();
+      const std::string &rhs_name = rhs_as_non_constantEdge->GetName();
+      const std::string &output_name = output->GetName();
+      std::shared_ptr<flow::Edge> lhs_ptr = flow.GetEdge(lhs_name);
+      std::shared_ptr<flow::Edge> rhs_ptr = flow.GetEdge(rhs_name);
+      std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-      assert(lhsPtr != nullptr);
-      assert(rhsPtr != nullptr);
-      assert(outputPtr != nullptr);
+      assert(lhs_ptr != nullptr);
+      assert(rhs_ptr != nullptr);
+      assert(output_ptr != nullptr);
 #endif
       ptr = std::make_shared<flow::MatMulCommonNode>(
-          std::move(name), std::move(lhsPtr), std::move(rhsPtr),
-          std::move(outputPtr));
+          std::move(name), std::move(lhs_ptr), std::move(rhs_ptr),
+          std::move(output_ptr));
     } else {
 #ifdef DEBUG
       throw UnreachableException();
@@ -712,67 +786,67 @@ void Converter::convertMulNode(flow::Flow &flow, const graph::Graph &graph,
   assert(inputs.size() == 2);
   assert(outputs.size() == 1);
 #endif
-  std::shared_ptr<graph::Edge> inputLhs = inputs[0];
-  std::shared_ptr<graph::Edge> inputRhs = inputs[1];
+  std::shared_ptr<graph::Edge> input_lhs = inputs[0];
+  std::shared_ptr<graph::Edge> input_rhs = inputs[1];
   std::shared_ptr<graph::Edge> output = outputs[0];
 #ifdef DEBUG
-  assert(inputLhs != nullptr);
-  assert(inputRhs != nullptr);
+  assert(input_lhs != nullptr);
+  assert(input_rhs != nullptr);
   assert(output != nullptr);
 #endif
   std::shared_ptr<flow::MulNode> ptr = nullptr;
-  std::shared_ptr<graph::NonConstantEdge> outputAsNonConstant =
+  std::shared_ptr<graph::NonConstantEdge> output_as_non_constant =
       std::dynamic_pointer_cast<graph::NonConstantEdge>(output);
-  if (std::shared_ptr<graph::NonConstantEdge> inputLhsAsNonConstant =
-          std::dynamic_pointer_cast<graph::NonConstantEdge>(inputLhs)) {
-    if (std::shared_ptr<graph::NonConstantEdge> inputRhsAsNonConstant =
-            std::dynamic_pointer_cast<graph::NonConstantEdge>(inputRhs)) {
-      const std::string &inputLhsName = inputLhsAsNonConstant->GetName();
-      const std::string &inputRhsName = inputRhsAsNonConstant->GetName();
-      const std::string &outputName = output->GetName();
-      std::shared_ptr<flow::Edge> inputLhsPtr = flow.GetEdge(inputLhsName);
-      std::shared_ptr<flow::Edge> inputRhsPtr = flow.GetEdge(inputRhsName);
-      std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+  if (std::shared_ptr<graph::NonConstantEdge> input_lhs_as_non_constant =
+          std::dynamic_pointer_cast<graph::NonConstantEdge>(input_lhs)) {
+    if (std::shared_ptr<graph::NonConstantEdge> input_rhs_as_non_constant =
+            std::dynamic_pointer_cast<graph::NonConstantEdge>(input_rhs)) {
+      const std::string &input_lhs_name = input_lhs_as_non_constant->GetName();
+      const std::string &input_rhs_name = input_rhs_as_non_constant->GetName();
+      const std::string &output_name = output->GetName();
+      std::shared_ptr<flow::Edge> input_lhs_tr = flow.GetEdge(input_lhs_name);
+      std::shared_ptr<flow::Edge> input_rhs_ptr = flow.GetEdge(input_rhs_name);
+      std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-      assert(inputLhsPtr != nullptr);
-      assert(inputRhsPtr != nullptr);
-      assert(outputPtr != nullptr);
+      assert(input_lhs_tr != nullptr);
+      assert(input_rhs_ptr != nullptr);
+      assert(output_ptr != nullptr);
 #endif
       ptr = std::make_shared<flow::MulCommonNode>(
-          std::move(name), std::move(inputLhsPtr), std::move(inputRhsPtr),
-          std::move(outputPtr));
+          std::move(name), std::move(input_lhs_tr), std::move(input_rhs_ptr),
+          std::move(output_ptr));
     } else if (std::shared_ptr<graph::ConstantScalarEdge>
-                   inputRhsAsConstantScalar =
+                   input_rhs_as_constant_scalar =
                        std::dynamic_pointer_cast<graph::ConstantScalarEdge>(
-                           inputRhs)) {
-      const std::string &inputName = inputLhsAsNonConstant->GetName();
-      const std::string &outputName = output->GetName();
-      std::shared_ptr<flow::Edge> inputPtr = flow.GetEdge(inputName);
-      std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+                           input_rhs)) {
+      const std::string &input_name = input_lhs_as_non_constant->GetName();
+      const std::string &output_name = output->GetName();
+      std::shared_ptr<flow::Edge> input_ptr = flow.GetEdge(input_name);
+      std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-      assert(inputPtr != nullptr);
-      assert(outputPtr != nullptr);
+      assert(input_ptr != nullptr);
+      assert(output_ptr != nullptr);
 #endif
       ptr = std::make_shared<flow::MulConstantScalarNode>(
-          std::move(name), std::move(inputPtr),
-          inputRhsAsConstantScalar->GetType(),
-          inputRhsAsConstantScalar->GetValue(), std::move(outputPtr));
+          std::move(name), std::move(input_ptr),
+          input_rhs_as_constant_scalar->GetType(),
+          input_rhs_as_constant_scalar->GetValue(), std::move(output_ptr));
     } else if (std::shared_ptr<graph::ConstantTensorEdge>
-                   inputRhsAsConstantTensor =
+                   inputRhs_as_constant_tensor =
                        std::dynamic_pointer_cast<graph::ConstantTensorEdge>(
-                           inputRhs)) {
-      Tensor tensor = inputRhsAsConstantTensor->GetValue();
-      const std::string &inputName = inputLhsAsNonConstant->GetName();
-      const std::string &outputName = output->GetName();
-      std::shared_ptr<flow::Edge> inputPtr = flow.GetEdge(inputName);
-      std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+                           input_rhs)) {
+      Tensor tensor = inputRhs_as_constant_tensor->GetValue();
+      const std::string &input_name = input_lhs_as_non_constant->GetName();
+      const std::string &output_name = output->GetName();
+      std::shared_ptr<flow::Edge> input_ptr = flow.GetEdge(input_name);
+      std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-      assert(inputPtr != nullptr);
-      assert(outputPtr != nullptr);
+      assert(input_ptr != nullptr);
+      assert(output_ptr != nullptr);
 #endif
       ptr = std::make_shared<flow::MulConstantTensorNode>(
-          std::move(name), std::move(inputPtr), std::move(tensor),
-          std::move(outputPtr));
+          std::move(name), std::move(input_ptr), std::move(tensor),
+          std::move(output_ptr));
     } else {
 #ifdef DEBUG
       throw UnreachableException();
@@ -780,23 +854,23 @@ void Converter::convertMulNode(flow::Flow &flow, const graph::Graph &graph,
       __builtin_unreachable();
 #endif
     }
-  } else if (std::shared_ptr<graph::ConstantTensorEdge> inputLhsAsConstant =
+  } else if (std::shared_ptr<graph::ConstantTensorEdge> input_lhs_as_constant =
                  std::dynamic_pointer_cast<graph::ConstantTensorEdge>(
-                     inputLhs)) {
-    if (std::shared_ptr<graph::NonConstantEdge> inputRhsAsNonConstant =
-            std::dynamic_pointer_cast<graph::NonConstantEdge>(inputRhs)) {
-      Tensor tensor = inputLhsAsConstant->GetValue();
-      const std::string &inputName = inputRhsAsNonConstant->GetName();
-      const std::string &outputName = output->GetName();
-      std::shared_ptr<flow::Edge> inputPtr = flow.GetEdge(inputName);
-      std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+                     input_lhs)) {
+    if (std::shared_ptr<graph::NonConstantEdge> input_rhs_as_non_constant =
+            std::dynamic_pointer_cast<graph::NonConstantEdge>(input_rhs)) {
+      Tensor tensor = input_lhs_as_constant->GetValue();
+      const std::string &input_name = input_rhs_as_non_constant->GetName();
+      const std::string &output_name = output->GetName();
+      std::shared_ptr<flow::Edge> input_ptr = flow.GetEdge(input_name);
+      std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-      assert(inputPtr != nullptr);
-      assert(outputPtr != nullptr);
+      assert(input_ptr != nullptr);
+      assert(output_ptr != nullptr);
 #endif
       ptr = std::make_shared<flow::MulConstantTensorNode>(
-          std::move(name), std::move(inputPtr), std::move(tensor),
-          std::move(outputPtr));
+          std::move(name), std::move(input_ptr), std::move(tensor),
+          std::move(output_ptr));
     } else {
 #ifdef DEBUG
       throw UnreachableException();
@@ -804,18 +878,19 @@ void Converter::convertMulNode(flow::Flow &flow, const graph::Graph &graph,
       __builtin_unreachable();
 #endif
     }
-  } else if (std::shared_ptr<graph::ConstantScalarEdge> inputLhsAsConstant =
+  } else if (std::shared_ptr<graph::ConstantScalarEdge> input_lhs_as_constant =
                  std::dynamic_pointer_cast<graph::ConstantScalarEdge>(
-                     inputLhs)) {
-    if (std::shared_ptr<graph::NonConstantEdge> inputRhsAsNonConstant =
-            std::dynamic_pointer_cast<graph::NonConstantEdge>(inputRhs)) {
-      const std::string &inputName = inputRhsAsNonConstant->GetName();
-      const std::string &outputName = output->GetName();
-      std::shared_ptr<flow::Edge> inputPtr = flow.GetEdge(inputName);
-      std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+                     input_lhs)) {
+    if (std::shared_ptr<graph::NonConstantEdge> input_rhs_as_non_constant =
+            std::dynamic_pointer_cast<graph::NonConstantEdge>(input_rhs)) {
+      const std::string &input_name = input_rhs_as_non_constant->GetName();
+      const std::string &output_name = output->GetName();
+      std::shared_ptr<flow::Edge> input_ptr = flow.GetEdge(input_name);
+      std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
       ptr = std::make_shared<flow::MulConstantScalarNode>(
-          std::move(name), std::move(inputPtr), inputLhsAsConstant->GetType(),
-          inputLhsAsConstant->GetValue(), std::move(outputPtr));
+          std::move(name), std::move(input_ptr),
+          input_lhs_as_constant->GetType(), input_lhs_as_constant->GetValue(),
+          std::move(output_ptr));
     } else {
 #ifdef DEBUG
       throw UnreachableException();
@@ -845,35 +920,35 @@ void Converter::convertPowNode(flow::Flow &flow, const graph::Graph &graph,
   assert(inputs.size() == 2);
   assert(outputs.size() == 1);
 #endif
-  std::shared_ptr<graph::Edge> inputBase = inputs[0];
-  std::shared_ptr<graph::Edge> inputExponent = inputs[1];
+  std::shared_ptr<graph::Edge> input_base = inputs[0];
+  std::shared_ptr<graph::Edge> input_exponent = inputs[1];
   std::shared_ptr<graph::Edge> output = outputs[0];
 #ifdef DEBUG
-  assert(inputBase != nullptr);
-  assert(inputExponent != nullptr);
+  assert(input_base != nullptr);
+  assert(input_exponent != nullptr);
   assert(output != nullptr);
 #endif
   std::shared_ptr<flow::PowNode> ptr = nullptr;
-  std::shared_ptr<graph::NonConstantEdge> outputAsNonConstant =
+  std::shared_ptr<graph::NonConstantEdge> output_as_non_constant =
       std::dynamic_pointer_cast<graph::NonConstantEdge>(output);
-  if (std::shared_ptr<graph::NonConstantEdge> inputBaseAsNonConstant =
-          std::dynamic_pointer_cast<graph::NonConstantEdge>(inputBase)) {
+  if (std::shared_ptr<graph::NonConstantEdge> input_base_as_non_constant =
+          std::dynamic_pointer_cast<graph::NonConstantEdge>(input_base)) {
     if (std::shared_ptr<graph::ConstantScalarEdge>
-            inputExponentAsConstantScalar =
+            input_exponent_as_constant_scalar =
                 std::dynamic_pointer_cast<graph::ConstantScalarEdge>(
-                    inputExponent)) {
-      const std::string &inputName = inputBaseAsNonConstant->GetName();
-      const std::string &outputName = output->GetName();
-      std::shared_ptr<flow::Edge> inputPtr = flow.GetEdge(inputName);
-      std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+                    input_exponent)) {
+      const std::string &input_name = input_base_as_non_constant->GetName();
+      const std::string &output_name = output->GetName();
+      std::shared_ptr<flow::Edge> input_ptr = flow.GetEdge(input_name);
+      std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-      assert(inputPtr != nullptr);
-      assert(outputPtr != nullptr);
+      assert(input_ptr != nullptr);
+      assert(output_ptr != nullptr);
 #endif
       ptr = std::make_shared<flow::PowNode>(
-          std::move(name), std::move(inputPtr),
-          inputExponentAsConstantScalar->GetType(),
-          inputExponentAsConstantScalar->GetValue(), std::move(outputPtr));
+          std::move(name), std::move(input_ptr),
+          input_exponent_as_constant_scalar->GetType(),
+          input_exponent_as_constant_scalar->GetValue(), std::move(output_ptr));
     }
   }
   flow.PutNode(std::move(ptr));
@@ -900,40 +975,40 @@ void Converter::convertReshapeNode(flow::Flow &flow, const graph::Graph &graph,
   assert(output != nullptr);
 #endif
   std::shared_ptr<flow::ReshapeNode> ptr = nullptr;
-  std::shared_ptr<graph::ConstantTensorEdge> shapeAsConstantTensor =
+  std::shared_ptr<graph::ConstantTensorEdge> shape_as_constant_tensor =
       std::dynamic_pointer_cast<graph::ConstantTensorEdge>(shape);
 #ifdef DEBUG
   assert(isa<graph::NonConstantEdge>(input));
-  assert(shapeAsConstantTensor != nullptr);
+  assert(shape_as_constant_tensor != nullptr);
   assert(isa<graph::NonConstantEdge>(output));
 #endif
-  Tensor shapeTensor = shapeAsConstantTensor->GetValue();
-  const std::string &inputName = input->GetName();
-  const std::string &outputName = output->GetName();
-  std::shared_ptr<flow::Edge> inputPtr = flow.GetEdge(inputName);
-  std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+  Tensor shape_tensor = shape_as_constant_tensor->GetValue();
+  const std::string &input_name = input->GetName();
+  const std::string &output_name = output->GetName();
+  std::shared_ptr<flow::Edge> input_ptr = flow.GetEdge(input_name);
+  std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-  assert(inputPtr != nullptr);
-  assert(outputPtr != nullptr);
-  const Meta &outputMeta = outputPtr->GetMeta();
-  const std::vector<int64_t> &shapeVector = shapeTensor.GetShape();
-  const std::vector<int64_t> &outputShape = outputMeta.GetShape();
-  assert(shapeVector.size() == 1);
-  size_t size = shapeVector[0];
-  assert(size == outputShape.size());
-  std::vector<int64_t> shapeVec;
+  assert(input_ptr != nullptr);
+  assert(output_ptr != nullptr);
+  const Meta &output_meta = output_ptr->GetMeta();
+  const std::vector<int64_t> &shape_vector = shape_tensor.GetShape();
+  const std::vector<int64_t> &output_shape = output_meta.GetShape();
+  assert(shape_vector.size() == 1);
+  size_t size = shape_vector[0];
+  assert(size == output_shape.size());
+  std::vector<int64_t> shape_vec;
   for (size_t i = 0; i < size; ++i) {
-    shapeVec.push_back(shapeTensor.Get({i}));
+    shape_vec.push_back(shape_tensor.Get({i}));
   }
-  Meta expectedMeta = Meta(outputMeta.GetType(), std::move(shapeVec));
-  std::optional<Meta> inferredShapeOpt = ReshapeShapeInference(
-      expectedMeta, std::accumulate(outputShape.begin(), outputShape.end(), 1,
-                                    std::multiplies<int64_t>()));
-  assert(inferredShapeOpt.has_value());
-  assert(outputMeta == *inferredShapeOpt);
+  Meta expected_meta = Meta(output_meta.GetType(), std::move(shape_vec));
+  std::optional<Meta> inferred_shape_opt = ReshapeShapeInference(
+      expected_meta, std::accumulate(output_shape.begin(), output_shape.end(),
+                                     1, std::multiplies<int64_t>()));
+  assert(inferred_shape_opt.has_value());
+  assert(output_meta == *inferred_shape_opt);
 #endif
   ptr = std::make_shared<flow::ReshapeNode>(
-      std::move(name), std::move(inputPtr), std::move(outputPtr));
+      std::move(name), std::move(input_ptr), std::move(output_ptr));
   flow.PutNode(std::move(ptr));
 }
 
@@ -956,31 +1031,31 @@ void Converter::convertSoftmaxNode(flow::Flow &flow, const graph::Graph &graph,
   assert(output != nullptr);
 #endif
   std::shared_ptr<flow::SoftmaxNode> ptr = nullptr;
-  std::shared_ptr<graph::NonConstantEdge> inputAsNonConstant =
+  std::shared_ptr<graph::NonConstantEdge> input_as_non_constant =
       std::dynamic_pointer_cast<graph::NonConstantEdge>(input);
-  std::shared_ptr<graph::NonConstantEdge> outputAsNonConstant =
+  std::shared_ptr<graph::NonConstantEdge> output_as_non_constant =
       std::dynamic_pointer_cast<graph::NonConstantEdge>(output);
 #ifdef DEBUG
-  assert(inputAsNonConstant != nullptr);
-  assert(outputAsNonConstant != nullptr);
+  assert(input_as_non_constant != nullptr);
+  assert(output_as_non_constant != nullptr);
 #endif
   int64_t axis = flow::SoftmaxNode::kAxis;
   if (node.HasAttribute(flow::SoftmaxNode::kAxisAttrName)) {
     axis = node.GetAttribute(flow::SoftmaxNode::kAxisAttrName).GetInt64();
   }
-  const std::string &inputName = inputAsNonConstant->GetName();
-  const std::string &outputName = outputAsNonConstant->GetName();
-  std::shared_ptr<flow::Edge> inputPtr = flow.GetEdge(inputName);
-  std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+  const std::string &input_name = input_as_non_constant->GetName();
+  const std::string &output_name = output_as_non_constant->GetName();
+  std::shared_ptr<flow::Edge> input_ptr = flow.GetEdge(input_name);
+  std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-  assert(inputPtr != nullptr);
-  assert(outputPtr != nullptr);
-  const Meta &inputMeta = inputPtr->GetMeta();
-  const Meta &outputMeta = outputPtr->GetMeta();
-  assert(inputMeta == outputMeta);
+  assert(input_ptr != nullptr);
+  assert(output_ptr != nullptr);
+  const Meta &input_meta = input_ptr->GetMeta();
+  const Meta &output_meta = output_ptr->GetMeta();
+  assert(input_meta == output_meta);
 #endif
   ptr = std::make_shared<flow::SoftmaxNode>(
-      std::move(name), std::move(inputPtr), std::move(outputPtr), axis);
+      std::move(name), std::move(input_ptr), std::move(output_ptr), axis);
   flow.PutNode(std::move(ptr));
 }
 
@@ -1002,18 +1077,18 @@ void Converter::convertSplitNode(flow::Flow &flow, const graph::Graph &graph,
   assert(input != nullptr);
 #endif
   std::shared_ptr<flow::SplitNode> ptr = nullptr;
-  std::shared_ptr<graph::NonConstantEdge> inputAsNonConstant =
+  std::shared_ptr<graph::NonConstantEdge> input_as_non_constant =
       std::dynamic_pointer_cast<graph::NonConstantEdge>(input);
-  std::shared_ptr<graph::ConstantTensorEdge> shapesAsConstantTensor =
+  std::shared_ptr<graph::ConstantTensorEdge> shapes_as_constant_tensor =
       std::dynamic_pointer_cast<graph::ConstantTensorEdge>(shapes);
 #ifdef DEBUG
-  assert(inputAsNonConstant != nullptr);
-  assert(shapesAsConstantTensor != nullptr);
+  assert(input_as_non_constant != nullptr);
+  assert(shapes_as_constant_tensor != nullptr);
 #endif
-  const std::string &inputName = inputAsNonConstant->GetName();
-  std::shared_ptr<flow::Edge> inputPtr = flow.GetEdge(inputName);
-  Tensor shapesTensor = shapesAsConstantTensor->GetValue();
-  const std::vector<int64_t> &shape = shapesTensor.GetShape();
+  const std::string &input_name = input_as_non_constant->GetName();
+  std::shared_ptr<flow::Edge> input_ptr = flow.GetEdge(input_name);
+  Tensor shapes_tensor = shapes_as_constant_tensor->GetValue();
+  const std::vector<int64_t> &shape = shapes_tensor.GetShape();
 #ifdef DEBUG
   assert(shape.size() == 1);
 #endif
@@ -1028,22 +1103,22 @@ void Converter::convertSplitNode(flow::Flow &flow, const graph::Graph &graph,
   std::vector<std::shared_ptr<flow::Edge>> outputPtrs;
   for (size_t i = 0; i < size; ++i) {
     std::shared_ptr<graph::Edge> output = outputs[i];
-    std::shared_ptr<graph::NonConstantEdge> outputAsNonConstant =
+    std::shared_ptr<graph::NonConstantEdge> output_as_non_constant =
         std::dynamic_pointer_cast<graph::NonConstantEdge>(output);
 #ifdef DEBUG
-    assert(outputAsNonConstant != nullptr);
+    assert(output_as_non_constant != nullptr);
 #endif
-    const std::string &outputName = outputAsNonConstant->GetName();
-    std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+    const std::string &output_name = output_as_non_constant->GetName();
+    std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-    assert(outputPtr != nullptr);
-    const Meta &outputMeta = outputPtr->GetMeta();
-    std::vector<int64_t> outputShape = outputMeta.GetShape();
-    assert(outputShape[axis] == shapesTensor.Get({i}));
+    assert(output_ptr != nullptr);
+    const Meta &output_meta = output_ptr->GetMeta();
+    std::vector<int64_t> output_shape = output_meta.GetShape();
+    assert(output_shape[axis] == shapes_tensor.Get({i}));
 #endif
-    outputPtrs.push_back(std::move(outputPtr));
+    outputPtrs.push_back(std::move(output_ptr));
   }
-  ptr = std::make_shared<flow::SplitNode>(std::move(name), std::move(inputPtr),
+  ptr = std::make_shared<flow::SplitNode>(std::move(name), std::move(input_ptr),
                                           std::move(outputPtrs), axis);
   flow.PutNode(std::move(ptr));
 }
@@ -1060,40 +1135,40 @@ void Converter::convertSubNode(flow::Flow &flow, const graph::Graph &graph,
   assert(inputs.size() == 2);
   assert(outputs.size() == 1);
 #endif
-  std::shared_ptr<graph::Edge> inputLhs = inputs[0];
-  std::shared_ptr<graph::Edge> inputRhs = inputs[1];
+  std::shared_ptr<graph::Edge> input_lhs = inputs[0];
+  std::shared_ptr<graph::Edge> input_rhs = inputs[1];
   std::shared_ptr<graph::Edge> output = outputs[0];
 #ifdef DEBUG
-  assert(inputLhs != nullptr);
-  assert(inputRhs != nullptr);
+  assert(input_lhs != nullptr);
+  assert(input_rhs != nullptr);
   assert(output != nullptr);
 #endif
   std::shared_ptr<flow::SubNode> ptr = nullptr;
-  std::shared_ptr<graph::NonConstantEdge> outputAsNonConstant =
+  std::shared_ptr<graph::NonConstantEdge> output_as_non_constant =
       std::dynamic_pointer_cast<graph::NonConstantEdge>(output);
   // The support format of Sub operator is limited to the following: the left
   // operator is a constant scalar, and the right operator is a non-constant
   // edge.
   // If new formats occur, the code should be updated.
-  if (std::shared_ptr<graph::ConstantScalarEdge> inputLhsAsConstantScalar =
-          std::dynamic_pointer_cast<graph::ConstantScalarEdge>(inputLhs)) {
-    if (std::shared_ptr<graph::NonConstantEdge> inputRhsAsNonConstant =
-            std::dynamic_pointer_cast<graph::NonConstantEdge>(inputRhs)) {
-      const std::string &inputName = inputRhsAsNonConstant->GetName();
-      const std::string &outputName = output->GetName();
-      std::shared_ptr<flow::Edge> inputPtr = flow.GetEdge(inputName);
-      std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+  if (std::shared_ptr<graph::ConstantScalarEdge> input_lhs_as_constant_scalar =
+          std::dynamic_pointer_cast<graph::ConstantScalarEdge>(input_lhs)) {
+    if (std::shared_ptr<graph::NonConstantEdge> input_rhs_as_non_constant =
+            std::dynamic_pointer_cast<graph::NonConstantEdge>(input_rhs)) {
+      const std::string &input_name = input_rhs_as_non_constant->GetName();
+      const std::string &output_name = output->GetName();
+      std::shared_ptr<flow::Edge> input_ptr = flow.GetEdge(input_name);
+      std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-      assert(inputPtr != nullptr);
-      assert(outputPtr != nullptr);
-      const Meta &inputMeta = inputPtr->GetMeta();
-      const Meta &outputMeta = outputPtr->GetMeta();
-      assert(inputMeta == outputMeta);
+      assert(input_ptr != nullptr);
+      assert(output_ptr != nullptr);
+      const Meta &input_meta = input_ptr->GetMeta();
+      const Meta &output_meta = output_ptr->GetMeta();
+      assert(input_meta == output_meta);
 #endif
       ptr = std::make_shared<flow::SubConstantScalarLhsNode>(
-          std::move(name), std::move(inputPtr),
-          inputLhsAsConstantScalar->GetType(),
-          inputLhsAsConstantScalar->GetValue(), std::move(outputPtr));
+          std::move(name), std::move(input_ptr),
+          input_lhs_as_constant_scalar->GetType(),
+          input_lhs_as_constant_scalar->GetValue(), std::move(output_ptr));
     } else {
 #ifdef DEBUG
       throw UnreachableException();
@@ -1130,27 +1205,27 @@ void Converter::convertTanhNode(flow::Flow &flow, const graph::Graph &graph,
   assert(output != nullptr);
 #endif
   std::shared_ptr<flow::TanhNode> ptr = nullptr;
-  std::shared_ptr<graph::NonConstantEdge> inputAsNonConstant =
+  std::shared_ptr<graph::NonConstantEdge> input_as_non_constant =
       std::dynamic_pointer_cast<graph::NonConstantEdge>(input);
-  std::shared_ptr<graph::NonConstantEdge> outputAsNonConstant =
+  std::shared_ptr<graph::NonConstantEdge> output_as_non_constant =
       std::dynamic_pointer_cast<graph::NonConstantEdge>(output);
 #ifdef DEBUG
-  assert(inputAsNonConstant != nullptr);
-  assert(outputAsNonConstant != nullptr);
+  assert(input_as_non_constant != nullptr);
+  assert(output_as_non_constant != nullptr);
 #endif
-  const std::string &inputName = inputAsNonConstant->GetName();
-  const std::string &outputName = outputAsNonConstant->GetName();
-  std::shared_ptr<flow::Edge> inputPtr = flow.GetEdge(inputName);
-  std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+  const std::string &input_name = input_as_non_constant->GetName();
+  const std::string &output_name = output_as_non_constant->GetName();
+  std::shared_ptr<flow::Edge> input_ptr = flow.GetEdge(input_name);
+  std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-  assert(inputPtr != nullptr);
-  assert(outputPtr != nullptr);
-  const Meta &inputMeta = inputPtr->GetMeta();
-  const Meta &outputMeta = outputPtr->GetMeta();
-  assert(inputMeta == outputMeta);
+  assert(input_ptr != nullptr);
+  assert(output_ptr != nullptr);
+  const Meta &input_meta = input_ptr->GetMeta();
+  const Meta &output_meta = output_ptr->GetMeta();
+  assert(input_meta == output_meta);
 #endif
-  ptr = std::make_shared<flow::TanhNode>(std::move(name), std::move(inputPtr),
-                                         std::move(outputPtr));
+  ptr = std::make_shared<flow::TanhNode>(std::move(name), std::move(input_ptr),
+                                         std::move(output_ptr));
   flow.PutNode(std::move(ptr));
 }
 
@@ -1174,25 +1249,25 @@ void Converter::convertTransposeNode(flow::Flow &flow,
   assert(output != nullptr);
 #endif
   std::shared_ptr<flow::TransposeNode> ptr = nullptr;
-  std::shared_ptr<graph::NonConstantEdge> inputAsNonConstant =
+  std::shared_ptr<graph::NonConstantEdge> input_as_non_constant =
       std::dynamic_pointer_cast<graph::NonConstantEdge>(input);
-  std::shared_ptr<graph::NonConstantEdge> outputAsNonConstant =
+  std::shared_ptr<graph::NonConstantEdge> output_as_non_constant =
       std::dynamic_pointer_cast<graph::NonConstantEdge>(output);
 #ifdef DEBUG
-  assert(inputAsNonConstant != nullptr);
-  assert(outputAsNonConstant != nullptr);
+  assert(input_as_non_constant != nullptr);
+  assert(output_as_non_constant != nullptr);
 #endif
-  const std::string &inputName = inputAsNonConstant->GetName();
-  const std::string &outputName = outputAsNonConstant->GetName();
-  std::shared_ptr<flow::Edge> inputPtr = flow.GetEdge(inputName);
-  std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+  const std::string &input_name = input_as_non_constant->GetName();
+  const std::string &output_name = output_as_non_constant->GetName();
+  std::shared_ptr<flow::Edge> input_ptr = flow.GetEdge(input_name);
+  std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-  assert(inputPtr != nullptr);
-  assert(outputPtr != nullptr);
+  assert(input_ptr != nullptr);
+  assert(output_ptr != nullptr);
 #endif
-  const Meta &inputMeta = inputPtr->GetMeta();
-  const std::vector<int64_t> &inputShape = inputMeta.GetShape();
-  size_t inputShapeLen = inputShape.size();
+  const Meta &input_meta = input_ptr->GetMeta();
+  const std::vector<int64_t> &input_shape = input_meta.GetShape();
+  size_t inputShapeLen = input_shape.size();
   std::vector<int64_t> permutation(inputShapeLen);
   // the default permutation is the reverse of the input shape
   for (size_t i = 0; i < inputShapeLen; ++i) {
@@ -1204,7 +1279,7 @@ void Converter::convertTransposeNode(flow::Flow &flow,
     permutation = perm;
   }
   ptr = std::make_shared<flow::TransposeNode>(
-      std::move(name), std::move(inputPtr), std::move(outputPtr),
+      std::move(name), std::move(input_ptr), std::move(output_ptr),
       std::move(permutation));
   flow.PutNode(std::move(ptr));
 }
@@ -1231,22 +1306,22 @@ void Converter::convertUnsqueezeNode(flow::Flow &flow,
   assert(output != nullptr);
 #endif
   std::shared_ptr<flow::UnsqueezeNode> ptr = nullptr;
-  std::shared_ptr<graph::ConstantTensorEdge> axesAsConstantTensor =
+  std::shared_ptr<graph::ConstantTensorEdge> axes_as_constant_tensor =
       std::dynamic_pointer_cast<graph::ConstantTensorEdge>(axes);
 #ifdef DEBUG
-  assert(axesAsConstantTensor != nullptr);
+  assert(axes_as_constant_tensor != nullptr);
   assert(isa<graph::NonConstantEdge>(input));
   assert(isa<graph::NonConstantEdge>(output));
 #endif
-  Tensor axesTensor = axesAsConstantTensor->GetValue();
+  Tensor axesTensor = axes_as_constant_tensor->GetValue();
   const std::vector<int64_t> &axesVector = axesTensor.GetShape();
-  const std::string &inputName = input->GetName();
-  const std::string &outputName = output->GetName();
-  std::shared_ptr<flow::Edge> inputPtr = flow.GetEdge(inputName);
-  std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+  const std::string &input_name = input->GetName();
+  const std::string &output_name = output->GetName();
+  std::shared_ptr<flow::Edge> input_ptr = flow.GetEdge(input_name);
+  std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-  assert(inputPtr != nullptr);
-  assert(outputPtr != nullptr);
+  assert(input_ptr != nullptr);
+  assert(output_ptr != nullptr);
   assert(axesVector.size() == 1);
 #endif
   size_t size = axesVector[0];
@@ -1255,7 +1330,7 @@ void Converter::convertUnsqueezeNode(flow::Flow &flow,
     axesVec[i] = axesTensor.Get({i});
   }
   ptr = std::make_shared<flow::UnsqueezeNode>(
-      std::move(name), std::move(inputPtr), std::move(outputPtr),
+      std::move(name), std::move(input_ptr), std::move(output_ptr),
       std::move(axesVec));
   flow.PutNode(std::move(ptr));
 }
@@ -1287,43 +1362,43 @@ void Converter::convertWhereNode(flow::Flow &flow, const graph::Graph &graph,
   // condition operator is a constant tensor, the x operator is a non-constant
   // edge, the y operator is a constant tensor, and the output operator is a
   // non-constant edge. If new formats occur, the code should be updated.
-  std::shared_ptr<graph::ConstantTensorEdge> conditionAsConstantTensor =
+  std::shared_ptr<graph::ConstantTensorEdge> condition_as_constant_tensor =
       std::dynamic_pointer_cast<graph::ConstantTensorEdge>(condition);
 #ifdef DEBUG
-  assert(conditionAsConstantTensor != nullptr);
+  assert(condition_as_constant_tensor != nullptr);
   assert(isa<graph::NonConstantEdge>(x));
   assert(isa<graph::NonConstantEdge>(output));
 #endif
-  if (std::shared_ptr<graph::ConstantScalarEdge> yAsConstantScalar =
+  if (std::shared_ptr<graph::ConstantScalarEdge> y_as_constant_scalar =
           std::dynamic_pointer_cast<graph::ConstantScalarEdge>(y)) {
-    Tensor conditionTensor = conditionAsConstantTensor->GetValue();
-    const std::string &xName = x->GetName();
-    const std::string &outputName = output->GetName();
-    std::shared_ptr<flow::Edge> xPtr = flow.GetEdge(xName);
-    std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+    Tensor condition_tensor = condition_as_constant_tensor->GetValue();
+    const std::string &x_name = x->GetName();
+    const std::string &output_name = output->GetName();
+    std::shared_ptr<flow::Edge> x_ptr = flow.GetEdge(x_name);
+    std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-    assert(xPtr != nullptr);
-    assert(outputPtr != nullptr);
+    assert(x_ptr != nullptr);
+    assert(output_ptr != nullptr);
 #endif
     ptr = std::make_shared<flow::WhereConstantCondConstantScalarYNode>(
-        std::move(name), std::move(conditionTensor), std::move(xPtr),
-        yAsConstantScalar->GetType(), yAsConstantScalar->GetValue(),
-        std::move(outputPtr));
-  } else if (std::shared_ptr<graph::ConstantTensorEdge> yAsConstantTensor =
+        std::move(name), std::move(condition_tensor), std::move(x_ptr),
+        y_as_constant_scalar->GetType(), y_as_constant_scalar->GetValue(),
+        std::move(output_ptr));
+  } else if (std::shared_ptr<graph::ConstantTensorEdge> y_as_constant_tensor =
                  std::dynamic_pointer_cast<graph::ConstantTensorEdge>(y)) {
-    Tensor conditionTensor = conditionAsConstantTensor->GetValue();
-    Tensor yTensor = yAsConstantTensor->GetValue();
-    const std::string &xName = x->GetName();
-    const std::string &outputName = output->GetName();
-    std::shared_ptr<flow::Edge> xPtr = flow.GetEdge(xName);
-    std::shared_ptr<flow::Edge> outputPtr = flow.GetEdge(outputName);
+    Tensor condition_tensor = condition_as_constant_tensor->GetValue();
+    Tensor y_tensor = y_as_constant_tensor->GetValue();
+    const std::string &x_name = x->GetName();
+    const std::string &output_name = output->GetName();
+    std::shared_ptr<flow::Edge> x_ptr = flow.GetEdge(x_name);
+    std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
 #ifdef DEBUG
-    assert(xPtr != nullptr);
-    assert(outputPtr != nullptr);
+    assert(x_ptr != nullptr);
+    assert(output_ptr != nullptr);
 #endif
     ptr = std::make_shared<flow::WhereConstantCondConstantTensorYNode>(
-        std::move(name), std::move(conditionTensor), std::move(xPtr),
-        std::move(yTensor), std::move(outputPtr));
+        std::move(name), std::move(condition_tensor), std::move(x_ptr),
+        std::move(y_tensor), std::move(output_ptr));
   } else {
 #ifdef DEBUG
     throw UnreachableException();

@@ -195,6 +195,32 @@ private:
   std::shared_ptr<Edge> rhs_;
 };
 
+class GatherConstantDataTensorAddTensorLhsAddTensorLhsNode : public Node {
+public:
+  GatherConstantDataTensorAddTensorLhsAddTensorLhsNode(
+      std::string &&name, Tensor &&data, Tensor &&add0_weight,
+      Tensor &&add1_weight, std::shared_ptr<Edge> &&input,
+      std::shared_ptr<Edge> &&output);
+  GatherConstantDataTensorAddTensorLhsAddTensorLhsNode(
+      const GatherConstantDataTensorAddTensorLhsAddTensorLhsNode &node) =
+      delete;
+  GatherConstantDataTensorAddTensorLhsAddTensorLhsNode(
+      GatherConstantDataTensorAddTensorLhsAddTensorLhsNode &&node) = default;
+  virtual ~GatherConstantDataTensorAddTensorLhsAddTensorLhsNode() = default;
+  const Tensor &GetData() const noexcept;
+  const Tensor &GetAdd0Weight() const noexcept;
+  const Tensor &GetAdd1Weight() const noexcept;
+  std::shared_ptr<Edge> GetInput() const noexcept;
+  std::shared_ptr<Edge> GetOutput() const noexcept;
+
+private:
+  const Tensor data_;
+  const Tensor add0_weight_;
+  const Tensor add1_weight_;
+  std::shared_ptr<Edge> input_;
+  std::shared_ptr<Edge> output_;
+};
+
 class GemmNode : public Node {
 public:
   GemmNode(std::string &&name, float64_t alpha, float64_t beta, bool transA,

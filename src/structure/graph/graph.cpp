@@ -131,7 +131,8 @@ Graph::GetEdgeTo(const std::string &edge_name) const {
   }
   std::vector<std::shared_ptr<Node>> result;
   for (const std::string &name : it->second.to) {
-    result.push_back(GetNode(name));
+    std::shared_ptr<Node> node = GetNode(name);
+    result.push_back(std::move(node));
   }
   return result;
 }
@@ -195,6 +196,7 @@ Graph::GetNodeFrom(const std::string &node_name) const {
     for (const std::shared_ptr<Node> &node : nodes) {
       if (node->GetName() == node_name) {
         found = true;
+        break;
       }
     }
     if (!found) {
@@ -353,23 +355,22 @@ bool Graph::ClearEdgeFrom(const std::string &edge_name) {
     return false;
   }
   std::optional<std::string> &from_opt = edge_it->second.from;
-#ifdef DEBUG
-  assert(from_opt.has_value());
-#endif
-  const std::string &from = *from_opt;
-  auto node_it = nodes_.find(from);
-#ifdef DEBUG
-  assert(node_it != nodes_.end());
-#endif
-  std::vector<std::string> &to = node_it->second.to;
-  std::vector<std::string> new_to;
-  for (const std::string &name : to) {
-    if (name != edge_name) {
-      new_to.push_back(name);
+  if (from_opt) {
+    const std::string &from = *from_opt;
+    auto node_it = nodes_.find(from);
+    if (node_it == nodes_.end()) {
+      return false;
     }
+    std::vector<std::string> &to = node_it->second.to;
+    std::vector<std::string> new_to;
+    for (const std::string &name : to) {
+      if (name != edge_name) {
+        new_to.push_back(name);
+      }
+    }
+    node_it->second.to = new_to;
+    from_opt.reset();
   }
-  node_it->second.to = new_to;
-  from_opt.reset();
   return true;
 }
 
@@ -385,9 +386,9 @@ bool Graph::ClearNodeFrom(const std::string &node_name) {
   }
   for (const std::string &edge_name : node_it->second.from) {
     auto edge_it = edges_.find(edge_name);
-#ifdef DEBUG
-    assert(edge_it != edges_.end());
-#endif
+    if (edge_it == edges_.end()) {
+      continue;
+    }
     std::vector<std::string> &to = edge_it->second.to;
     std::vector<std::string> new_to;
     for (const std::string &name : to) {
@@ -413,9 +414,9 @@ bool Graph::ClearEdgeTos(const std::string &edge_name) {
   }
   for (const std::string &node_name : edge_it->second.to) {
     auto node_it = nodes_.find(node_name);
-#ifdef DEBUG
-    assert(node_it != nodes_.end());
-#endif
+    if (node_it == nodes_.end()) {
+      continue;
+    }
     std::vector<std::string> &from = node_it->second.from;
     std::vector<std::string> new_from;
     for (const std::string &name : from) {
@@ -441,14 +442,16 @@ bool Graph::ClearNodeTos(const std::string &node_name) {
   }
   for (const std::string &edge_name : edge_it->second.to) {
     auto node_it = edges_.find(edge_name);
+    if (node_it == edges_.end()) {
+      continue;
+    }
+    std::optional<std::string> &from_opt = node_it->second.from;
+    if (from_opt) {
 #ifdef DEBUG
-    assert(node_it != edges_.end());
+      assert(*from_opt == node_name);
 #endif
-    std::optional<std::string> &from = node_it->second.from;
-#ifdef DEBUG
-    assert(from.has_value() && *from == edge_name);
-#endif
-    from.reset();
+      from_opt.reset();
+    }
   }
   edge_it->second.to.clear();
   return true;
@@ -478,6 +481,7 @@ bool Graph::Check() const {
       for (std::shared_ptr<Node> node : nodes) {
         if (node->GetName() == node->GetName()) {
           found = true;
+          break;
         }
       }
       if (!found) {
@@ -507,6 +511,7 @@ bool Graph::Check() const {
       for (std::shared_ptr<Edge> edge : edges) {
         if (edge->GetName() == edge->GetName()) {
           found = true;
+          break;
         }
       }
       if (!found) {
@@ -522,6 +527,7 @@ bool Graph::Check() const {
       for (std::shared_ptr<Edge> edge : edges) {
         if (edge->GetName() == edge->GetName()) {
           found = true;
+          break;
         }
       }
       if (!found) {

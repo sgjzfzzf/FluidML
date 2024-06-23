@@ -21,6 +21,7 @@ public:
     Equal,
     Erf,
     Gather,
+    GatherAddAdd,
     Gemm,
     LayerNormalization,
     MatMul,

@@ -1,3 +1,5 @@
+#include "optimization/graph/gather_add_fusion.h"
+#include "optimization/graph/manager.h"
 #include "worker/builder.h"
 #include "worker/converter.h"
 #include "worker/lower.h"
@@ -7,20 +9,24 @@
 #include "gtest/gtest.h"
 
 using namespace cpu_transformers;
-using namespace cpu_transformers::graph;
-using namespace cpu_transformers::flow;
 using namespace cpu_transformers::context;
+using namespace cpu_transformers::flow;
+using namespace cpu_transformers::graph;
 using namespace cpu_transformers::memory;
+using namespace cpu_transformers::optimization;
 using namespace cpu_transformers::worker;
 
 TEST(ModelTest, BertTest) {
   Parser parser;
+  GraphPassesManager pm{
+      std::make_shared<GatherAddFusionPass>()};
   Converter converter;
   std::shared_ptr<Context> context = Context::Make();
   NaiveBuilder builder("bert", context);
   Lower lower(context);
   Runner runner(context);
   Graph graph = parser.Run(BERT_MODEL_PATH);
+  pm.Run(graph);
   Flow flow = converter.Run(graph);
   LinearPlanner linear_planner;
   GreedyPlanner greedy_planner;
@@ -36,10 +42,9 @@ TEST(ModelTest, BertTest) {
 #ifdef DEBUG
   context->DumpModule("bert-llvm.mlir");
 #endif
-  std::vector<uint8_t> input_ids(1 * 128 * sizeof(int64_t), 0),
-      attention_mask(1 * 128 * sizeof(float32_t), 0),
-      output0(1 * 128 * 768 * sizeof(float32_t), 0),
-      output1(1 * 768 * sizeof(float32_t), 0);
+  std::vector<int64_t> input_ids(1 * 128, 0);
+  std::vector<float32_t> attention_mask(1 * 128, 0), output0(1 * 128 * 768, 0),
+      output1(1 * 768, 0);
   runner.Run({
       {"input_ids", input_ids.data()},
       {"attention_mask", attention_mask.data()},

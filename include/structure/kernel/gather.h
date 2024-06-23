@@ -6,6 +6,7 @@
 
 namespace cpu_transformers {
 namespace kernel {
+
 class GatherConstantIndexScalarKernel : public Kernel {
 public:
   GatherConstantIndexScalarKernel(int64_t axis);
@@ -32,6 +33,7 @@ public:
   void Run(mlir::OpBuilder &builder, const Tensor &data, mlir::Value &indices,
            mlir::Value &output);
 };
+
 } // namespace kernel
 } // namespace cpu_transformers
 
