@@ -19,7 +19,10 @@ class NodeTest(unittest.TestCase):
     def test_add0(self):
         add0_onnx_path = os.environ.get("ONNX_add0_PATH")
         self.assertIsNotNone(add0_onnx_path)
-        session = onnxruntime.InferenceSession(add0_onnx_path)
+        session_options = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session = onnxruntime.InferenceSession(add0_onnx_path, session_options)
         input0 = np.random.random((1, 128, 768)).astype(np.float32)
         input1 = np.random.random((1, 128, 768)).astype(np.float32)
         output = np.zeros((1, 128, 768)).astype(np.float32)
@@ -60,7 +63,10 @@ class NodeTest(unittest.TestCase):
     def test_add1(self):
         add1_onnx_path = os.environ.get("ONNX_add1_PATH")
         self.assertIsNotNone(add1_onnx_path)
-        session = onnxruntime.InferenceSession(add1_onnx_path)
+        session_options = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session = onnxruntime.InferenceSession(add1_onnx_path, session_options)
         input = np.random.random((1, 128, 768)).astype(np.float32)
         output = np.zeros((1, 128, 768)).astype(np.float32)
         start = time.time_ns()
@@ -98,7 +104,10 @@ class NodeTest(unittest.TestCase):
     def test_div(self):
         div_onnx_path = os.environ.get("ONNX_div_PATH")
         self.assertIsNotNone(div_onnx_path)
-        session = onnxruntime.InferenceSession(div_onnx_path)
+        session_options = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session = onnxruntime.InferenceSession(div_onnx_path, session_options)
         input = np.random.random((1, 12, 128, 128)).astype(np.float32)
         output = np.zeros((1, 12, 128, 128)).astype(np.float32)
         start = time.time_ns()
@@ -136,7 +145,10 @@ class NodeTest(unittest.TestCase):
     def test_erf(self):
         erf_onnx_path = os.environ.get("ONNX_erf_PATH")
         self.assertIsNotNone(erf_onnx_path)
-        session = onnxruntime.InferenceSession(erf_onnx_path)
+        session_options = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session = onnxruntime.InferenceSession(erf_onnx_path, session_options)
         input = np.random.random((1, 128, 3072)).astype(np.float32)
         output = np.zeros((1, 128, 3072)).astype(np.float32)
         start = time.time_ns()
@@ -174,7 +186,10 @@ class NodeTest(unittest.TestCase):
     def test_gather0(self):
         gather0_onnx_path = os.environ.get("ONNX_gather0_PATH")
         self.assertIsNotNone(gather0_onnx_path)
-        session = onnxruntime.InferenceSession(gather0_onnx_path)
+        session_options = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session = onnxruntime.InferenceSession(gather0_onnx_path, session_options)
         indices = np.random.randint(0, 30522, (1, 128)).astype(np.int64)
         output = np.zeros((1, 128, 768)).astype(np.float32)
         start = time.time_ns()
@@ -212,7 +227,10 @@ class NodeTest(unittest.TestCase):
     def test_gather1(self):
         gather1_onnx_path = os.environ.get("ONNX_gather1_PATH")
         self.assertIsNotNone(gather1_onnx_path)
-        session = onnxruntime.InferenceSession(gather1_onnx_path)
+        session_options = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session = onnxruntime.InferenceSession(gather1_onnx_path, session_options)
         data = np.random.random((1, 128, 768)).astype(np.float32)
         output = np.zeros((1, 768)).astype(np.float32)
         start = time.time_ns()
@@ -250,7 +268,10 @@ class NodeTest(unittest.TestCase):
     def test_gemm(self):
         gemm_onnx_path = os.environ.get("ONNX_gemm_PATH")
         self.assertIsNotNone(gemm_onnx_path)
-        session = onnxruntime.InferenceSession(gemm_onnx_path)
+        session_options = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session = onnxruntime.InferenceSession(gemm_onnx_path, session_options)
         input = np.random.random((1, 768)).astype(np.float32)
         output = np.zeros((1, 768)).astype(np.float32)
         start = time.time_ns()
@@ -288,7 +309,12 @@ class NodeTest(unittest.TestCase):
     def test_layer_normalization(self):
         layer_normalization_onnx_path = os.environ.get("ONNX_layer_normalization_PATH")
         self.assertIsNotNone(layer_normalization_onnx_path)
-        session = onnxruntime.InferenceSession(layer_normalization_onnx_path)
+        session_options = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session = onnxruntime.InferenceSession(
+            layer_normalization_onnx_path, session_options
+        )
         input = np.random.random((1, 128, 768)).astype(np.float32)
         output = np.zeros((1, 128, 768)).astype(np.float32)
         start = time.time_ns()
@@ -326,7 +352,10 @@ class NodeTest(unittest.TestCase):
     def test_matmul0(self):
         matmul0_onnx_path = os.environ.get("ONNX_matmul0_PATH")
         self.assertIsNotNone(matmul0_onnx_path)
-        session = onnxruntime.InferenceSession(matmul0_onnx_path)
+        session_options = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session = onnxruntime.InferenceSession(matmul0_onnx_path, session_options)
         input0 = np.random.random((1, 12, 128, 64)).astype(np.float32)
         input1 = np.random.random((1, 12, 64, 128)).astype(np.float32)
         output = np.zeros((1, 12, 128, 128)).astype(np.float32)
@@ -367,7 +396,10 @@ class NodeTest(unittest.TestCase):
     def test_matmul1(self):
         matmul1_onnx_path = os.environ.get("ONNX_matmul1_PATH")
         self.assertIsNotNone(matmul1_onnx_path)
-        session = onnxruntime.InferenceSession(matmul1_onnx_path)
+        session_options = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session = onnxruntime.InferenceSession(matmul1_onnx_path, session_options)
         input = np.random.random((1, 128, 768)).astype(np.float32)
         output = np.zeros((1, 128, 768)).astype(np.float32)
         start = time.time_ns()
@@ -405,7 +437,10 @@ class NodeTest(unittest.TestCase):
     def test_mul0(self):
         mul0_onnx_path = os.environ.get("ONNX_mul0_PATH")
         self.assertIsNotNone(mul0_onnx_path)
-        session = onnxruntime.InferenceSession(mul0_onnx_path)
+        session_options = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session = onnxruntime.InferenceSession(mul0_onnx_path, session_options)
         input0 = np.random.random((1, 128, 3072)).astype(np.float32)
         input1 = np.random.random((1, 128, 3072)).astype(np.float32)
         output = np.zeros((1, 128, 3072)).astype(np.float32)
@@ -446,7 +481,10 @@ class NodeTest(unittest.TestCase):
     def test_mul1(self):
         mul1_onnx_path = os.environ.get("ONNX_mul1_PATH")
         self.assertIsNotNone(mul1_onnx_path)
-        session = onnxruntime.InferenceSession(mul1_onnx_path)
+        session_options = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session = onnxruntime.InferenceSession(mul1_onnx_path, session_options)
         input = np.random.random((1, 1, 1, 128)).astype(np.float32)
         output = np.zeros((1, 1, 1, 128)).astype(np.float32)
         start = time.time_ns()
@@ -484,7 +522,10 @@ class NodeTest(unittest.TestCase):
     def test_pow(self):
         pow_onnx_path = os.environ.get("ONNX_pow_PATH")
         self.assertIsNotNone(pow_onnx_path)
-        session = onnxruntime.InferenceSession(pow_onnx_path)
+        session_options = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session = onnxruntime.InferenceSession(pow_onnx_path, session_options)
         input = np.random.random((1, 128, 3072)).astype(np.float32)
         output = np.zeros((1, 128, 3072)).astype(np.float32)
         start = time.time_ns()
@@ -522,7 +563,10 @@ class NodeTest(unittest.TestCase):
     def test_reshape(self):
         reshape_onnx_path = os.environ.get("ONNX_reshape_PATH")
         self.assertIsNotNone(reshape_onnx_path)
-        session = onnxruntime.InferenceSession(reshape_onnx_path)
+        session_options = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session = onnxruntime.InferenceSession(reshape_onnx_path, session_options)
         data = np.random.random((1, 128, 768)).astype(np.float32)
         output = np.zeros((1, 128, 12, 64)).astype(np.float32)
         start = time.time_ns()
@@ -560,7 +604,10 @@ class NodeTest(unittest.TestCase):
     def test_softmax(self):
         softmax_onnx_path = os.environ.get("ONNX_softmax_PATH")
         self.assertIsNotNone(softmax_onnx_path)
-        session = onnxruntime.InferenceSession(softmax_onnx_path)
+        session_options = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session = onnxruntime.InferenceSession(softmax_onnx_path, session_options)
         input = np.random.random((1, 12, 128, 768)).astype(np.float32)
         output = np.zeros((1, 12, 128, 768)).astype(np.float32)
         start = time.time_ns()
@@ -599,7 +646,10 @@ class NodeTest(unittest.TestCase):
     def test_split(self):
         split_onnx_path = os.environ.get("ONNX_split_PATH")
         self.assertIsNotNone(split_onnx_path)
-        session = onnxruntime.InferenceSession(split_onnx_path)
+        session_options = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session = onnxruntime.InferenceSession(split_onnx_path, session_options)
         input = np.random.random((1, 128, 2304)).astype(np.float32)
         output0 = np.zeros((1, 128, 768)).astype(np.float32)
         output1 = np.zeros((1, 128, 768)).astype(np.float32)
@@ -638,7 +688,10 @@ class NodeTest(unittest.TestCase):
     def test_sub(self):
         sub_onnx_path = os.environ.get("ONNX_sub_PATH")
         self.assertIsNotNone(sub_onnx_path)
-        session = onnxruntime.InferenceSession(sub_onnx_path)
+        session_options = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session = onnxruntime.InferenceSession(sub_onnx_path, session_options)
         input0 = np.random.random((1, 1, 1, 128)).astype(np.float32)
         output = np.zeros((1, 1, 1, 128)).astype(np.float32)
         start = time.time_ns()
@@ -676,7 +729,10 @@ class NodeTest(unittest.TestCase):
     def test_tanh(self):
         tanh_onnx_path = os.environ.get("ONNX_tanh_PATH")
         self.assertIsNotNone(tanh_onnx_path)
-        session = onnxruntime.InferenceSession(tanh_onnx_path)
+        session_options = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session = onnxruntime.InferenceSession(tanh_onnx_path, session_options)
         input = np.random.random((1, 768)).astype(np.float32)
         output = np.zeros((1, 768)).astype(np.float32)
         start = time.time_ns()
@@ -714,7 +770,10 @@ class NodeTest(unittest.TestCase):
     def test_transpose(self):
         transpose_onnx_path = os.environ.get("ONNX_transpose_PATH")
         self.assertIsNotNone(transpose_onnx_path)
-        session = onnxruntime.InferenceSession(transpose_onnx_path)
+        session_options = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session = onnxruntime.InferenceSession(transpose_onnx_path, session_options)
         input = np.random.random((1, 128, 12, 64)).astype(np.float32)
         output = np.zeros((1, 12, 128, 64)).astype(np.float32)
         start = time.time_ns()
@@ -752,7 +811,10 @@ class NodeTest(unittest.TestCase):
     def test_unsqueeze(self):
         unsqueeze_onnx_path = os.environ.get("ONNX_unsqueeze_PATH")
         self.assertIsNotNone(unsqueeze_onnx_path)
-        session = onnxruntime.InferenceSession(unsqueeze_onnx_path)
+        session_options = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session = onnxruntime.InferenceSession(unsqueeze_onnx_path, session_options)
         input = np.random.random((1, 128)).astype(np.float32)
         output = np.zeros((1, 1, 1, 128)).astype(np.float32)
         start = time.time_ns()
@@ -790,7 +852,10 @@ class NodeTest(unittest.TestCase):
     def test_where0(self):
         where_onnx_path = os.environ.get("ONNX_where_PATH")
         self.assertIsNotNone(where_onnx_path)
-        session = onnxruntime.InferenceSession(where_onnx_path)
+        session_options = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session = onnxruntime.InferenceSession(where_onnx_path, session_options)
         input = np.random.random((1, 12, 128, 128)).astype(np.float32)
         output = np.zeros((1, 12, 128, 128)).astype(np.float32)
         start = time.time_ns()
