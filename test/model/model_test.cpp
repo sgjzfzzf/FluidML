@@ -18,8 +18,7 @@ using namespace cpu_transformers::worker;
 
 TEST(ModelTest, BertTest) {
   Parser parser;
-  GraphPassesManager pm{
-      std::make_shared<GatherAddFusionPass>()};
+  GraphPassesManager pm{std::make_shared<GatherAddFusionPass>()};
   Converter converter;
   std::shared_ptr<Context> context = Context::Make();
   NaiveBuilder builder("bert", context);

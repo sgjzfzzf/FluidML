@@ -1,11 +1,21 @@
 import libCpuTransformers  # type: ignore
+import logging
 import numpy as np
 import onnxruntime
 import os
+import time
 import unittest
 
 
 class ModelTest(unittest.TestCase):
+    def setUp(self):
+        logging.basicConfig(
+            filename="model_test.log",
+            filemode="w",
+            level=logging.INFO,
+        )
+        self.logger = logging.getLogger(__name__)
+
     def test_bert(self):
         parser = libCpuTransformers.Parser()
         converter = libCpuTransformers.Converter()
@@ -30,6 +40,7 @@ class ModelTest(unittest.TestCase):
         session_options.intra_op_num_threads = 1
         session_options.inter_op_num_threads = 1
         session = onnxruntime.InferenceSession(model_path, session_options)
+        start = time.time_ns()
         session.run(
             ["onnx::Gather_1269", "1272"],
             {
@@ -37,13 +48,17 @@ class ModelTest(unittest.TestCase):
                 "attention_mask": attention_mask,
             },
         )
-        runner.Run(
+        end = time.time_ns()
+        timecost = runner.Run(
             {
                 "input_ids": input_ids,
                 "attention_mask": attention_mask,
                 "onnx::Gather_1269": output0,
                 "1272": output1,
             }
+        )
+        self.logger.info(
+            f"bert, onnxruntime timecost: {end - start}, timecost: {timecost}"
         )
 
     def test_gpt2(self):
