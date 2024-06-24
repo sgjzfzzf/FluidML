@@ -1,4 +1,5 @@
 #include "optimization/graph/manager.h"
+#include "optimization/graph/gather_add_fusion.h"
 #ifdef DEBUG
 #include <cassert>
 #endif
@@ -17,10 +18,15 @@ void GraphPassesManager::Run(graph::Graph &graph) const {
 #ifdef DEBUG
       assert(pass != nullptr);
       assert(node != nullptr);
+      assert(graph.Check());
 #endif
       pass->Run(*node);
     }
   }
+}
+
+void GraphPassesManager::RegisterAllPasses() {
+  passes_.emplace_back(std::make_shared<GatherAddFusionPass>());
 }
 
 } // namespace optimization

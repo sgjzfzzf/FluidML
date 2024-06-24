@@ -70,6 +70,15 @@ const char *UnknownNodeException::what() const noexcept {
 namespace cpu_transformers {
 namespace graph {
 
+Graph::Graph(Graph &&graph) : edges_(graph.edges_), nodes_(graph.nodes_) {
+  for (auto &[k, v] : edges_) {
+    v.ptr->graph_ = this;
+  }
+  for (auto &[k, v] : nodes_) {
+    v.ptr->graph_ = this;
+  }
+}
+
 bool Graph::ExistEdge(const std::string &name) const {
   return edges_.find(name) != edges_.end();
 }
@@ -272,19 +281,19 @@ std::vector<std::string> Graph::GetNextNodeNames(const Node &node) const {
 
 std::vector<std::shared_ptr<Edge>> Graph::GetAllEdges() const {
   std::vector<std::shared_ptr<Edge>> result;
-  for (const auto &pair : edges_) {
-    result.push_back(pair.second.ptr);
+  for (const auto &[k, v] : edges_) {
+    result.push_back(v.ptr);
   }
   return result;
 }
 
 std::vector<std::shared_ptr<InputEdge>> Graph::GetInputEdges() const {
   std::vector<std::shared_ptr<InputEdge>> result;
-  for (const auto &pair : edges_) {
+  for (const auto &[k, v] : edges_) {
     if (std::shared_ptr<InputEdge> inputEdge =
-            std::dynamic_pointer_cast<InputEdge>(pair.second.ptr)) {
+            std::dynamic_pointer_cast<InputEdge>(v.ptr)) {
 #ifdef DEBUG
-      assert(pair.second.from.has_value() == false);
+      assert(v.from.has_value() == false);
 #endif
       result.push_back(std::move(inputEdge));
     }
@@ -294,12 +303,12 @@ std::vector<std::shared_ptr<InputEdge>> Graph::GetInputEdges() const {
 
 std::vector<std::string> Graph::GetInputEdgeNames() const {
   std::vector<std::string> result;
-  for (const auto &pair : edges_) {
-    if (isa<InputEdge>(pair.second.ptr.get())) {
+  for (const auto &[k, v] : edges_) {
+    if (isa<InputEdge>(v.ptr.get())) {
 #ifdef DEBUG
-      assert(!pair.second.from.has_value());
+      assert(!v.from.has_value());
 #endif
-      result.push_back(pair.first);
+      result.push_back(k);
     }
   }
   return result;
@@ -307,16 +316,16 @@ std::vector<std::string> Graph::GetInputEdgeNames() const {
 
 std::vector<std::shared_ptr<Node>> Graph::GetAllNodes() const {
   std::vector<std::shared_ptr<Node>> result;
-  for (const auto &pair : nodes_) {
-    result.push_back(pair.second.ptr);
+  for (const auto &[k, v] : nodes_) {
+    result.push_back(v.ptr);
   }
   return result;
 }
 
 std::vector<std::string> Graph::GetAllNodeNames() const {
   std::vector<std::string> result;
-  for (const auto &pair : nodes_) {
-    result.push_back(pair.first);
+  for (const auto &[k, v] : nodes_) {
+    result.push_back(k);
   }
   return result;
 }

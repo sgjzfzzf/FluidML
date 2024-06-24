@@ -14,7 +14,7 @@ class Graph {
 public:
   Graph() = default;
   Graph(const Graph &graph) = delete;
-  Graph(Graph &&graph) = default;
+  Graph(Graph &&graph);
   bool ExistEdge(const std::string &name) const;
   bool PutEdge(std::shared_ptr<Edge> &&edge);
   bool DeleteEdge(const std::string &name);

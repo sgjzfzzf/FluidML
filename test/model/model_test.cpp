@@ -1,4 +1,3 @@
-#include "optimization/graph/gather_add_fusion.h"
 #include "optimization/graph/manager.h"
 #include "worker/builder.h"
 #include "worker/converter.h"
@@ -18,13 +17,14 @@ using namespace cpu_transformers::worker;
 
 TEST(ModelTest, BertTest) {
   Parser parser;
-  GraphPassesManager pm{std::make_shared<GatherAddFusionPass>()};
+  GraphPassesManager pm;
   Converter converter;
   std::shared_ptr<Context> context = Context::Make();
   NaiveBuilder builder("bert", context);
   Lower lower(context);
   Runner runner(context);
   Graph graph = parser.Run(BERT_MODEL_PATH);
+  pm.RegisterAllPasses();
   pm.Run(graph);
   Flow flow = converter.Run(graph);
   LinearPlanner linear_planner;

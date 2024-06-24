@@ -16,6 +16,7 @@ public:
   GraphPassesManager(std::initializer_list<std::shared_ptr<GraphPass>> passes);
   GraphPassesManager(const GraphPassesManager &manager) = default;
   GraphPassesManager(GraphPassesManager &&manager) = default;
+  void RegisterAllPasses();
   void Run(graph::Graph &graph) const;
 
 private:

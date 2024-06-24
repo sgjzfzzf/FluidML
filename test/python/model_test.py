@@ -18,6 +18,7 @@ class ModelTest(unittest.TestCase):
 
     def test_bert(self):
         parser = libCpuTransformers.Parser()
+        pm = libCpuTransformers.GraphPassesManager()
         converter = libCpuTransformers.Converter()
         context = libCpuTransformers.Context.Make()
         builder = libCpuTransformers.NaiveBuilder("bert", context)
@@ -26,6 +27,8 @@ class ModelTest(unittest.TestCase):
         model_path = os.environ.get("BERT_MODEL_PATH")
         self.assertIsNotNone(model_path)
         graph = parser.Run(model_path)
+        pm.RegisterAllPasses()
+        pm.Run(graph)
         flow = converter.Run(graph)
         planner = libCpuTransformers.GreedyPlanner()
         sequence = planner.FlowToSequence(flow)
@@ -63,6 +66,7 @@ class ModelTest(unittest.TestCase):
 
     def test_gpt2(self):
         parser = libCpuTransformers.Parser()
+        pm = libCpuTransformers.GraphPassesManager()
         converter = libCpuTransformers.Converter()
         context = libCpuTransformers.Context.Make()
         builder = libCpuTransformers.NaiveBuilder("bert", context)
@@ -71,6 +75,8 @@ class ModelTest(unittest.TestCase):
         model_path = os.environ.get("GPT2_MODEL_PATH")
         self.assertIsNotNone(model_path)
         graph = parser.Run(model_path)
+        pm.RegisterAllPasses()
+        pm.Run(graph)
         flow = converter.Run(graph)
         planner = libCpuTransformers.GreedyPlanner()
         sequence = planner.FlowToSequence(flow)

@@ -1,3 +1,4 @@
+#include "optimization/graph/manager.h"
 #include "pybind11/detail/common.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
@@ -15,6 +16,13 @@
 #include "worker/runner.h"
 
 PYBIND11_MODULE(libCpuTransformers, m) {
+
+  pybind11::class_<cpu_transformers::optimization::GraphPassesManager>(
+      m, "GraphPassesManager")
+      .def(pybind11::init())
+      .def("RegisterAllPasses", &cpu_transformers::optimization::
+                                    GraphPassesManager::RegisterAllPasses)
+      .def("Run", &cpu_transformers::optimization::GraphPassesManager::Run);
 
   pybind11::class_<cpu_transformers::context::Context,
                    std::shared_ptr<cpu_transformers::context::Context>>(
