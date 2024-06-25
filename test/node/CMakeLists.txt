@@ -7,6 +7,7 @@ set(
     "div"
     "equal"
     "erf"
+    "gather_add_add"
     "gather0"
     "gather1"
     "gemm"

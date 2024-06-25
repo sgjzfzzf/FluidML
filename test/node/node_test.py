@@ -183,6 +183,69 @@ class NodeTest(unittest.TestCase):
             f"erf, onnxruntime timecost: {end - start}, timecost: {timecost}"
         )
 
+    def test_gather_add_add(self):
+        gather_add_add_onnx_path = os.environ.get("ONNX_gather_add_add_PATH")
+        self.assertIsNotNone(gather_add_add_onnx_path)
+        session_options = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session = onnxruntime.InferenceSession(
+            gather_add_add_onnx_path, session_options
+        )
+        input = np.random.randint(0, 30522, (1, 128)).astype(np.int64)
+        output = np.zeros((1, 128, 768)).astype(np.float32)
+        start = time.time_ns()
+        (onnx_output,) = session.run(
+            ["output"],
+            {
+                "input": input,
+            },
+        )
+        end = time.time_ns()
+        parser = libCpuTransformers.Parser()
+        pm = libCpuTransformers.GraphPassesManager()
+        converter = libCpuTransformers.Converter()
+        plain_context = libCpuTransformers.Context.Make()
+        optim_context = libCpuTransformers.Context.Make()
+        plain_builder = libCpuTransformers.NaiveBuilder("gather_add_add", plain_context)
+        optim_builder = libCpuTransformers.NaiveBuilder("gather_add_add", optim_context)
+        plain_lower = libCpuTransformers.Lower(plain_context)
+        optim_lower = libCpuTransformers.Lower(optim_context)
+        plain_runner = libCpuTransformers.Runner(plain_context)
+        optim_runner = libCpuTransformers.Runner(optim_context)
+        plain_graph = parser.Run(gather_add_add_onnx_path)
+        optim_graph = parser.Run(gather_add_add_onnx_path)
+        pm.RegisterAllPasses()
+        pm.Run(optim_graph)
+        plain_flow = converter.Run(plain_graph)
+        optim_flow = converter.Run(optim_graph)
+        planner = libCpuTransformers.GreedyPlanner()
+        plain_sequence = planner.FlowToSequence(plain_flow)
+        optim_sequence = planner.FlowToSequence(optim_flow)
+        plain_index = planner.Run(plain_sequence)
+        optim_index = planner.Run(optim_sequence)
+        plain_builder.Run(plain_sequence, plain_index)
+        optim_builder.Run(optim_sequence, optim_index)
+        plain_lower.Run()
+        optim_lower.Run()
+        plain_timecost = plain_runner.Run(
+            {
+                "input": input,
+                "output": output,
+            }
+        )
+        self.assertTrue(np.allclose(onnx_output, output))
+        optim_timecost = optim_runner.Run(
+            {
+                "input": input,
+                "output": output,
+            }
+        )
+        self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"gather_add_add, onnxruntime timecost: {end - start}, plain timecost: {plain_timecost}, optim timecost: {optim_timecost}"
+        )
+
     def test_gather0(self):
         gather0_onnx_path = os.environ.get("ONNX_gather0_PATH")
         self.assertIsNotNone(gather0_onnx_path)

@@ -103,8 +103,10 @@ void GatherAddFusionPass::Run(cpu_transformers::graph::Node &node) const {
   if (output2_edges.size() != 1) {
     return;
   }
-  std::shared_ptr<graph::PureEdge> output_edge =
-      std::dynamic_pointer_cast<graph::PureEdge>(output2_edges[0]);
+  std::shared_ptr<graph::Edge> output_edge = output2_edges[0];
+#ifdef DEBUG
+  assert(output_edge != nullptr);
+#endif
   std::string gather_add_add_name = fmt::format(
       "{}-{}-{}", node.GetName(), add0_node->GetName(), add1_node->GetName());
   std::shared_ptr<graph::Node> gather_add_add_node =
@@ -113,14 +115,14 @@ void GatherAddFusionPass::Run(cpu_transformers::graph::Node &node) const {
   std::shared_ptr<graph::Node> holder = gather_add_add_node;
   add0_edge->Delete();
   add1_edge->Delete();
-  gather_data_edge->ClearOutputs();
-  add0_weight_edge->ClearOutputs();
-  add1_weight_edge->ClearOutputs();
+  gather_data_edge->ClearOutput(node);
+  add0_weight_edge->ClearOutput(*add0_node);
+  add1_weight_edge->ClearOutput(*add1_node);
   node.Delete();
   add0_node->Delete();
   add1_node->Delete();
-  input_edge->ClearOutputs();
-  output_edge->ClearInputs();
+  input_edge->ClearOutput(node);
+  output_edge->ClearInput(*add1_node);
   graph->PutNode(std::move(gather_add_add_node));
   gather_data_edge->PutOutput(*holder);
   add0_weight_edge->PutOutput(*holder);
