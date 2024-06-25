@@ -33,6 +33,30 @@ void Edge::Delete() {
   }
 }
 
+void Edge::ClearInput(Node &node) {
+  if (graph_) {
+    graph_->ClearEdgeToNode(*this, node);
+  }
+}
+
+void Edge::ClearInput(const std::string &name) {
+  if (graph_) {
+    graph_->ClearEdgeToNode(name, name_);
+  }
+}
+
+void Edge::ClearOutput(Node &node) {
+  if (graph_) {
+    graph_->ClearNodeToEdge(node, *this);
+  }
+}
+
+void Edge::ClearOutput(const std::string &name) {
+  if (graph_) {
+    graph_->ClearNodeToEdge(name_, name);
+  }
+}
+
 void Edge::ClearInputs() {
   if (graph_) {
     graph_->ClearEdgeFrom(*this);

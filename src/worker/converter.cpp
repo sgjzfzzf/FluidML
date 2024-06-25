@@ -148,6 +148,9 @@ flow::Flow Converter::Run(const graph::Graph &graph) {
     case graph::Node::Op::Unsqueeze:
       convertUnsqueezeNode(flow, graph, *node);
       break;
+    case graph::Node::Op::UnsqueezeSubMul:
+      convertUnsqueezeSubMulNode(flow, graph, *node);
+      break;
     case graph::Node::Op::Where:
       convertWhereNode(flow, graph, *node);
       break;
@@ -1332,6 +1335,69 @@ void Converter::convertUnsqueezeNode(flow::Flow &flow,
   ptr = std::make_shared<flow::UnsqueezeNode>(
       std::move(name), std::move(input_ptr), std::move(output_ptr),
       std::move(axesVec));
+  flow.PutNode(std::move(ptr));
+}
+
+void Converter::convertUnsqueezeSubMulNode(flow::Flow &flow,
+                                           const graph::Graph &graph,
+                                           const graph::Node &node) {
+#ifdef DEBUG
+  assert(node.GetOp() == graph::Node::Op::UnsqueezeSubMul);
+#endif
+  std::string name = node.GetName();
+  std::vector<std::shared_ptr<graph::Edge>> inputs = graph.GetNodeFrom(node);
+  std::vector<std::shared_ptr<graph::Edge>> outputs = graph.GetNodeTo(node);
+#ifdef DEBUG
+  assert(inputs.size() == 4);
+  assert(outputs.size() == 1);
+#endif
+  std::shared_ptr<graph::Edge> axes = inputs[0];
+  std::shared_ptr<graph::Edge> sub = inputs[1];
+  std::shared_ptr<graph::Edge> mul = inputs[2];
+  std::shared_ptr<graph::Edge> input = inputs[3];
+  std::shared_ptr<graph::Edge> output = outputs[0];
+#ifdef DEBUG
+  assert(axes != nullptr);
+  assert(sub != nullptr);
+  assert(mul != nullptr);
+  assert(input != nullptr);
+  assert(output != nullptr);
+#endif
+  std::shared_ptr<flow::UnsqueezeSubLhsScalarMulRhsScalarNode> ptr = nullptr;
+  std::shared_ptr<graph::ConstantTensorEdge> axes_as_constant_tensor =
+      std::dynamic_pointer_cast<graph::ConstantTensorEdge>(axes);
+  std::shared_ptr<graph::ConstantScalarEdge> sub_as_constant_scalar =
+      std::dynamic_pointer_cast<graph::ConstantScalarEdge>(sub);
+  std::shared_ptr<graph::ConstantScalarEdge> mul_as_constant_scalar =
+      std::dynamic_pointer_cast<graph::ConstantScalarEdge>(mul);
+#ifdef DEBUG
+  assert(axes_as_constant_tensor != nullptr);
+  assert(sub_as_constant_scalar != nullptr);
+  assert(mul_as_constant_scalar != nullptr);
+  assert(isa<graph::NonConstantEdge>(input));
+  assert(isa<graph::NonConstantEdge>(output));
+#endif
+  Tensor axesTensor = axes_as_constant_tensor->GetValue();
+  const std::vector<int64_t> &axesVector = axesTensor.GetShape();
+  const std::string &input_name = input->GetName();
+  const std::string &output_name = output->GetName();
+  std::shared_ptr<flow::Edge> input_ptr = flow.GetEdge(input_name);
+  std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
+#ifdef DEBUG
+  assert(input_ptr != nullptr);
+  assert(output_ptr != nullptr);
+  assert(axesVector.size() == 1);
+#endif
+  size_t size = axesVector[0];
+  std::vector<int64_t> axesVec(size, 0);
+  for (size_t i = 0; i < size; ++i) {
+    axesVec[i] = axesTensor.Get({i});
+  }
+  ptr = std::make_shared<flow::UnsqueezeSubLhsScalarMulRhsScalarNode>(
+      std::move(name), std::move(input_ptr), std::move(output_ptr),
+      std::move(axesVec), sub_as_constant_scalar->GetType(),
+      sub_as_constant_scalar->GetValue(), mul_as_constant_scalar->GetType(),
+      mul_as_constant_scalar->GetValue());
   flow.PutNode(std::move(ptr));
 }
 

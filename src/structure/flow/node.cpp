@@ -786,6 +786,63 @@ const std::vector<int64_t> &UnsqueezeNode::GetAxes() const noexcept {
   return axes_;
 }
 
+UnsqueezeSubLhsScalarMulRhsScalarNode::UnsqueezeSubLhsScalarMulRhsScalarNode(
+    std::string &&name, std::shared_ptr<Edge> &&input,
+    std::shared_ptr<Edge> &&output, std::vector<int64_t> &&unsqueeze_axes,
+    Type sub_type, float64_t sub_val, Type mul_type, float64_t mul_val)
+    : Node(std::move(name)), input_(std::move(input)),
+      output_(std::move(output)), unsqueeze_axes_(std::move(unsqueeze_axes)),
+      sub_type_(sub_type), sub_val_(sub_val), mul_type_(mul_type),
+      mul_val_(mul_val) {
+#ifdef DEBUG
+  const Meta &input_meta = input_->GetMeta();
+  const Meta &output_meta = output_->GetMeta();
+  const std::vector<int64_t> &input_shape = input_meta.GetShape();
+  const std::vector<int64_t> &output_shape = output_meta.GetShape();
+  size_t input_shape_len = input_shape.size();
+  size_t output_shape_len = output_shape.size();
+  assert(output_shape_len == input_shape_len + unsqueeze_axes_.size());
+  for (size_t i = 0, j = 0; i < output_shape_len; ++i) {
+    if (j < unsqueeze_axes_.size() && unsqueeze_axes_[j] == i) {
+      ++j;
+    } else {
+      assert(input_shape[i - j] == output_shape[i]);
+    }
+  }
+#endif
+}
+
+std::shared_ptr<Edge>
+UnsqueezeSubLhsScalarMulRhsScalarNode::GetInput() const noexcept {
+  return input_;
+}
+
+std::shared_ptr<Edge>
+UnsqueezeSubLhsScalarMulRhsScalarNode::GetOutput() const noexcept {
+  return output_;
+}
+
+const std::vector<int64_t> &
+UnsqueezeSubLhsScalarMulRhsScalarNode::GetUnsqueezeAxes() const noexcept {
+  return unsqueeze_axes_;
+}
+
+Type UnsqueezeSubLhsScalarMulRhsScalarNode::GetSubType() const noexcept {
+  return sub_type_;
+}
+
+float64_t UnsqueezeSubLhsScalarMulRhsScalarNode::GetSubVal() const noexcept {
+  return sub_val_;
+}
+
+Type UnsqueezeSubLhsScalarMulRhsScalarNode::GetMulType() const noexcept {
+  return mul_type_;
+}
+
+float64_t UnsqueezeSubLhsScalarMulRhsScalarNode::GetMulVal() const noexcept {
+  return mul_val_;
+}
+
 WhereNode::WhereNode(std::string &&name) : Node(std::move(name)) {}
 
 WhereConstantCondConstantScalarYNode::WhereConstantCondConstantScalarYNode(

@@ -24,6 +24,10 @@ public:
   std::shared_ptr<Node> GetInputNode() const;
   std::vector<std::shared_ptr<Node>> GetOutputNodes() const;
   void Delete();
+  void ClearInput(Node &node);
+  void ClearInput(const std::string &name);
+  void ClearOutput(Node &node);
+  void ClearOutput(const std::string &name);
   void ClearInputs();
   void ClearOutputs();
   void PutInput(Node &node);

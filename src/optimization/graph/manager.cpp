@@ -1,5 +1,6 @@
 #include "optimization/graph/manager.h"
 #include "optimization/graph/gather_add_fusion.h"
+#include "optimization/graph/unsqueeze_sub_mul_fusion.h"
 #ifdef DEBUG
 #include <cassert>
 #endif
@@ -26,7 +27,8 @@ void GraphPassesManager::Run(graph::Graph &graph) const {
 }
 
 void GraphPassesManager::RegisterAllPasses() {
-  passes_.emplace_back(std::make_shared<GatherAddFusionPass>());
+  passes_.emplace_back(GatherAddFusionPass::Make());
+  passes_.emplace_back(UnsqueezeSubMulPass::Make());
 }
 
 } // namespace optimization

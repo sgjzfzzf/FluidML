@@ -6,7 +6,7 @@
 #include "structure/kernel/gather.h"
 #include "structure/kernel/gather_add_add.h"
 #include "structure/kernel/gemm.h"
-#include "structure/kernel/layernormalization.h"
+#include "structure/kernel/layer_normalization.h"
 #include "structure/kernel/matmul.h"
 #include "structure/kernel/mul.h"
 #include "structure/kernel/pow.h"
@@ -17,6 +17,7 @@
 #include "structure/kernel/tanh.h"
 #include "structure/kernel/transpose.h"
 #include "structure/kernel/unsqueeze.h"
+#include "structure/kernel/unsqueeze_sub_mul.h"
 #include "structure/kernel/where.h"
 #include "structure/tensor/tensor.h"
 #include <memory>
@@ -345,6 +346,23 @@ void NaiveScheduler::Run(
       std::vector<int64_t> axes = ptr->GetAxes();
       kernel::UnSqueezeKernel kernel(std::move(axes));
       kernel.Run(builder, input, output);
+    } else if (std::shared_ptr<flow::UnsqueezeSubLhsScalarMulRhsScalarNode>
+                   ptr = std::dynamic_pointer_cast<
+                       flow::UnsqueezeSubLhsScalarMulRhsScalarNode>(node)) {
+      const std::vector<int64_t> &unsqueeze_axes = ptr->GetUnsqueezeAxes();
+      Type sub_type = ptr->GetSubType();
+      float64_t sub_val = ptr->GetSubVal();
+      Type mul_type = ptr->GetMulType();
+      float64_t mul_val = ptr->GetMulVal();
+      std::shared_ptr<flow::Edge> input_edge = ptr->GetInput();
+      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
+      const std::string &input_name = input_edge->GetName();
+      const std::string &output_name = output_edge->GetName();
+      mlir::Value &input = symbol_table.at(input_name);
+      mlir::Value &output = symbol_table.at(output_name);
+      kernel::UnsqueezeSubLhsScalarMulRhsScalarKernel kernel;
+      kernel.Run(builder, unsqueeze_axes, sub_type, sub_val, mul_type, mul_val,
+                 input, output);
     } else if (std::shared_ptr<flow::WhereConstantCondConstantScalarYNode> ptr =
                    std::dynamic_pointer_cast<
                        flow::WhereConstantCondConstantScalarYNode>(node)) {

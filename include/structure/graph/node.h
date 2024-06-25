@@ -34,6 +34,7 @@ public:
     Tanh,
     Transpose,
     Unsqueeze,
+    UnsqueezeSubMul,
     Where,
   };
   Node(std::string &&name, Op op,
@@ -52,6 +53,10 @@ public:
   std::vector<std::shared_ptr<Node>> GetInputNodes() const;
   std::vector<std::shared_ptr<Node>> GetOutputNodes() const;
   void Delete();
+  void ClearInput(const Edge &edge);
+  void ClearInput(const std::string &name);
+  void ClearOutput(const Edge &edge);
+  void ClearOutput(const std::string &name);
   void ClearInputs();
   void ClearOutputs();
   void PutInput(Edge &edge);

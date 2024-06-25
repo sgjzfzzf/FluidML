@@ -11,6 +11,10 @@
 namespace cpu_transformers {
 namespace optimization {
 
+std::shared_ptr<GatherAddFusionPass> GatherAddFusionPass::Make() {
+  return std::make_shared<GatherAddFusionPass>();
+}
+
 void GatherAddFusionPass::Run(cpu_transformers::graph::Node &node) const {
   graph::Graph *graph = node.GetGraph();
   if (graph == nullptr) {

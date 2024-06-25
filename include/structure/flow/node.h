@@ -597,6 +597,42 @@ private:
   const std::vector<int64_t> axes_;
 };
 
+class UnsqueezeSubLhsScalarMulRhsScalarNode : public Node {
+public:
+  UnsqueezeSubLhsScalarMulRhsScalarNode(std::string &&name,
+                                        std::shared_ptr<Edge> &&input,
+                                        std::shared_ptr<Edge> &&output,
+                                        std::vector<int64_t> &&unsqueeze_axes,
+                                        Type sub_type, float64_t sub_val,
+                                        Type mul_type, float64_t mul_val);
+  UnsqueezeSubLhsScalarMulRhsScalarNode(std::string &&name,
+                                        std::shared_ptr<Edge> &&unsqueeze_axes,
+                                        Type sub_type, float64_t sub_val,
+                                        Type mul_type, float64_t mul_val,
+                                        std::shared_ptr<Edge> &&output);
+  UnsqueezeSubLhsScalarMulRhsScalarNode(
+      const UnsqueezeSubLhsScalarMulRhsScalarNode &node) = delete;
+  UnsqueezeSubLhsScalarMulRhsScalarNode(
+      UnsqueezeSubLhsScalarMulRhsScalarNode &&node) = default;
+  virtual ~UnsqueezeSubLhsScalarMulRhsScalarNode() = default;
+  std::shared_ptr<Edge> GetInput() const noexcept;
+  std::shared_ptr<Edge> GetOutput() const noexcept;
+  const std::vector<int64_t> &GetUnsqueezeAxes() const noexcept;
+  Type GetSubType() const noexcept;
+  float64_t GetSubVal() const noexcept;
+  Type GetMulType() const noexcept;
+  float64_t GetMulVal() const noexcept;
+
+private:
+  std::shared_ptr<Edge> input_;
+  std::shared_ptr<Edge> output_;
+  std::vector<int64_t> unsqueeze_axes_;
+  const Type sub_type_;
+  const float64_t sub_val_;
+  const Type mul_type_;
+  const float64_t mul_val_;
+};
+
 class WhereNode : public Node {
 public:
   WhereNode(std::string &&name);

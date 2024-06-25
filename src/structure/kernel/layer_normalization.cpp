@@ -1,4 +1,4 @@
-#include "structure/kernel/layernormalization.h"
+#include "structure/kernel/layer_normalization.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Bufferization/IR/Bufferization.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"

@@ -49,11 +49,17 @@ public:
   bool EdgeToNode(const std::string &edge_name, const std::string &node_name);
   bool EdgeToNode(const Edge &edge, const Node &node);
   bool NodeToEdge(const std::string &node_name, const std::string &edge_name);
+  bool NodeToEdge(const Node &node, const Edge &edge);
+  bool ClearEdgeToNode(const std::string &edge_name,
+                       const std::string &node_name);
+  bool ClearEdgeToNode(const Edge &edge, const Node &node);
+  bool ClearNodeToEdge(const std::string &node_name,
+                       const std::string &edge_name);
+  bool ClearNodeToEdge(const Node &node, const Edge &edge);
   bool ClearEdgeFrom(const std::string &edge_name);
   bool ClearEdgeFrom(const Edge &edge);
   bool ClearNodeFrom(const std::string &node_name);
   bool ClearNodeFrom(const Node &node);
-  bool NodeToEdge(const Node &node, const Edge &edge);
   bool ClearEdgeTos(const std::string &edge_name);
   bool ClearEdgeTos(const Edge &edge);
   bool ClearNodeTos(const std::string &node_name);

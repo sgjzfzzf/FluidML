@@ -6,13 +6,13 @@ find_package(Wget REQUIRED)
 
 include_directories(${GTEST_INCLUDE_DIRS})
 
-if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/bert_Optset18.onnx)
+if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/bert_Opset18.onnx)
     execute_process(
-        COMMAND ${WGET_EXECUTABLE} -O bert_Optset18.onnx "https://github.com/onnx/models/raw/main/Natural_Language_Processing/bert_Opset18_transformers/bert_Opset18.onnx"
+        COMMAND ${WGET_EXECUTABLE} -O bert_Opset18.onnx "https://github.com/onnx/models/raw/main/Natural_Language_Processing/bert_Opset18_transformers/bert_Opset18.onnx"
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
     execute_process(
-        COMMAND ${ONNXSIM} bert_Optset18.onnx bert_Optset18.onnx
+        COMMAND ${ONNXSIM} bert_Opset18.onnx bert_Opset18.onnx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 endif()
@@ -28,7 +28,7 @@ if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/gpt2_Opset18.onnx)
     )
 endif()
 
-set(BERT_MODEL_PATH ${CMAKE_CURRENT_BINARY_DIR}/bert_Optset18.onnx)
+set(BERT_MODEL_PATH ${CMAKE_CURRENT_BINARY_DIR}/bert_Opset18.onnx)
 set(GPT2_MODEL_PATH ${CMAKE_CURRENT_BINARY_DIR}/gpt2_Opset18.onnx)
 
 add_subdirectory(model)

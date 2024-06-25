@@ -76,6 +76,30 @@ void Node::Delete() {
   }
 }
 
+void Node::ClearInput(const Edge &edge) {
+  if (graph_) {
+    graph_->ClearEdgeToNode(edge, *this);
+  }
+}
+
+void Node::ClearInput(const std::string &name) {
+  if (graph_) {
+    graph_->ClearEdgeToNode(name, name_);
+  }
+}
+
+void Node::ClearOutput(const Edge &edge) {
+  if (graph_) {
+    graph_->ClearNodeToEdge(*this, edge);
+  }
+}
+
+void Node::ClearOutput(const std::string &name) {
+  if (graph_) {
+    graph_->ClearNodeToEdge(name_, name);
+  }
+}
+
 void Node::ClearInputs() {
   if (graph_) {
     graph_->ClearNodeFrom(name_);

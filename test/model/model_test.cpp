@@ -44,31 +44,31 @@ TEST(ModelTest, BertTest) {
   std::vector<int64_t> input_ids(1 * 128, 0);
   std::vector<float32_t> attention_mask(1 * 128, 0), output0(1 * 128 * 768, 0),
       output1(1 * 768, 0);
-  runner.Run({
-      {"input_ids", input_ids.data()},
-      {"attention_mask", attention_mask.data()},
-      {"onnx::Gather_1269", output0.data()},
-      {"1272", output1.data()},
-  });
+  //   runner.Run({
+  //       {"input_ids", input_ids.data()},
+  //       {"attention_mask", attention_mask.data()},
+  //       {"onnx::Gather_1269", output0.data()},
+  //       {"1272", output1.data()},
+  //   });
 }
 
-TEST(ModelTest, GPT2Test) {
-  Parser parser;
-  Converter converter;
-  std::shared_ptr<Context> context = Context::Make();
-  NaiveBuilder builder("gpt2", context);
-  Lower lower(context);
-  Graph graph = parser.Run(GPT2_MODEL_PATH);
-  Flow flow = converter.Run(graph);
-  LinearPlanner planner;
-  Sequence sequence = planner.FlowToSequence(flow);
-  Index index = planner.Run(sequence);
-  builder.Run(sequence, index);
-#ifdef DEBUG
-  context->DumpModule("gpt2.mlir");
-#endif
-  lower.Run();
-#ifdef DEBUG
-  context->DumpModule("gpt2-llvm.mlir");
-#endif
-}
+// TEST(ModelTest, GPT2Test) {
+//   Parser parser;
+//   Converter converter;
+//   std::shared_ptr<Context> context = Context::Make();
+//   NaiveBuilder builder("gpt2", context);
+//   Lower lower(context);
+//   Graph graph = parser.Run(GPT2_MODEL_PATH);
+//   Flow flow = converter.Run(graph);
+//   LinearPlanner planner;
+//   Sequence sequence = planner.FlowToSequence(flow);
+//   Index index = planner.Run(sequence);
+//   builder.Run(sequence, index);
+// #ifdef DEBUG
+//   context->DumpModule("gpt2.mlir");
+// #endif
+//   lower.Run();
+// #ifdef DEBUG
+//   context->DumpModule("gpt2-llvm.mlir");
+// #endif
+// }

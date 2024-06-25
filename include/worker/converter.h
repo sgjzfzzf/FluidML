@@ -49,6 +49,8 @@ private:
                             const graph::Node &node);
   void convertUnsqueezeNode(flow::Flow &flow, const graph::Graph &graph,
                             const graph::Node &node);
+  void convertUnsqueezeSubMulNode(flow::Flow &flow, const graph::Graph &graph,
+                                  const graph::Node &node);
   void convertWhereNode(flow::Flow &flow, const graph::Graph &graph,
                         const graph::Node &node);
 };

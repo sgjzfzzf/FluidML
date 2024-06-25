@@ -11,6 +11,7 @@ public:
   GatherAddFusionPass() = default;
   GatherAddFusionPass(const GatherAddFusionPass &) = default;
   GatherAddFusionPass(GatherAddFusionPass &&) = default;
+  static std::shared_ptr<GatherAddFusionPass> Make();
   void Run(cpu_transformers::graph::Node &node) const override;
 };
 

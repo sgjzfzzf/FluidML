@@ -2,6 +2,7 @@
 
 namespace cpu_transformers {
 namespace flow {
+
 Edge::Edge(std::shared_ptr<Region> &&region) : region_(region) {}
 
 const std::string &Edge::GetName() const { return region_->GetName(); }
@@ -28,5 +29,6 @@ OutputEdge::OutputEdge(std::shared_ptr<Region> &&region, std::string &&from)
     : InterfaceEdge(std::move(region)), from_(std::move(from)) {}
 
 const std::string &OutputEdge::GetFrom() const { return from_; }
+
 } // namespace flow
 } // namespace cpu_transformers
