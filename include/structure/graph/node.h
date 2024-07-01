@@ -15,6 +15,7 @@ public:
   // plan.
   enum class Op {
     Add,
+    AddDivErfAddMulMul,
     Cast,
     ConstantOfShape,
     Div,

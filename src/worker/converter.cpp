@@ -100,6 +100,9 @@ flow::Flow Converter::Run(const graph::Graph &graph) {
     case graph::Node::Op::Add:
       convertAddNode(flow, graph, *node);
       break;
+    case graph::Node::Op::AddDivErfAddMulMul:
+      convertAddDivErfAddMulMulNode(flow, graph, *node);
+      break;
     case graph::Node::Op::Div:
       convertDivNode(flow, graph, *node);
       break;
@@ -294,6 +297,71 @@ void Converter::convertAddNode(flow::Flow &flow, const graph::Graph &graph,
 #endif
     }
   }
+  flow.PutNode(std::move(ptr));
+}
+
+void Converter::convertAddDivErfAddMulMulNode(flow::Flow &flow,
+                                              const graph::Graph &graph,
+                                              const graph::Node &node) {
+#ifdef DEBUG
+  assert(node.GetOp() == graph::Node::Op::AddDivErfAddMulMul);
+#endif
+  std::string name = node.GetName();
+  std::vector<std::shared_ptr<graph::Edge>> inputs = graph.GetNodeFrom(node);
+  std::vector<std::shared_ptr<graph::Edge>> outputs = graph.GetNodeTo(node);
+#ifdef DEBUG
+  assert(inputs.size() == 5);
+  assert(outputs.size() == 1);
+#endif
+  std::shared_ptr<graph::Edge> add0_edge = inputs[0];
+  std::shared_ptr<graph::Edge> div_edge = inputs[1];
+  std::shared_ptr<graph::Edge> add1_edge = inputs[2];
+  std::shared_ptr<graph::Edge> mul1_edge = inputs[3];
+  std::shared_ptr<graph::Edge> input_edge = inputs[4];
+  std::shared_ptr<graph::Edge> output_edge = outputs[0];
+#ifdef DEBUG
+  assert(add0_edge != nullptr);
+  assert(div_edge != nullptr);
+  assert(add1_edge != nullptr);
+  assert(mul1_edge != nullptr);
+  assert(input_edge != nullptr);
+  assert(output_edge != nullptr);
+#endif
+  std::shared_ptr<graph::ConstantTensorEdge> add0_weight =
+      std::dynamic_pointer_cast<graph::ConstantTensorEdge>(add0_edge);
+  std::shared_ptr<graph::ConstantScalarEdge> div_weight =
+      std::dynamic_pointer_cast<graph::ConstantScalarEdge>(div_edge);
+  std::shared_ptr<graph::ConstantScalarEdge> add1_weight =
+      std::dynamic_pointer_cast<graph::ConstantScalarEdge>(add1_edge);
+  std::shared_ptr<graph::ConstantScalarEdge> mul1_weight =
+      std::dynamic_pointer_cast<graph::ConstantScalarEdge>(mul1_edge);
+  std::shared_ptr<graph::NonConstantEdge> input =
+      std::dynamic_pointer_cast<graph::NonConstantEdge>(input_edge);
+  std::shared_ptr<graph::NonConstantEdge> output =
+      std::dynamic_pointer_cast<graph::NonConstantEdge>(output_edge);
+#ifdef DEBUG
+  assert(add0_weight != nullptr);
+  assert(div_weight != nullptr);
+  assert(add1_weight != nullptr);
+  assert(mul1_weight != nullptr);
+  assert(input != nullptr);
+  assert(output != nullptr);
+#endif
+  std::shared_ptr<flow::AddDivErfAddMulMulNode> ptr = nullptr;
+  const std::string &input_name = input->GetName();
+  const std::string &output_name = output->GetName();
+  std::shared_ptr<flow::Edge> input_ptr = flow.GetEdge(input_name);
+  std::shared_ptr<flow::Edge> output_ptr = flow.GetEdge(output_name);
+#ifdef DEBUG
+  assert(input_ptr != nullptr);
+  assert(output_ptr != nullptr);
+#endif
+  Tensor add0_weight_tensor = add0_weight->GetValue();
+  ptr = std::make_shared<flow::AddDivErfAddMulMulNode>(
+      std::move(name), std::move(add0_weight_tensor), div_weight->GetType(),
+      div_weight->GetValue(), add1_weight->GetType(), add1_weight->GetValue(),
+      mul1_weight->GetType(), mul1_weight->GetValue(), std::move(input_ptr),
+      std::move(output_ptr));
   flow.PutNode(std::move(ptr));
 }
 

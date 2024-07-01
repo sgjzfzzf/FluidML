@@ -116,9 +116,8 @@ void AddConstTensorKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
       builder.getUnknownLoc(), elements);
   mlir::MemRefType weights_ref_type =
       mlir::MemRefType::get(tensor_shape, tensor_elem_type);
-  mlir::bufferization::ToMemrefOp weights_ref =
-      builder.create<mlir::bufferization::ToMemrefOp>(
-          builder.getUnknownLoc(), weights_ref_type, weights);
+  mlir::Value weights_ref = builder.create<mlir::bufferization::ToMemrefOp>(
+      builder.getUnknownLoc(), weights_ref_type, weights);
 #ifdef DEBUG
   std::vector<int64_t> input_shape = input_type.getShape();
   std::vector<int64_t> output_shape = output_type.getShape();

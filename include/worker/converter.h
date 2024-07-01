@@ -16,6 +16,9 @@ public:
 private:
   void convertAddNode(flow::Flow &flow, const graph::Graph &graph,
                       const graph::Node &node);
+  void convertAddDivErfAddMulMulNode(flow::Flow &flow,
+                                     const graph::Graph &graph,
+                                     const graph::Node &node);
   void convertDivNode(flow::Flow &flow, const graph::Graph &graph,
                       const graph::Node &node);
   void convertErfNode(flow::Flow &flow, const graph::Graph &graph,

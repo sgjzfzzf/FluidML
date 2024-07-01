@@ -105,6 +105,52 @@ std::shared_ptr<Edge> AddCommonNode::GetOutput() const noexcept {
   return output_;
 }
 
+AddDivErfAddMulMulNode::AddDivErfAddMulMulNode(
+    std::string &&name, Tensor &&add0_weight, Type div_type,
+    float64_t div_weight, Type add1_type, float64_t add1_weight, Type mul1_type,
+    float64_t mul1_weight, std::shared_ptr<Edge> &&input,
+    std::shared_ptr<Edge> &&output)
+    : Node(std::move(name)), add0_weight_(add0_weight), div_type_(div_type),
+      div_weight_(div_weight), add1_type_(add1_type), add1_weight_(add1_weight),
+      mul1_type_(mul1_type), mul1_weight_(mul1_weight),
+      input_(std::move(input)), output_(std::move(output)) {
+#ifdef DEBUG
+  const Meta &input_meta = input_->GetMeta();
+  const Meta &output_meta = output_->GetMeta();
+  assert(input_meta == output_meta);
+#endif
+}
+
+const Tensor &AddDivErfAddMulMulNode::GetAdd0Weight() const noexcept {
+  return add0_weight_;
+}
+
+Type AddDivErfAddMulMulNode::GetDivType() const noexcept { return div_type_; }
+
+float64_t AddDivErfAddMulMulNode::GetDivWeight() const noexcept {
+  return div_weight_;
+}
+
+Type AddDivErfAddMulMulNode::GetAdd1Type() const noexcept { return add1_type_; }
+
+float64_t AddDivErfAddMulMulNode::GetAdd1Weight() const noexcept {
+  return add1_weight_;
+}
+
+Type AddDivErfAddMulMulNode::GetMul1Type() const noexcept { return mul1_type_; }
+
+float64_t AddDivErfAddMulMulNode::GetMul1Weight() const noexcept {
+  return mul1_weight_;
+}
+
+std::shared_ptr<Edge> AddDivErfAddMulMulNode::GetInput() const noexcept {
+  return input_;
+}
+
+std::shared_ptr<Edge> AddDivErfAddMulMulNode::GetOutput() const noexcept {
+  return output_;
+}
+
 DivNode::DivNode(std::string &&name) : Node(std::move(name)) {}
 
 DivConstantScalarNode::DivConstantScalarNode(std::string &&name, Type type,

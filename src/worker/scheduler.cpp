@@ -1,6 +1,7 @@
 #include "worker/scheduler.h"
 #include "structure/flow/node.h"
 #include "structure/kernel/add.h"
+#include "structure/kernel/add_div_erf_add_mul_mul.h"
 #include "structure/kernel/div.h"
 #include "structure/kernel/erf.h"
 #include "structure/kernel/gather.h"
@@ -71,6 +72,26 @@ void NaiveScheduler::Run(
       mlir::Value &output = symbol_table.at(output_name);
       kernel::AddCommonKernel kernel;
       kernel.Run(builder, lhs, rhs, output);
+    } else if (std::shared_ptr<flow::AddDivErfAddMulMulNode> ptr =
+                   std::dynamic_pointer_cast<flow::AddDivErfAddMulMulNode>(
+                       node)) {
+      Tensor add0_weight = ptr->GetAdd0Weight();
+      Type div_type = ptr->GetDivType();
+      float64_t div_weight = ptr->GetDivWeight();
+      Type add1_type = ptr->GetAdd1Type();
+      float64_t add1_weight = ptr->GetAdd1Weight();
+      Type mul1_type = ptr->GetMul1Type();
+      float64_t mul1_weight = ptr->GetMul1Weight();
+      std::shared_ptr<flow::Edge> input_edge = ptr->GetInput();
+      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
+      const std::string &input_name = input_edge->GetName();
+      const std::string &output_name = output_edge->GetName();
+      mlir::Value &input = symbol_table.at(input_name);
+      mlir::Value &output = symbol_table.at(output_name);
+      kernel::AddDivErfAddMulMulKernel kernel(
+          std::move(add0_weight), div_type, div_weight, add1_type, add1_weight,
+          mul1_type, mul1_weight);
+      kernel.Run(builder, input, output);
     } else if (std::shared_ptr<flow::DivConstantScalarNode> ptr =
                    std::dynamic_pointer_cast<flow::DivConstantScalarNode>(
                        node)) {

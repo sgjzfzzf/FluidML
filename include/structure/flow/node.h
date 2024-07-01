@@ -100,6 +100,38 @@ private:
   std::shared_ptr<Edge> output_;
 };
 
+class AddDivErfAddMulMulNode : public Node {
+public:
+  AddDivErfAddMulMulNode(std::string &&name, Tensor &&add0_weight,
+                         Type div_type, float64_t div_weight, Type add1_type,
+                         float64_t add1_weight, Type mul1_type,
+                         float64_t mul1_weight, std::shared_ptr<Edge> &&input,
+                         std::shared_ptr<Edge> &&output);
+  AddDivErfAddMulMulNode(const AddDivErfAddMulMulNode &node) = delete;
+  AddDivErfAddMulMulNode(AddDivErfAddMulMulNode &&node) = default;
+  virtual ~AddDivErfAddMulMulNode() = default;
+  const Tensor &GetAdd0Weight() const noexcept;
+  Type GetDivType() const noexcept;
+  float64_t GetDivWeight() const noexcept;
+  Type GetAdd1Type() const noexcept;
+  float64_t GetAdd1Weight() const noexcept;
+  Type GetMul1Type() const noexcept;
+  float64_t GetMul1Weight() const noexcept;
+  std::shared_ptr<Edge> GetInput() const noexcept;
+  std::shared_ptr<Edge> GetOutput() const noexcept;
+
+private:
+  const Tensor add0_weight_;
+  const Type div_type_;
+  const float64_t div_weight_;
+  const Type add1_type_;
+  const float64_t add1_weight_;
+  const Type mul1_type_;
+  const float64_t mul1_weight_;
+  std::shared_ptr<Edge> input_;
+  std::shared_ptr<Edge> output_;
+};
+
 class DivNode : public Node {
 public:
   DivNode(std::string &&name);

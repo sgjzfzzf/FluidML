@@ -1,4 +1,5 @@
 #include "optimization/graph/manager.h"
+#include "optimization/graph/add_div_erf_add_mul_fusion.h"
 #include "optimization/graph/gather_add_fusion.h"
 #include "optimization/graph/unsqueeze_sub_mul_fusion.h"
 #ifdef DEBUG
@@ -27,6 +28,7 @@ void GraphPassesManager::Run(graph::Graph &graph) const {
 }
 
 void GraphPassesManager::RegisterAllPasses() {
+  passes_.emplace_back(AddDivErfAddMulFusionPass::Make());
   passes_.emplace_back(GatherAddFusionPass::Make());
   passes_.emplace_back(UnsqueezeSubMulPass::Make());
 }
