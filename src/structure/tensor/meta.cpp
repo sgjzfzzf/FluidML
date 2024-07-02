@@ -22,15 +22,18 @@ void Meta::AlignLeftTo(size_t size, float64_t value) {
   shape_.insert(shape_.begin(), size - current_size, value);
 }
 
-size_t Meta::GetSize() const {
+size_t Meta::GetElementsNum() const {
 #ifdef DEBUG
   for (int64_t dim : shape_) {
     assert(dim > 0);
   }
 #endif
   return std::accumulate(shape_.begin(), shape_.end(), 1,
-                         std::multiplies<int64_t>()) *
-         GetSizeFromType(type_);
+                         std::multiplies<int64_t>());
+}
+
+size_t Meta::GetSize() const {
+  return GetElementsNum() * GetSizeFromType(type_);
 }
 
 bool operator==(const Meta &lhs, const Meta &rhs) {

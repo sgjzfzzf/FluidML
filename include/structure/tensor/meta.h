@@ -17,6 +17,7 @@ public:
   Type GetType() const;
   const std::vector<int64_t> &GetShape() const;
   void AlignLeftTo(size_t size, float64_t value = 1.0);
+  size_t GetElementsNum() const;
   size_t GetSize() const;
   friend bool operator==(const Meta &lhs, const Meta &rhs);
   friend bool operator!=(const Meta &lhs, const Meta &rhs);
