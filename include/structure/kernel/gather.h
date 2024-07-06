@@ -7,31 +7,35 @@
 namespace cpu_transformers {
 namespace kernel {
 
-class GatherConstantIndexScalarKernel : public Kernel {
+class GatherConstantIndexScalarKernel : public SingleInputWithoutBufferKernel {
 public:
-  GatherConstantIndexScalarKernel(int64_t axis);
+  GatherConstantIndexScalarKernel(int64_t axis, int64_t index);
   GatherConstantIndexScalarKernel(
       const GatherConstantIndexScalarKernel &gather_kernel) = delete;
   GatherConstantIndexScalarKernel(
       GatherConstantIndexScalarKernel &&gather_kernel) = default;
   ~GatherConstantIndexScalarKernel() = default;
-  void Run(mlir::OpBuilder &builder, mlir::Value &data, int64_t index,
-           mlir::Value &output);
+  void Run(mlir::OpBuilder &builder, mlir::Value &input,
+           mlir::Value &output) const override;
 
 private:
   int64_t axis_;
+  int64_t index_;
 };
 
-class GatherConstantDataTensorKernel : public Kernel {
+class GatherConstantDataTensorKernel : public SingleInputWithoutBufferKernel {
 public:
-  GatherConstantDataTensorKernel() = default;
+  GatherConstantDataTensorKernel(Tensor &&data);
   GatherConstantDataTensorKernel(
       const GatherConstantDataTensorKernel &gather_kernel) = delete;
   GatherConstantDataTensorKernel(
       GatherConstantDataTensorKernel &&gather_kernel) = default;
   ~GatherConstantDataTensorKernel() = default;
-  void Run(mlir::OpBuilder &builder, const Tensor &data, mlir::Value &indices,
-           mlir::Value &output);
+  void Run(mlir::OpBuilder &builder, mlir::Value &input,
+           mlir::Value &output) const override;
+
+private:
+  Tensor data_;
 };
 
 } // namespace kernel

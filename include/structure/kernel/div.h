@@ -7,18 +7,21 @@
 
 namespace cpu_transformers {
 namespace kernel {
-class DivConstScalarKernel : public Kernel {
+
+class DivConstScalarKernel : public SingleInputWithoutBufferKernel {
 public:
   DivConstScalarKernel(Type type, float64_t constant);
   DivConstScalarKernel(const DivConstScalarKernel &div_kernel) = delete;
   DivConstScalarKernel(DivConstScalarKernel &&div_kernel) = default;
   ~DivConstScalarKernel() = default;
-  void Run(mlir::OpBuilder &builder, mlir::Value &input, mlir::Value &output);
+  void Run(mlir::OpBuilder &builder, mlir::Value &input,
+           mlir::Value &output) const override;
 
 private:
   Type type_;
   float64_t constant_;
 };
+
 } // namespace kernel
 } // namespace cpu_transformers
 

@@ -7,9 +7,12 @@
 namespace cpu_transformers {
 namespace kernel {
 
-class GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel : public Kernel {
+class GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel
+    : public SingleInputWithoutBufferKernel {
 public:
-  GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel() = default;
+  GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel(Tensor &&data,
+                                                         Tensor &&add0_weight,
+                                                         Tensor &&add1_weight);
   GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel(
       const GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel
           &gather_kernel) = delete;
@@ -17,9 +20,13 @@ public:
       GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel &&gather_kernel) =
       default;
   ~GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel() = default;
-  void Run(mlir::OpBuilder &builder, const Tensor &data,
-           const Tensor &add0_weight, const Tensor &add1_weight,
-           mlir::Value &input, mlir::Value &output);
+  void Run(mlir::OpBuilder &builder, mlir::Value &input,
+           mlir::Value &output) const override;
+
+private:
+  Tensor data_;
+  Tensor add0_weight_;
+  Tensor add1_weight_;
 };
 
 } // namespace kernel

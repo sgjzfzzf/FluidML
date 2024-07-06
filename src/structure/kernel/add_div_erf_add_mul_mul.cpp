@@ -21,7 +21,7 @@ AddDivErfAddMulMulKernel::AddDivErfAddMulMulKernel(
       mul1_type_(mul1_type), mul1_weight_(mul1_weight) {}
 
 void AddDivErfAddMulMulKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
-                                   mlir::Value &output) {
+                                   mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::Type add0_weight_type;
   if (add0_weight_.GetType() == Type::FLOAT32) {
@@ -102,8 +102,7 @@ void AddDivErfAddMulMulKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
       builder.getUnknownLoc(), builder.getFloatAttr(mul1_type, mul1_weight_));
   builder.create<mlir::linalg::GenericOp>(
       builder.getUnknownLoc(), mlir::TypeRange{},
-      mlir::ValueRange({input, add0_weight_ref}), mlir::ValueRange({output}),
-      maps,
+      mlir::ValueRange{input, add0_weight_ref}, mlir::ValueRange{output}, maps,
       llvm::SmallVector<mlir::utils::IteratorType>(
           rank, mlir::utils::IteratorType::parallel),
       [&](mlir::OpBuilder &b, mlir::Location loc, mlir::ValueRange args) {

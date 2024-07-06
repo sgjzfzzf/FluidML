@@ -1,8 +1,10 @@
 #include "structure/kernel/reshape.h"
-#include "mlir/Dialect/Arith/IR/Arith.h"
-#include "mlir/Dialect/Bufferization/IR/Bufferization.h"
+#include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
+#include "mlir/IR/AffineMap.h"
 #include "mlir/IR/BuiltinTypes.h"
+#include "mlir/IR/ValueRange.h"
+#include "llvm/ADT/SmallVector.h"
 #ifdef DEBUG
 #include <cassert>
 #include <numeric>
@@ -11,33 +13,51 @@
 namespace cpu_transformers {
 namespace kernel {
 void ReshapeKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
-                        mlir::Value &output) {
+                        mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::MemRefType input_type = mlir::cast<mlir::MemRefType>(input.getType());
   mlir::MemRefType output_type = mlir::cast<mlir::MemRefType>(output.getType());
   llvm::ArrayRef<int64_t> input_shape = input_type.getShape();
   llvm::ArrayRef<int64_t> output_shape = output_type.getShape();
+  const int64_t elem_num = input_type.getNumElements(),
+                input_rank = input_shape.size(),
+                output_rank = output_shape.size();
 #ifdef DEBUG
-  assert(std::accumulate(input_shape.begin(), input_shape.end(), 1,
-                         std::multiplies<int64_t>()) ==
-         std::accumulate(output_shape.begin(), output_shape.end(), 1,
-                         std::multiplies<int64_t>()));
+  assert(elem_num == std::accumulate(input_shape.begin(), input_shape.end(), 1,
+                                     std::multiplies<int64_t>()));
+  assert(elem_num == output_type.getNumElements());
+  assert(elem_num == std::accumulate(output_shape.begin(), output_shape.end(),
+                                     1, std::multiplies<int64_t>()));
 #endif
-  mlir::RankedTensorType shape_tensor_type = mlir::RankedTensorType::get(
-      {output_type.getRank()}, builder.getIndexType());
-  mlir::Value shape = builder.create<mlir::arith::ConstantOp>(
-      builder.getUnknownLoc(), shape_tensor_type,
-      builder.getIndexTensorAttr(output_shape));
-  mlir::MemRefType shape_type =
-      mlir::MemRefType::get(output_type.getRank(), builder.getIndexType());
-  mlir::bufferization::ToMemrefOp shape_buffer =
-      builder.create<mlir::bufferization::ToMemrefOp>(builder.getUnknownLoc(),
-                                                      shape_type, shape);
-  mlir::memref::ReshapeOp reshape_view =
-      builder.create<mlir::memref::ReshapeOp>(builder.getUnknownLoc(),
-                                              output_type, input, shape_buffer);
-  builder.create<mlir::memref::CopyOp>(builder.getUnknownLoc(), reshape_view,
-                                       output);
+  builder.create<mlir::affine::AffineForOp>(
+      builder.getUnknownLoc(), 0, elem_num, 1, std::nullopt,
+      [&](mlir::OpBuilder &b, mlir::Location loc, mlir::Value arg,
+          mlir::ValueRange args) {
+        llvm::SmallVector<mlir::Value> input_indices, output_indices;
+        for (size_t i = 0, prod = elem_num; i < input_rank; ++i) {
+          mlir::AffineExpr expr = builder.getAffineDimExpr(0) % prod;
+          prod /= input_shape[i];
+          expr = expr.floorDiv(prod);
+          mlir::AffineMap map = mlir::AffineMap::get(1, 0, expr, context);
+          mlir::Value index =
+              b.create<mlir::affine::AffineApplyOp>(loc, map, arg);
+          input_indices.push_back(std::move(index));
+        }
+        for (size_t i = 0, prod = elem_num; i < output_rank; ++i) {
+          mlir::AffineExpr expr = builder.getAffineDimExpr(0) % prod;
+          prod /= output_shape[i];
+          expr = expr.floorDiv(prod);
+          mlir::AffineMap map = mlir::AffineMap::get(1, 0, expr, context);
+          mlir::Value index =
+              b.create<mlir::affine::AffineApplyOp>(loc, map, arg);
+          output_indices.push_back(std::move(index));
+        }
+        mlir::Value value =
+            b.create<mlir::affine::AffineLoadOp>(loc, input, input_indices);
+        b.create<mlir::affine::AffineStoreOp>(loc, std::move(value), output,
+                                              output_indices);
+        b.create<mlir::affine::AffineYieldOp>(loc);
+      });
 }
 } // namespace kernel
 } // namespace cpu_transformers

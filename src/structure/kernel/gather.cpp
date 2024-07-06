@@ -19,15 +19,16 @@
 
 namespace cpu_transformers {
 namespace kernel {
-GatherConstantIndexScalarKernel::GatherConstantIndexScalarKernel(int64_t axis)
-    : axis_(axis) {}
+GatherConstantIndexScalarKernel::GatherConstantIndexScalarKernel(int64_t axis,
+                                                                 int64_t index)
+    : axis_(axis), index_(index) {}
 
 void GatherConstantIndexScalarKernel::Run(mlir::OpBuilder &builder,
-                                          mlir::Value &data, int64_t index,
-                                          mlir::Value &output) {
+                                          mlir::Value &input,
+                                          mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::MemRefType data_memref_type =
-      mlir::cast<mlir::MemRefType>(data.getType());
+      mlir::cast<mlir::MemRefType>(input.getType());
   mlir::MemRefType output_memref_type =
       mlir::cast<mlir::MemRefType>(output.getType());
   int64_t data_rank = data_memref_type.getRank();
@@ -40,9 +41,9 @@ void GatherConstantIndexScalarKernel::Run(mlir::OpBuilder &builder,
   for (size_t i = 0; i < data_rank; ++i) {
     if (i == axis_) {
 #ifdef DEBUG
-      assert(index >= 0);
+      assert(index_ >= 0);
 #endif
-      data_exprs.push_back(mlir::getAffineConstantExpr(index, context));
+      data_exprs.push_back(mlir::getAffineConstantExpr(index_, context));
     } else {
       size_t index = i < axis_ ? i : i - 1;
       data_exprs.push_back(mlir::getAffineDimExpr(index, context));
@@ -57,7 +58,7 @@ void GatherConstantIndexScalarKernel::Run(mlir::OpBuilder &builder,
     iterator_types.push_back(mlir::utils::IteratorType::parallel);
   }
   builder.create<mlir::linalg::GenericOp>(
-      builder.getUnknownLoc(), mlir::TypeRange{}, mlir::ValueRange{data},
+      builder.getUnknownLoc(), mlir::TypeRange{}, mlir::ValueRange{input},
       mlir::ValueRange{output}, maps, iterator_types,
       [&](mlir::OpBuilder &b, mlir::Location loc, mlir::ValueRange inputs) {
 #ifdef DEBUG
@@ -68,17 +69,19 @@ void GatherConstantIndexScalarKernel::Run(mlir::OpBuilder &builder,
       });
 }
 
+GatherConstantDataTensorKernel::GatherConstantDataTensorKernel(Tensor &&data)
+    : data_(std::move(data)) {}
+
 void GatherConstantDataTensorKernel::Run(mlir::OpBuilder &builder,
-                                         const Tensor &data,
-                                         mlir::Value &indices,
-                                         mlir::Value &output) {
+                                         mlir::Value &input,
+                                         mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::MemRefType indices_memref_type =
-      mlir::cast<mlir::MemRefType>(indices.getType());
+      mlir::cast<mlir::MemRefType>(input.getType());
   mlir::MemRefType output_memref_type =
       mlir::cast<mlir::MemRefType>(output.getType());
-  const std::vector<int64_t> &data_shape = data.GetShape();
-  const std::vector<float64_t> &data_ref = data.Get();
+  const std::vector<int64_t> &data_shape = data_.GetShape();
+  const std::vector<float64_t> &data_ref = data_.Get();
   int64_t data_rank = data_shape.size();
   llvm::ArrayRef<int64_t> indices_shape = indices_memref_type.getShape();
   int64_t indices_rank = indices_memref_type.getRank();
@@ -97,7 +100,7 @@ void GatherConstantDataTensorKernel::Run(mlir::OpBuilder &builder,
   mlir::ShapedType data_shaped_type =
       mlir::RankedTensorType::get(data_shape, mlir::FloatType::getF32(context));
   mlir::DenseElementsAttr elements;
-  if (data.GetType() == Type::FLOAT32) {
+  if (data_.GetType() == Type::FLOAT32) {
     std::vector<float32_t> data(data_ref.begin(), data_ref.end());
     elements =
         mlir::DenseElementsAttr::get(data_shaped_type, llvm::ArrayRef(data));
@@ -127,7 +130,7 @@ void GatherConstantDataTensorKernel::Run(mlir::OpBuilder &builder,
     iterator_types.push_back(mlir::utils::IteratorType::parallel);
   }
   builder.create<mlir::linalg::GenericOp>(
-      builder.getUnknownLoc(), mlir::TypeRange{}, mlir::ValueRange{indices},
+      builder.getUnknownLoc(), mlir::TypeRange{}, mlir::ValueRange{input},
       mlir::ValueRange{output}, maps, iterator_types,
       [&](mlir::OpBuilder &b, mlir::Location loc, mlir::ValueRange inputs) {
 #ifdef DEBUG
@@ -147,5 +150,6 @@ void GatherConstantDataTensorKernel::Run(mlir::OpBuilder &builder,
         b.create<mlir::linalg::YieldOp>(loc, out);
       });
 }
+
 } // namespace kernel
 } // namespace cpu_transformers

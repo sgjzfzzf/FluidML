@@ -1,26 +1,8 @@
 #include "worker/scheduler.h"
+#include "mlir/IR/Builders.h"
 #include "structure/flow/node.h"
-#include "structure/kernel/add.h"
-#include "structure/kernel/add_div_erf_add_mul_mul.h"
-#include "structure/kernel/div.h"
-#include "structure/kernel/erf.h"
-#include "structure/kernel/gather.h"
-#include "structure/kernel/gather_add_add.h"
-#include "structure/kernel/gemm.h"
-#include "structure/kernel/layer_normalization.h"
-#include "structure/kernel/matmul.h"
-#include "structure/kernel/mul.h"
-#include "structure/kernel/pow.h"
-#include "structure/kernel/reshape.h"
-#include "structure/kernel/softmax.h"
-#include "structure/kernel/split.h"
-#include "structure/kernel/sub.h"
-#include "structure/kernel/tanh.h"
-#include "structure/kernel/transpose.h"
-#include "structure/kernel/unsqueeze.h"
-#include "structure/kernel/unsqueeze_sub_mul.h"
-#include "structure/kernel/where.h"
-#include "structure/tensor/tensor.h"
+#include "structure/kernel/kernel.h"
+#include "worker/utils.h"
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -30,389 +12,85 @@
 
 namespace cpu_transformers {
 namespace worker {
-void NaiveScheduler::Run(
+
+void Scheduler::Run(
     mlir::OpBuilder &builder, const flow::Sequence &sequence,
     std::unordered_map<std::string, mlir::Value> &symbol_table) {
   const std::vector<std::shared_ptr<flow::Node>> &nodes = sequence.GetNodes();
   for (std::shared_ptr<flow::Node> node : nodes) {
-    if (std::shared_ptr<flow::AddConstantScalarNode> ptr =
-            std::dynamic_pointer_cast<flow::AddConstantScalarNode>(node)) {
-      std::shared_ptr<flow::Edge> input_edge = ptr->GetInput();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      const std::string &input_name = input_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
-      mlir::Value &input = symbol_table.at(input_name);
-      mlir::Value &output = symbol_table.at(output_name);
-      Type type = ptr->GetType();
-      float64_t constant = ptr->GetValue();
-      kernel::AddConstantScalarKernel kernel(type, constant);
-      kernel.Run(builder, input, output);
-    } else if (std::shared_ptr<flow::AddConstantTensorNode> ptr =
-                   std::dynamic_pointer_cast<flow::AddConstantTensorNode>(
-                       node)) {
-      std::shared_ptr<flow::Edge> input_edge = ptr->GetInput();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      const std::string &input_name = input_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
-      mlir::Value &input = symbol_table.at(input_name);
-      mlir::Value &output = symbol_table.at(output_name);
-      Tensor tensor = ptr->GetTensor();
-      kernel::AddConstTensorKernel kernel(std::move(tensor));
-      kernel.Run(builder, input, output);
-    } else if (std::shared_ptr<flow::AddCommonNode> ptr =
-                   std::dynamic_pointer_cast<flow::AddCommonNode>(node)) {
-      std::shared_ptr<flow::Edge> lhs_edge = ptr->GetLhs();
-      std::shared_ptr<flow::Edge> rhs_edge = ptr->GetRhs();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      const std::string &lhs_name = lhs_edge->GetName();
-      const std::string &rhs_name = rhs_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
-      mlir::Value &lhs = symbol_table.at(lhs_name);
-      mlir::Value &rhs = symbol_table.at(rhs_name);
-      mlir::Value &output = symbol_table.at(output_name);
-      kernel::AddCommonKernel kernel;
-      kernel.Run(builder, lhs, rhs, output);
-    } else if (std::shared_ptr<flow::AddDivErfAddMulMulNode> ptr =
-                   std::dynamic_pointer_cast<flow::AddDivErfAddMulMulNode>(
-                       node)) {
-      Tensor add0_weight = ptr->GetAdd0Weight();
-      Type div_type = ptr->GetDivType();
-      float64_t div_weight = ptr->GetDivWeight();
-      Type add1_type = ptr->GetAdd1Type();
-      float64_t add1_weight = ptr->GetAdd1Weight();
-      Type mul1_type = ptr->GetMul1Type();
-      float64_t mul1_weight = ptr->GetMul1Weight();
-      std::shared_ptr<flow::Edge> input_edge = ptr->GetInput();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      const std::string &input_name = input_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
-      mlir::Value &input = symbol_table.at(input_name);
-      mlir::Value &output = symbol_table.at(output_name);
-      kernel::AddDivErfAddMulMulKernel kernel(
-          std::move(add0_weight), div_type, div_weight, add1_type, add1_weight,
-          mul1_type, mul1_weight);
-      kernel.Run(builder, input, output);
-    } else if (std::shared_ptr<flow::DivConstantScalarNode> ptr =
-                   std::dynamic_pointer_cast<flow::DivConstantScalarNode>(
-                       node)) {
-      std::shared_ptr<flow::Edge> input_edge = ptr->GetInput();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      const std::string &input_name = input_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
-      mlir::Value &input = symbol_table.at(input_name);
-      mlir::Value &output = symbol_table.at(output_name);
-      Type type = ptr->GetType();
-      float64_t constant = ptr->GetValue();
-      kernel::DivConstScalarKernel kernel(type, constant);
-      kernel.Run(builder, input, output);
-    } else if (std::shared_ptr<flow::ErfNode> ptr =
-                   std::dynamic_pointer_cast<flow::ErfNode>(node)) {
-      std::shared_ptr<flow::Edge> input_edge = ptr->GetInput();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      const std::string &input_name = input_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
-      mlir::Value &input = symbol_table.at(input_name);
-      mlir::Value &output = symbol_table.at(output_name);
-      kernel::ErfKernel kernel;
-      kernel.Run(builder, input, output);
-    } else if (std::shared_ptr<flow::GatherConstantIndexScalarNode> ptr =
-                   std::dynamic_pointer_cast<
-                       flow::GatherConstantIndexScalarNode>(node)) {
-      std::shared_ptr<flow::Edge> lhs_edge = ptr->GetLhs();
-      int64_t rhs = ptr->GetRhs();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      int64_t axis = ptr->GetAxis();
-      const std::string &lhs_name = lhs_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
-      mlir::Value &lhs = symbol_table.at(lhs_name);
-      mlir::Value &output = symbol_table.at(output_name);
-      kernel::GatherConstantIndexScalarKernel kernel(axis);
-      kernel.Run(builder, lhs, rhs, output);
-    } else if (std::shared_ptr<flow::GatherConstantDataTensorNode> ptr =
-                   std::dynamic_pointer_cast<
-                       flow::GatherConstantDataTensorNode>(node)) {
-      const Tensor &lhs = ptr->GetLhs();
-      std::shared_ptr<flow::Edge> rhs_edge = ptr->GetRhs();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      const std::string &rhs_name = rhs_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
-      mlir::Value &rhs = symbol_table.at(rhs_name);
-      mlir::Value &output = symbol_table.at(output_name);
-      kernel::GatherConstantDataTensorKernel kernel;
-      kernel.Run(builder, lhs, rhs, output);
-    } else if (
-        std::shared_ptr<
-            flow::GatherConstantDataTensorAddTensorLhsAddTensorLhsNode>
-            ptr = std::dynamic_pointer_cast<
-                flow::GatherConstantDataTensorAddTensorLhsAddTensorLhsNode>(
+    std::shared_ptr<kernel::Kernel> k = SelectKernel(node.get());
+#ifdef DEBUG
+    assert(k != nullptr);
+#endif
+    if (std::shared_ptr<flow::SingleInputWithoutBufferNode> ptr =
+            std::dynamic_pointer_cast<flow::SingleInputWithoutBufferNode>(
                 node)) {
-      const Tensor &data = ptr->GetData();
-      const Tensor &add0_weight = ptr->GetAdd0Weight();
-      const Tensor &add1_weight = ptr->GetAdd1Weight();
-      std::shared_ptr<flow::Edge> input_edge = ptr->GetInput();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      const std::string &input_name = input_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
+      std::shared_ptr<kernel::SingleInputWithoutBufferKernel> kernel =
+          std::dynamic_pointer_cast<kernel::SingleInputWithoutBufferKernel>(k);
+#ifdef DEBUG
+      assert(kernel != nullptr);
+#endif
+      const std::string &input_name = ptr->GetInputAsString();
+      const std::string &output_name = ptr->GetOutputAsString();
       mlir::Value &input = symbol_table.at(input_name);
       mlir::Value &output = symbol_table.at(output_name);
-      kernel::GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel kernel;
-      kernel.Run(builder, data, add0_weight, add1_weight, input, output);
-    } else if (std::shared_ptr<flow::GemmConstantWeightsBiasNode> ptr =
-                   std::dynamic_pointer_cast<flow::GemmConstantWeightsBiasNode>(
+      kernel->Run(builder, input, output);
+    } else if (std::shared_ptr<flow::SingleInputWithBufferNode> ptr =
+                   std::dynamic_pointer_cast<flow::SingleInputWithBufferNode>(
                        node)) {
-      std::shared_ptr<flow::Edge> input_edge = ptr->GetInput();
-      const Tensor &weights = ptr->GetWeights();
-      const Tensor &bias = ptr->GetBias();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      const std::string &input_name = input_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
+      std::shared_ptr<kernel::SingleInputWithBufferKernel> kernel =
+          std::dynamic_pointer_cast<kernel::SingleInputWithBufferKernel>(k);
+#ifdef DEBUG
+      assert(kernel != nullptr);
+#endif
+      const std::string &input_name = ptr->GetInputAsString();
+      const std::string &output_name = ptr->GetOutputAsString();
+      const std::string &buffer_name = ptr->GetName();
       mlir::Value &input = symbol_table.at(input_name);
       mlir::Value &output = symbol_table.at(output_name);
-      float64_t alpha = ptr->GetAlpha();
-      float64_t beta = ptr->GetBeta();
-      bool transA = ptr->GetTransA();
-      bool transB = ptr->GetTransB();
-      kernel::GemmConstantWeightsBiasKernel kernel(alpha, beta, transA, transB);
-      kernel.Run(builder, input, weights, bias, output);
-    } else if (std::shared_ptr<flow::LayerNormalizationConstantScaleBiasNode>
-                   ptr = std::dynamic_pointer_cast<
-                       flow::LayerNormalizationConstantScaleBiasNode>(node)) {
-      std::shared_ptr<flow::Edge> input_edge = ptr->GetInput();
-      const Tensor &scale = ptr->GetScale();
-      const Tensor &bias = ptr->GetBias();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      const std::string &name = ptr->GetName();
-      const std::string &input_name = input_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
-      mlir::Value &input = symbol_table.at(input_name);
-      mlir::Value &output = symbol_table.at(output_name);
-      mlir::Value &buffer = symbol_table.at(name);
-      int64_t axis = ptr->GetAxis();
-      float64_t epsilon = ptr->GetEpsilon();
-      kernel::LayerNormalizationConstantScaleBiasKernel kernel(axis, epsilon);
-      kernel.Run(builder, input, scale, bias, output, buffer);
-    } else if (std::shared_ptr<flow::MatMulConstantLhsNode> ptr =
-                   std::dynamic_pointer_cast<flow::MatMulConstantLhsNode>(
-                       node)) {
-      const Tensor &lhs = ptr->GetLhs();
-      std::shared_ptr<flow::Edge> rhs_edge = ptr->GetRhs();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      std::string rhs_name = rhs_edge->GetName();
-      std::string output_name = output_edge->GetName();
-      mlir::Value &rhs = symbol_table.at(rhs_name);
-      mlir::Value &output = symbol_table.at(output_name);
-      kernel::MatMulConstantLhsKernel kernel;
-      kernel.Run(builder, lhs, rhs, output);
-    } else if (std::shared_ptr<flow::MatMulConstantRhsNode> ptr =
-                   std::dynamic_pointer_cast<flow::MatMulConstantRhsNode>(
-                       node)) {
-      std::shared_ptr<flow::Edge> lhs = ptr->GetLhs();
-      const Tensor &rhs = ptr->GetRhs();
-      std::shared_ptr<flow::Edge> output = ptr->GetOutput();
-      std::string lhs_name = lhs->GetName();
-      std::string output_name = output->GetName();
-      mlir::Value &lhs_value = symbol_table.at(lhs_name);
-      mlir::Value &output_value = symbol_table.at(output_name);
-      kernel::MatMulConstantRhsKernel kernel;
-      kernel.Run(builder, lhs_value, rhs, output_value);
-    } else if (std::shared_ptr<flow::MatMulCommonNode> ptr =
-                   std::dynamic_pointer_cast<flow::MatMulCommonNode>(node)) {
-      std::shared_ptr<flow::Edge> lhs = ptr->GetLhs();
-      std::shared_ptr<flow::Edge> rhs = ptr->GetRhs();
-      std::shared_ptr<flow::Edge> output = ptr->GetOutput();
-      std::string lhs_name = lhs->GetName();
-      std::string rhs_name = rhs->GetName();
-      std::string output_name = output->GetName();
-      mlir::Value &lhs_value = symbol_table.at(lhs_name);
-      mlir::Value &rhs_value = symbol_table.at(rhs_name);
-      mlir::Value &output_value = symbol_table.at(output_name);
-      kernel::MatMulCommonKernel kernel;
-      kernel.Run(builder, lhs_value, rhs_value, output_value);
-    } else if (std::shared_ptr<flow::MulConstantScalarNode> ptr =
-                   std::dynamic_pointer_cast<flow::MulConstantScalarNode>(
-                       node)) {
-      std::shared_ptr<flow::Edge> input_edge = ptr->GetInput();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      const std::string &input_name = input_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
-      mlir::Value &input = symbol_table.at(input_name);
-      mlir::Value &output = symbol_table.at(output_name);
-      Type type = ptr->GetType();
-      float64_t constant = ptr->GetValue();
-      kernel::MulConstantScalarKernel kernel(type, constant);
-      kernel.Run(builder, input, output);
-    } else if (std::shared_ptr<flow::MulConstantTensorNode> ptr =
-                   std::dynamic_pointer_cast<flow::MulConstantTensorNode>(
-                       node)) {
-      std::shared_ptr<flow::Edge> input_edge = ptr->GetInput();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      const std::string &input_name = input_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
-      mlir::Value &input = symbol_table.at(input_name);
-      mlir::Value &output = symbol_table.at(output_name);
-      Tensor tensor = ptr->GetTensor();
-      kernel::MulConstantTensorKernel kernel(std::move(tensor));
-      kernel.Run(builder, input, output);
-    } else if (std::shared_ptr<flow::MulCommonNode> ptr =
-                   std::dynamic_pointer_cast<flow::MulCommonNode>(node)) {
-      std::shared_ptr<flow::Edge> lhs_edge = ptr->GetLhs();
-      std::shared_ptr<flow::Edge> rhs_edge = ptr->GetRhs();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      const std::string &lhs_name = lhs_edge->GetName();
-      const std::string &rhs_name = rhs_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
+      mlir::Value &buffer = symbol_table.at(buffer_name);
+      kernel->Run(builder, input, output, buffer);
+    } else if (std::shared_ptr<flow::DoubleInputsWithoutBufferNode> ptr =
+                   std::dynamic_pointer_cast<
+                       flow::DoubleInputsWithoutBufferNode>(node)) {
+      std::shared_ptr<kernel::DoubleInputsWithoutBufferKernel> kernel =
+          std::dynamic_pointer_cast<kernel::DoubleInputsWithoutBufferKernel>(k);
+#ifdef DEBUG
+      assert(kernel != nullptr);
+#endif
+      const std::string &lhs_name = ptr->GetLhsAsString();
+      const std::string &rhs_name = ptr->GetRhsAsString();
+      const std::string &output_name = ptr->GetOutputAsString();
       mlir::Value &lhs = symbol_table.at(lhs_name);
       mlir::Value &rhs = symbol_table.at(rhs_name);
       mlir::Value &output = symbol_table.at(output_name);
-      kernel::MulCommonKernel kernel;
-      kernel.Run(builder, lhs, rhs, output);
-    } else if (std::shared_ptr<flow::PowNode> ptr =
-                   std::dynamic_pointer_cast<flow::PowNode>(node)) {
-      std::shared_ptr<flow::Edge> input_edge = ptr->GetInput();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      const std::string &input_name = input_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
-      mlir::Value &input = symbol_table.at(input_name);
-      mlir::Value &output = symbol_table.at(output_name);
-      Type type = ptr->GetType();
-      const float64_t exp = ptr->GetExp();
-      kernel::PowKernel kernel(type, exp);
-      kernel.Run(builder, input, output);
-    } else if (std::shared_ptr<flow::ReshapeNode> ptr =
-                   std::dynamic_pointer_cast<flow::ReshapeNode>(node)) {
-      std::shared_ptr<flow::Edge> input_edge = ptr->GetInput();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      const std::string &input_name = input_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
-      mlir::Value &input = symbol_table.at(input_name);
-      mlir::Value &output = symbol_table.at(output_name);
-      kernel::ReshapeKernel kernel;
-      kernel.Run(builder, input, output);
-    } else if (std::shared_ptr<flow::SoftmaxNode> ptr =
-                   std::dynamic_pointer_cast<flow::SoftmaxNode>(node)) {
-      std::shared_ptr<flow::Edge> input_edge = ptr->GetInput();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      const std::string &name = ptr->GetName();
-      const std::string &input_name = input_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
-      mlir::Value &input = symbol_table.at(input_name);
-      mlir::Value &output = symbol_table.at(output_name);
-      mlir::Value &buffer = symbol_table.at(name);
-      const int64_t axis = ptr->GetAxis();
-#ifdef DEBUG
-      assert(axis >= 0);
-#endif
-      kernel::SoftmaxKernel kernel(axis);
-      kernel.Run(builder, input, output, buffer);
-    } else if (std::shared_ptr<flow::SplitNode> ptr =
-                   std::dynamic_pointer_cast<flow::SplitNode>(node)) {
-      std::shared_ptr<flow::Edge> input_edge = ptr->GetInput();
-      std::vector<std::shared_ptr<flow::Edge>> output_edges = ptr->GetOutputs();
-      const std::string &input_name = input_edge->GetName();
-      mlir::Value &input = symbol_table.at(input_name);
-      llvm::SmallVector<mlir::Value> outputs;
-      for (std::shared_ptr<flow::Edge> output_edge : output_edges) {
-        const std::string &output_name = output_edge->GetName();
-        mlir::Value &output = symbol_table.at(output_name);
-        outputs.push_back(output);
-      }
-      const int64_t axis = ptr->GetAxis();
-#ifdef DEBUG
-      assert(axis >= 0);
-#endif
-      kernel::SplitKernel kernel(axis);
-      kernel.Run(builder, input, outputs);
-    } else if (std::shared_ptr<flow::SubConstantScalarLhsNode> ptr =
-                   std::dynamic_pointer_cast<flow::SubConstantScalarLhsNode>(
+      kernel->Run(builder, lhs, rhs, output);
+    } else if (std::shared_ptr<flow::DoubleInputsWithBufferNode> ptr =
+                   std::dynamic_pointer_cast<flow::DoubleInputsWithBufferNode>(
                        node)) {
-      std::shared_ptr<flow::Edge> input_edge = ptr->GetInput();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      const std::string &input_name = input_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
-      mlir::Value &input = symbol_table.at(input_name);
+      std::shared_ptr<kernel::DoubleInputsWithBufferKernel> kernel =
+          std::dynamic_pointer_cast<kernel::DoubleInputsWithBufferKernel>(k);
+#ifdef DEBUG
+      assert(kernel != nullptr);
+#endif
+      const std::string &lhs_name = ptr->GetLhsAsString();
+      const std::string &rhs_name = ptr->GetRhsAsString();
+      const std::string &output_name = ptr->GetOutputAsString();
+      const std::string &buffer_name = ptr->GetName();
+      mlir::Value &lhs = symbol_table.at(lhs_name);
+      mlir::Value &rhs = symbol_table.at(rhs_name);
       mlir::Value &output = symbol_table.at(output_name);
-      Type type = ptr->GetType();
-      const float64_t value = ptr->GetValue();
-      kernel::SubConstantScalarLhsKernel kernel(type, value);
-      kernel.Run(builder, input, output);
-    } else if (std::shared_ptr<flow::TanhNode> ptr =
-                   std::dynamic_pointer_cast<flow::TanhNode>(node)) {
-      std::shared_ptr<flow::Edge> input_edge = ptr->GetInput();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      const std::string &input_name = input_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
-      mlir::Value &input = symbol_table.at(input_name);
-      mlir::Value &output = symbol_table.at(output_name);
-      kernel::TanhKernel kernel;
-      kernel.Run(builder, input, output);
-    } else if (std::shared_ptr<flow::TransposeNode> ptr =
-                   std::dynamic_pointer_cast<flow::TransposeNode>(node)) {
-      std::shared_ptr<flow::Edge> input_edge = ptr->GetInput();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      const std::string &input_name = input_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
-      mlir::Value &input = symbol_table.at(input_name);
-      mlir::Value &output = symbol_table.at(output_name);
-      const std::vector<int64_t> &perm = ptr->GetPerm();
-      kernel::TransposeKernel kernel(perm);
-      kernel.Run(builder, input, output);
-    } else if (std::shared_ptr<flow::UnsqueezeNode> ptr =
-                   std::dynamic_pointer_cast<flow::UnsqueezeNode>(node)) {
-      std::shared_ptr<flow::Edge> input_edge = ptr->GetInput();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      const std::string &input_name = input_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
-      mlir::Value &input = symbol_table.at(input_name);
-      mlir::Value &output = symbol_table.at(output_name);
-      std::vector<int64_t> axes = ptr->GetAxes();
-      kernel::UnSqueezeKernel kernel(std::move(axes));
-      kernel.Run(builder, input, output);
-    } else if (std::shared_ptr<flow::UnsqueezeSubLhsScalarMulRhsScalarNode>
-                   ptr = std::dynamic_pointer_cast<
-                       flow::UnsqueezeSubLhsScalarMulRhsScalarNode>(node)) {
-      const std::vector<int64_t> &unsqueeze_axes = ptr->GetUnsqueezeAxes();
-      Type sub_type = ptr->GetSubType();
-      float64_t sub_val = ptr->GetSubVal();
-      Type mul_type = ptr->GetMulType();
-      float64_t mul_val = ptr->GetMulVal();
-      std::shared_ptr<flow::Edge> input_edge = ptr->GetInput();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      const std::string &input_name = input_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
-      mlir::Value &input = symbol_table.at(input_name);
-      mlir::Value &output = symbol_table.at(output_name);
-      kernel::UnsqueezeSubLhsScalarMulRhsScalarKernel kernel;
-      kernel.Run(builder, unsqueeze_axes, sub_type, sub_val, mul_type, mul_val,
-                 input, output);
-    } else if (std::shared_ptr<flow::WhereConstantCondConstantScalarYNode> ptr =
-                   std::dynamic_pointer_cast<
-                       flow::WhereConstantCondConstantScalarYNode>(node)) {
-      const Tensor &cond = ptr->GetCond();
-      Type type = ptr->GetType();
-      float64_t y = ptr->GetY();
-      std::shared_ptr<flow::Edge> x_edge = ptr->GetX();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      const std::string &x_name = x_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
-      mlir::Value &x = symbol_table.at(x_name);
-      mlir::Value &output = symbol_table.at(output_name);
-      kernel::WhereConstantCondConstantScalarYKernel kernel;
-      kernel.Run(builder, cond, x, type, y, output);
-    } else if (std::shared_ptr<flow::WhereConstantCondConstantTensorYNode> ptr =
-                   std::dynamic_pointer_cast<
-                       flow::WhereConstantCondConstantTensorYNode>(node)) {
-      const Tensor &cond = ptr->GetCond();
-      std::shared_ptr<flow::Edge> x_edge = ptr->GetX();
-      const Tensor &y = ptr->GetY();
-      std::shared_ptr<flow::Edge> output_edge = ptr->GetOutput();
-      const std::string &x_name = x_edge->GetName();
-      const std::string &output_name = output_edge->GetName();
-      mlir::Value &x = symbol_table.at(x_name);
-      mlir::Value &output = symbol_table.at(output_name);
-      kernel::WhereConstantCondConstantTensorYKernel kernel;
-      kernel.Run(builder, cond, x, y, output);
+      mlir::Value &buffer = symbol_table.at(buffer_name);
+      kernel->Run(builder, lhs, rhs, output, buffer);
+    } else {
+#ifdef DEBUG
+      assert(false && "unreachable");
+#else
+      __builtin_unreachable();
+#endif
     }
   }
 }
+
 } // namespace worker
 } // namespace cpu_transformers

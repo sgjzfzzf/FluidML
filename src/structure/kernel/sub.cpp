@@ -13,7 +13,8 @@ SubConstantScalarLhsKernel::SubConstantScalarLhsKernel(Type type,
     : type_(type), value_(value) {}
 
 void SubConstantScalarLhsKernel::Run(mlir::OpBuilder &builder,
-                                     mlir::Value &input, mlir::Value &output) {
+                                     mlir::Value &input,
+                                     mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::Value value;
   if (type_ == Type::FLOAT32) {

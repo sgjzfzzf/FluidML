@@ -9,6 +9,7 @@
 #include "llvm/Support/Error.h"
 #include <cstdint>
 #include <cstdlib>
+#include <llvm-18/llvm/ADT/ArrayRef.h>
 #include <type_traits>
 #include <unordered_map>
 #ifdef DEBUG
@@ -32,7 +33,8 @@ namespace worker {
 Runner::Runner(std::shared_ptr<context::Context> context)
     : context_(context ? std::move(context) : context::Context::Make()) {}
 
-size_t Runner::Run(const std::unordered_map<std::string, void *> &args) {
+size_t Runner::Run(const std::unordered_map<std::string, void *> &args,
+                   size_t epoch) {
   mlir::MLIRContext &mlir_context = context_->GetMLIRContext();
   std::unique_ptr<mlir::ExecutionEngine> engine =
       context_->MakeExecutionEngine();
@@ -52,28 +54,18 @@ size_t Runner::Run(const std::unordered_map<std::string, void *> &args) {
     llvm::ArrayRef<int64_t> shape = type.getShape();
     const int64_t len = shape.size();
     int64_t mem = type.getNumElements() * type.getElementTypeBitWidth() / 8;
-    void *base_ptr = std::malloc(mem);
-    std::memcpy(base_ptr, ref_base_ptr, mem);
     MemRefDescriptor *desc = reinterpret_cast<MemRefDescriptor *>(
         std::malloc(sizeof(MemRefDescriptor) + 2 * len * sizeof(int64_t)));
     desc->base = ref_base_ptr;
     desc->alloc = ref_base_ptr;
     desc->offset = 0;
-    for (size_t i = 0; i < len; ++i) {
-      desc->size[i] = shape[i];
-      int64_t stride = 1;
-      for (int64_t j = i + 1; j < len; ++j) {
-        stride *= shape[j];
-      }
-      desc->size[i + len] = stride;
-    }
     MemRefDescriptor **desc_ptr = reinterpret_cast<MemRefDescriptor **>(
         std::malloc(sizeof(MemRefDescriptor *)));
     *desc_ptr = desc;
     descs.push_back(desc_ptr);
   }
-  int64_t buffer_size = func_attr.GetBuffer();
-  llvm::SmallVector<int8_t> buffer(buffer_size);
+  const int64_t buffer_size = func_attr.GetBuffer();
+  std::vector<uint8_t> buffer(buffer_size, 0);
   void *base_ptr = buffer.data();
   MemRefDescriptor *desc = reinterpret_cast<MemRefDescriptor *>(
       std::malloc(sizeof(MemRefDescriptor) + 2 * sizeof(int64_t)));
@@ -82,26 +74,29 @@ size_t Runner::Run(const std::unordered_map<std::string, void *> &args) {
   desc->offset = 0;
   desc->size[0] = buffer_size;
   desc->size[1] = 1;
-  MemRefDescriptor **desc_ptr = new MemRefDescriptor *;
+  MemRefDescriptor **desc_ptr = reinterpret_cast<MemRefDescriptor **>(
+      std::malloc(sizeof(MemRefDescriptor *)));
   *desc_ptr = desc;
   descs.push_back(desc_ptr);
   std::string mlir_func_name = "_mlir_ciface_" + func_name;
   std::chrono::high_resolution_clock::time_point start =
       std::chrono::high_resolution_clock::now();
-  llvm::Error error = engine->invokePacked(mlir_func_name, descs);
+  for (size_t i = 0; i < epoch; ++i) {
+    llvm::Error error = engine->invokePacked(mlir_func_name, descs);
+#ifdef DEBUG
+    assert(!error);
+#endif
+  }
   std::chrono::high_resolution_clock::time_point end =
       std::chrono::high_resolution_clock::now();
   auto duration_ns =
       std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
-#ifdef DEBUG
-  assert(!error);
-#endif
   for (void *desc : descs) {
     MemRefDescriptor *p = *reinterpret_cast<MemRefDescriptor **>(desc);
     std::free(p);
     std::free(desc);
   }
-  return duration_ns.count();
+  return duration_ns.count() / epoch;
 }
 
 #ifdef BUILD_PYTHON

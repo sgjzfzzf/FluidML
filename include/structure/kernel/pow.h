@@ -7,17 +7,20 @@
 
 namespace cpu_transformers {
 namespace kernel {
-class PowKernel : public Kernel {
+
+class PowKernel : public SingleInputWithoutBufferKernel {
 public:
   PowKernel(Type type, float64_t exp);
   PowKernel(const PowKernel &other) = delete;
   PowKernel(PowKernel &&other) = default;
-  void Run(mlir::OpBuilder &builder, mlir::Value &input, mlir::Value &output);
+  void Run(mlir::OpBuilder &builder, mlir::Value &input,
+           mlir::Value &output) const override;
 
 private:
   Type type_;
   float64_t exp_;
 };
+
 } // namespace kernel
 } // namespace cpu_transformers
 

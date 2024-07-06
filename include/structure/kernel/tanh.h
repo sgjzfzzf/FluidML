@@ -5,13 +5,16 @@
 
 namespace cpu_transformers {
 namespace kernel {
-class TanhKernel : public Kernel {
+
+class TanhKernel : public SingleInputWithoutBufferKernel {
 public:
   TanhKernel() = default;
   TanhKernel(const TanhKernel &other) = delete;
   TanhKernel(TanhKernel &&other) = default;
-  void Run(mlir::OpBuilder &builder, mlir::Value &input, mlir::Value &output);
+  void Run(mlir::OpBuilder &builder, mlir::Value &input,
+           mlir::Value &output) const override;
 };
+
 } // namespace kernel
 } // namespace cpu_transformers
 

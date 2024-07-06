@@ -5,13 +5,16 @@
 
 namespace cpu_transformers {
 namespace kernel {
-class ReshapeKernel : public Kernel {
+
+class ReshapeKernel : public SingleInputWithoutBufferKernel {
 public:
   ReshapeKernel() = default;
   ReshapeKernel(const ReshapeKernel &) = delete;
   ReshapeKernel(ReshapeKernel &&) = default;
-  void Run(mlir::OpBuilder &builder, mlir::Value &input, mlir::Value &output);
+  void Run(mlir::OpBuilder &builder, mlir::Value &input,
+           mlir::Value &output) const override;
 };
+
 } // namespace kernel
 } // namespace cpu_transformers
 

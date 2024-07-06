@@ -33,22 +33,6 @@ TEST(IsaTest, RawPointerTest) {
   ASSERT_FALSE(isa<Derived1>(base));
 }
 
-// TEST(IsaTest, ConstReferenceTest) {
-//   using namespace cpu_transformers;
-//   Derived0 derived;
-//   const Base &base = derived;
-//   ASSERT_TRUE(isa<Derived0>(base));
-//   ASSERT_FALSE(isa<Derived1>(base));
-// }
-
-// TEST(IsaTest, ReferenceTest) {
-//   using namespace cpu_transformers;
-//   Derived0 derived;
-//   Base &base = derived;
-//   ASSERT_TRUE(isa<Derived0>(base));
-//   ASSERT_FALSE(isa<Derived1>(base));
-// }
-
 TEST(IsaTest, UniquePointerTest) {
   using namespace cpu_transformers;
 

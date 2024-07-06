@@ -7,19 +7,22 @@
 
 namespace cpu_transformers {
 namespace kernel {
-class SubConstantScalarLhsKernel : public Kernel {
+
+class SubConstantScalarLhsKernel : public SingleInputWithoutBufferKernel {
 public:
   SubConstantScalarLhsKernel(Type type, float64_t value);
   SubConstantScalarLhsKernel(const SubConstantScalarLhsKernel &sub_kernel) =
       delete;
   SubConstantScalarLhsKernel(SubConstantScalarLhsKernel &&sub_kernel) = default;
   ~SubConstantScalarLhsKernel() = default;
-  void Run(mlir::OpBuilder &builder, mlir::Value &input, mlir::Value &output);
+  void Run(mlir::OpBuilder &builder, mlir::Value &input,
+           mlir::Value &output) const override;
 
 protected:
   Type type_;
   float64_t value_;
 };
+
 } // namespace kernel
 } // namespace cpu_transformers
 

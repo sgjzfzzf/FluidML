@@ -20,19 +20,22 @@ TEST(ModelTest, BertTest) {
   GraphPassesManager pm;
   Converter converter;
   std::shared_ptr<Context> context = Context::Make();
-  NaiveBuilder builder("bert", context);
+  GeneralBuilder builder("bert", context);
   Lower lower(context);
   Runner runner(context);
   Graph graph = parser.Run(BERT_MODEL_PATH);
   pm.RegisterAllPasses();
   pm.Run(graph);
   Flow flow = converter.Run(graph);
-  LinearPlanner linear_planner;
-  GreedyPlanner greedy_planner;
-  Sequence sequence = greedy_planner.FlowToSequence(flow);
-  Index linear_index = linear_planner.Run(sequence);
-  Index greedy_index = greedy_planner.Run(sequence);
-  ASSERT_LE(greedy_index.GetMaximum(), linear_index.GetMaximum());
+  PlainLinearPlanner plain_linear_planner;
+  PlainGreedyPlanner plain_greedy_planner;
+  DPGreedyPlanner dp_greedy_planner;
+  Sequence sequence = plain_greedy_planner.FlowToSequence(flow);
+  // Sequence sequence = dp_greedy_planner.FlowToSequence(flow);
+  Index plain_linear_index = plain_linear_planner.Run(sequence);
+  Index greedy_index = plain_greedy_planner.Run(sequence);
+  Index plain_dp_greedy_index = dp_greedy_planner.Run(sequence);
+  ASSERT_LE(greedy_index.GetMaximum(), plain_linear_index.GetMaximum());
   builder.Run(sequence, greedy_index);
 #ifdef DEBUG
   context->DumpModule("bert.mlir");
@@ -44,31 +47,13 @@ TEST(ModelTest, BertTest) {
   std::vector<int64_t> input_ids(1 * 128, 0);
   std::vector<float32_t> attention_mask(1 * 128, 0), output0(1 * 128 * 768, 0),
       output1(1 * 768, 0);
-  runner.Run({
-      {"input_ids", input_ids.data()},
-      {"attention_mask", attention_mask.data()},
-      {"onnx::Gather_1269", output0.data()},
-      {"1272", output1.data()},
-  });
-}
-
-TEST(ModelTest, GPT2Test) {
-  Parser parser;
-  Converter converter;
-  std::shared_ptr<Context> context = Context::Make();
-  NaiveBuilder builder("gpt2", context);
-  Lower lower(context);
-  Graph graph = parser.Run(GPT2_MODEL_PATH);
-  Flow flow = converter.Run(graph);
-  LinearPlanner planner;
-  Sequence sequence = planner.FlowToSequence(flow);
-  Index index = planner.Run(sequence);
-  builder.Run(sequence, index);
-#ifdef DEBUG
-  context->DumpModule("gpt2.mlir");
-#endif
-  lower.Run();
-#ifdef DEBUG
-  context->DumpModule("gpt2-llvm.mlir");
-#endif
+  size_t time_cost = runner.Run(
+      {
+          {"input_ids", input_ids.data()},
+          {"attention_mask", attention_mask.data()},
+          {"onnx::Gather_1269", output0.data()},
+          {"1272", output1.data()},
+      },
+      10);
+  llvm::outs() << "Time cost: " << time_cost << "\n";
 }

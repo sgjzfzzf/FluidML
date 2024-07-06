@@ -5,6 +5,8 @@
 
 namespace cpu_transformers {
 namespace kernel {
+
+// TODO: need further implementation for split
 class SplitKernel : public Kernel {
 public:
   SplitKernel(int64_t axis);
@@ -16,6 +18,7 @@ public:
 private:
   int64_t axis_;
 };
+
 } // namespace kernel
 } // namespace cpu_transformers
 

@@ -9,20 +9,27 @@
 
 namespace cpu_transformers {
 namespace kernel {
+
+GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel::
+    GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel(Tensor &&data,
+                                                           Tensor &&add0_weight,
+                                                           Tensor &&add1_weight)
+    : data_(std::move(data)), add0_weight_(std::move(add0_weight)),
+      add1_weight_(std::move(add1_weight)) {}
+
 void GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel::Run(
-    mlir::OpBuilder &builder, const Tensor &data, const Tensor &add0_weight,
-    const Tensor &add1_weight, mlir::Value &input, mlir::Value &output) {
+    mlir::OpBuilder &builder, mlir::Value &input, mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::MemRefType input_memref_type =
                        mlir::cast<mlir::MemRefType>(input.getType()),
                    output_memref_type =
                        mlir::cast<mlir::MemRefType>(output.getType());
-  const std::vector<int64_t> &data_shape = data.GetShape();
-  const std::vector<float64_t> &data_ref = data.Get();
-  const std::vector<int64_t> &add0_weight_shape = add0_weight.GetShape();
-  const std::vector<float64_t> &add0_weight_ref = add0_weight.Get();
-  const std::vector<int64_t> &add1_weight_shape = add1_weight.GetShape();
-  const std::vector<float64_t> &add1_weight_ref = add1_weight.Get();
+  const std::vector<int64_t> &data_shape = data_.GetShape();
+  const std::vector<float64_t> &data_ref = data_.Get();
+  const std::vector<int64_t> &add0_weight_shape = add0_weight_.GetShape();
+  const std::vector<float64_t> &add0_weight_ref = add0_weight_.Get();
+  const std::vector<int64_t> &add1_weight_shape = add1_weight_.GetShape();
+  const std::vector<float64_t> &add1_weight_ref = add1_weight_.Get();
 #ifdef DEBUG
   int64_t data_rank = data_shape.size(),
           add0_weight_rank = add0_weight_shape.size(),
@@ -52,7 +59,7 @@ void GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel::Run(
                        add1_weight_shape, mlir::FloatType::getF32(context));
   mlir::DenseElementsAttr data_elements, add0_weight_elements,
       add1_weight_elements;
-  if (data.GetType() == Type::FLOAT32) {
+  if (data_.GetType() == Type::FLOAT32) {
     std::vector<float32_t> data(data_ref.begin(), data_ref.end());
     data_elements =
         mlir::DenseElementsAttr::get(data_shaped_type, llvm::ArrayRef(data));
@@ -63,7 +70,7 @@ void GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel::Run(
     __builtin_unreachable();
 #endif
   }
-  if (add0_weight.GetType() == Type::FLOAT32) {
+  if (add0_weight_.GetType() == Type::FLOAT32) {
     std::vector<float32_t> add0_weight(add0_weight_ref.begin(),
                                        add0_weight_ref.end());
     add0_weight_elements = mlir::DenseElementsAttr::get(
@@ -75,7 +82,7 @@ void GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel::Run(
     __builtin_unreachable();
 #endif
   }
-  if (add1_weight.GetType() == Type::FLOAT32) {
+  if (add1_weight_.GetType() == Type::FLOAT32) {
     std::vector<float32_t> add1_weight(add1_weight_ref.begin(),
                                        add1_weight_ref.end());
     add1_weight_elements = mlir::DenseElementsAttr::get(
@@ -149,5 +156,6 @@ void GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel::Run(
         b.create<mlir::linalg::YieldOp>(loc, add1_op);
       });
 }
+
 } // namespace kernel
 } // namespace cpu_transformers

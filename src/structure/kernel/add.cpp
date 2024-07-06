@@ -20,7 +20,7 @@ AddConstantScalarKernel::AddConstantScalarKernel(Type type, float64_t constant)
     : type_(type), constant_(constant) {}
 
 void AddConstantScalarKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
-                                  mlir::Value &output) {
+                                  mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::Value constant;
   if (type_ == Type::FLOAT32) {
@@ -69,11 +69,11 @@ void AddConstantScalarKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
       });
 }
 
-AddConstTensorKernel::AddConstTensorKernel(Tensor &&tensor)
+AddConstantTensorKernel::AddConstantTensorKernel(Tensor &&tensor)
     : tensor_(std::move(tensor)) {}
 
-void AddConstTensorKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
-                               mlir::Value &output) {
+void AddConstantTensorKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
+                                  mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   const std::vector<int64_t> &shape = tensor_.GetShape();
   mlir::MemRefType input_type = mlir::cast<mlir::MemRefType>(input.getType());
@@ -161,7 +161,7 @@ void AddConstTensorKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 }
 
 void AddCommonKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
-                          mlir::Value &rhs, mlir::Value &output) {
+                          mlir::Value &rhs, mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::MemRefType lhs_type = mlir::cast<mlir::MemRefType>(lhs.getType());
   mlir::MemRefType rhs_type = mlir::cast<mlir::MemRefType>(rhs.getType());

@@ -16,7 +16,7 @@ MulConstantScalarKernel::MulConstantScalarKernel(Type type, float64_t constant)
     : type_(type), constant_(constant) {}
 
 void MulConstantScalarKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
-                                  mlir::Value &output) {
+                                  mlir::Value &output) const {
   mlir::Value constant;
   if (type_ == Type::FLOAT32) {
     constant = builder.create<mlir::arith::ConstantOp>(
@@ -56,7 +56,7 @@ MulConstantTensorKernel::MulConstantTensorKernel(const Tensor &constant)
     : constant_(constant) {}
 
 void MulConstantTensorKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
-                                  mlir::Value &output) {
+                                  mlir::Value &output) const {
   mlir::MemRefType input_type = mlir::cast<mlir::MemRefType>(input.getType());
   mlir::MemRefType output_type = mlir::cast<mlir::MemRefType>(output.getType());
   size_t rank = output_type.getRank();
@@ -114,7 +114,7 @@ void MulConstantTensorKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 }
 
 void MulCommonKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
-                          mlir::Value &rhs, mlir::Value &output) {
+                          mlir::Value &rhs, mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::MemRefType lhs_type = mlir::cast<mlir::MemRefType>(lhs.getType());
   mlir::MemRefType rhs_type = mlir::cast<mlir::MemRefType>(rhs.getType());

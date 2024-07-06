@@ -7,7 +7,7 @@
 namespace cpu_transformers {
 namespace kernel {
 void TanhKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
-                     mlir::Value &output) {
+                     mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::Value value;
   mlir::MemRefType input_type = mlir::cast<mlir::MemRefType>(input.getType());

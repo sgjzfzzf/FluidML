@@ -12,8 +12,9 @@
 
 namespace cpu_transformers {
 namespace kernel {
+
 void ErfKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
-                    mlir::Value &output) {
+                    mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::MemRefType input_type = mlir::cast<mlir::MemRefType>(input.getType());
   size_t rank = input_type.getRank();
@@ -40,5 +41,6 @@ void ErfKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
         b.create<mlir::linalg::YieldOp>(loc, erf_op);
       });
 }
+
 } // namespace kernel
 } // namespace cpu_transformers

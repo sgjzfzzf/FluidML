@@ -3,21 +3,24 @@
 
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/Value.h"
+#include "structure/kernel/kernel.h"
 #include <cstdint>
 
 namespace cpu_transformers {
 namespace kernel {
-class SoftmaxKernel {
+
+class SoftmaxKernel : public SingleInputWithBufferKernel {
 public:
   SoftmaxKernel(int64_t axis);
   SoftmaxKernel(const SoftmaxKernel &) = delete;
   SoftmaxKernel(SoftmaxKernel &&) = default;
   void Run(mlir::OpBuilder &builder, mlir::Value &input, mlir::Value &output,
-           mlir::Value &buffer);
+           mlir::Value &buffer) const override;
 
 private:
   const int64_t axis_;
 };
+
 } // namespace kernel
 } // namespace cpu_transformers
 

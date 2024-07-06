@@ -9,40 +9,44 @@
 
 namespace cpu_transformers {
 namespace kernel {
-class AddConstantScalarKernel : public Kernel {
+
+class AddConstantScalarKernel : public SingleInputWithoutBufferKernel {
 public:
   AddConstantScalarKernel(Type type, float64_t constant);
   AddConstantScalarKernel(const AddConstantScalarKernel &add_kernel) = delete;
   AddConstantScalarKernel(AddConstantScalarKernel &&add_kernel) = default;
   ~AddConstantScalarKernel() = default;
-  void Run(mlir::OpBuilder &builder, mlir::Value &input, mlir::Value &output);
+  void Run(mlir::OpBuilder &builder, mlir::Value &input,
+           mlir::Value &output) const override;
 
 private:
   Type type_;
   float64_t constant_;
 };
 
-class AddConstTensorKernel : public Kernel {
+class AddConstantTensorKernel : public SingleInputWithoutBufferKernel {
 public:
-  AddConstTensorKernel(Tensor &&tensor);
-  AddConstTensorKernel(const AddConstTensorKernel &add_kernel) = delete;
-  AddConstTensorKernel(AddConstTensorKernel &&add_kernel) = default;
-  ~AddConstTensorKernel() = default;
-  void Run(mlir::OpBuilder &builder, mlir::Value &input, mlir::Value &output);
+  AddConstantTensorKernel(Tensor &&tensor);
+  AddConstantTensorKernel(const AddConstantTensorKernel &add_kernel) = delete;
+  AddConstantTensorKernel(AddConstantTensorKernel &&add_kernel) = default;
+  ~AddConstantTensorKernel() = default;
+  void Run(mlir::OpBuilder &builder, mlir::Value &input,
+           mlir::Value &output) const override;
 
 private:
   Tensor tensor_;
 };
 
-class AddCommonKernel : public Kernel {
+class AddCommonKernel : public DoubleInputsWithoutBufferKernel {
 public:
   AddCommonKernel() = default;
   AddCommonKernel(const AddCommonKernel &add_kernel) = delete;
   AddCommonKernel(AddCommonKernel &&add_kernel) = default;
   ~AddCommonKernel() = default;
   void Run(mlir::OpBuilder &builder, mlir::Value &lhs, mlir::Value &rhs,
-           mlir::Value &output);
+           mlir::Value &output) const override;
 };
+
 } // namespace kernel
 } // namespace cpu_transformers
 

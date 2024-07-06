@@ -20,7 +20,7 @@ namespace cpu_transformers {
 namespace kernel {
 
 void MatMulKernel::run(mlir::OpBuilder &builder, mlir::Value &lhs,
-                       mlir::Value &rhs, mlir::Value &output) {
+                       mlir::Value &rhs, mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::MemRefType lhs_type = mlir::cast<mlir::MemRefType>(lhs.getType());
   mlir::MemRefType rhs_type = mlir::cast<mlir::MemRefType>(rhs.getType());
@@ -54,20 +54,23 @@ void MatMulKernel::run(mlir::OpBuilder &builder, mlir::Value &lhs,
       });
 }
 
-void MatMulConstantLhsKernel::Run(mlir::OpBuilder &builder, const Tensor &lhs,
-                                  mlir::Value &rhs, mlir::Value &output) {
+MatMulConstantLhsKernel::MatMulConstantLhsKernel(Tensor &&weight)
+    : weight_(std::move(weight)) {}
+
+void MatMulConstantLhsKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
+                                  mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
-  Type lhs_raw_type = lhs.GetType();
-  mlir::Type lhs_type = GetMLIRType(lhs_raw_type, builder);
-  const std::vector<int64_t> &lhs_shape = lhs.GetShape();
-  const std::vector<float64_t> &lhs_ref = lhs.Get();
-  mlir::RankedTensorType lhs_tensor_type =
-      mlir::RankedTensorType::get(lhs_shape, lhs_type);
-  mlir::DenseElementsAttr lhs_elements;
-  if (lhs_raw_type == Type::FLOAT32) {
-    std::vector<float32_t> lhs_data(lhs_ref.begin(), lhs_ref.end());
-    lhs_elements = mlir::DenseElementsAttr::get(
-        lhs_tensor_type, llvm::ArrayRef<float32_t>(lhs_data));
+  Type weight_raw_type = weight_.GetType();
+  mlir::Type weight_type = GetMLIRType(weight_raw_type, builder);
+  const std::vector<int64_t> &weight_shape = weight_.GetShape();
+  const std::vector<float64_t> &weight_ref = weight_.Get();
+  mlir::RankedTensorType weight_tensor_type =
+      mlir::RankedTensorType::get(weight_shape, weight_type);
+  mlir::DenseElementsAttr weight_elements;
+  if (weight_raw_type == Type::FLOAT32) {
+    std::vector<float32_t> lhs_data(weight_ref.begin(), weight_ref.end());
+    weight_elements = mlir::DenseElementsAttr::get(
+        weight_tensor_type, llvm::ArrayRef<float32_t>(lhs_data));
   } else {
 #ifdef DEBUG
     throw UnreachableException();
@@ -75,28 +78,32 @@ void MatMulConstantLhsKernel::Run(mlir::OpBuilder &builder, const Tensor &lhs,
     __builtin_unreachable();
 #endif
   }
-  mlir::Value lhs_value = builder.create<mlir::arith::ConstantOp>(
-      builder.getUnknownLoc(), lhs_elements);
-  mlir::MemRefType lhs_memref_type = mlir::MemRefType::get(lhs_shape, lhs_type);
-  mlir::Value lhs_buffer = builder.create<mlir::bufferization::ToMemrefOp>(
-      builder.getUnknownLoc(), lhs_memref_type, lhs_value);
-  run(builder, lhs_buffer, rhs, output);
+  mlir::Value weight_value = builder.create<mlir::arith::ConstantOp>(
+      builder.getUnknownLoc(), weight_elements);
+  mlir::MemRefType weight_memref_type =
+      mlir::MemRefType::get(weight_shape, weight_type);
+  mlir::Value weight_buffer = builder.create<mlir::bufferization::ToMemrefOp>(
+      builder.getUnknownLoc(), weight_memref_type, weight_value);
+  run(builder, weight_buffer, input, output);
 }
 
-void MatMulConstantRhsKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
-                                  const Tensor &rhs, mlir::Value &output) {
+MatMulConstantRhsKernel::MatMulConstantRhsKernel(Tensor &&weight)
+    : weight_(std::move(weight)) {}
+
+void MatMulConstantRhsKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
+                                  mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
-  Type rhs_raw_type = rhs.GetType();
-  mlir::Type rhs_type = GetMLIRType(rhs_raw_type, builder);
-  const std::vector<int64_t> &rhs_shape = rhs.GetShape();
-  const std::vector<float64_t> &rhs_ref = rhs.Get();
-  mlir::RankedTensorType rhs_tensor_type =
-      mlir::RankedTensorType::get(rhs_shape, rhs_type);
-  mlir::DenseElementsAttr rhs_elements;
-  if (rhs_raw_type == Type::FLOAT32) {
-    std::vector<float32_t> rhs_data(rhs_ref.begin(), rhs_ref.end());
-    rhs_elements = mlir::DenseElementsAttr::get(
-        rhs_tensor_type, llvm::ArrayRef<float32_t>(rhs_data));
+  Type weight_raw_type = weight_.GetType();
+  mlir::Type rhs_type = GetMLIRType(weight_raw_type, builder);
+  const std::vector<int64_t> &weight_shape = weight_.GetShape();
+  const std::vector<float64_t> &weight_ref = weight_.Get();
+  mlir::RankedTensorType weight_tensor_type =
+      mlir::RankedTensorType::get(weight_shape, rhs_type);
+  mlir::DenseElementsAttr weight_elements;
+  if (weight_raw_type == Type::FLOAT32) {
+    std::vector<float32_t> rhs_data(weight_ref.begin(), weight_ref.end());
+    weight_elements = mlir::DenseElementsAttr::get(
+        weight_tensor_type, llvm::ArrayRef<float32_t>(rhs_data));
   } else {
 #ifdef DEBUG
     throw UnreachableException();
@@ -104,16 +111,17 @@ void MatMulConstantRhsKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
     __builtin_unreachable();
 #endif
   }
-  mlir::Value rhs_value = builder.create<mlir::arith::ConstantOp>(
-      builder.getUnknownLoc(), rhs_elements);
-  mlir::MemRefType rhs_memref_type = mlir::MemRefType::get(rhs_shape, rhs_type);
-  mlir::Value rhs_buffer = builder.create<mlir::bufferization::ToMemrefOp>(
-      builder.getUnknownLoc(), rhs_memref_type, rhs_value);
-  run(builder, lhs, rhs_buffer, output);
+  mlir::Value weight_value = builder.create<mlir::arith::ConstantOp>(
+      builder.getUnknownLoc(), weight_elements);
+  mlir::MemRefType weight_memref_type =
+      mlir::MemRefType::get(weight_shape, rhs_type);
+  mlir::Value weight_buffer = builder.create<mlir::bufferization::ToMemrefOp>(
+      builder.getUnknownLoc(), weight_memref_type, weight_value);
+  run(builder, input, weight_buffer, output);
 }
 
 void MatMulCommonKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
-                             mlir::Value &rhs, mlir::Value &output) {
+                             mlir::Value &rhs, mlir::Value &output) const {
   run(builder, lhs, rhs, output);
 }
 

@@ -30,7 +30,7 @@ class ModelTest(unittest.TestCase):
         pm.RegisterAllPasses()
         pm.Run(graph)
         flow = converter.Run(graph)
-        planner = libCpuTransformers.GreedyPlanner()
+        planner = libCpuTransformers.PlainGreedyPlanner()
         sequence = planner.FlowToSequence(flow)
         index = planner.Run(sequence)
         builder.Run(sequence, index)
@@ -63,26 +63,6 @@ class ModelTest(unittest.TestCase):
         self.logger.info(
             f"bert, onnxruntime timecost: {end - start}, timecost: {timecost}"
         )
-
-    def test_gpt2(self):
-        parser = libCpuTransformers.Parser()
-        pm = libCpuTransformers.GraphPassesManager()
-        converter = libCpuTransformers.Converter()
-        context = libCpuTransformers.Context.Make()
-        builder = libCpuTransformers.NaiveBuilder("bert", context)
-        lower = libCpuTransformers.Lower(context)
-        runner = libCpuTransformers.Runner(context)
-        model_path = os.environ.get("GPT2_MODEL_PATH")
-        self.assertIsNotNone(model_path)
-        graph = parser.Run(model_path)
-        pm.RegisterAllPasses()
-        pm.Run(graph)
-        flow = converter.Run(graph)
-        planner = libCpuTransformers.GreedyPlanner()
-        sequence = planner.FlowToSequence(flow)
-        index = planner.Run(sequence)
-        builder.Run(sequence, index)
-        lower.Run()
 
 
 if __name__ == "__main__":

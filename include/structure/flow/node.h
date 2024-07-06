@@ -1,7 +1,7 @@
 #ifndef CPU_TRANSFORMERS_STRUCTURE_FLOW_NODE_H_
 #define CPU_TRANSFORMERS_STRUCTURE_FLOW_NODE_H_
 
-#include "structure/flow/edge.h"
+#include "structure/flow/object.h"
 #include "structure/tensor/tensor.h"
 #include "utils/float.h"
 #include "utils/type.h"
@@ -15,12 +15,14 @@
 
 namespace cpu_transformers {
 namespace flow {
+
 class Node {
 public:
   Node(std::string &&name);
   Node(const Node &node) = delete;
   Node(Node &&node) = default;
   virtual ~Node() = default;
+  virtual std::shared_ptr<Node> CloneAsNode() const = 0;
   virtual const std::string &GetName() const noexcept;
   virtual size_t GetBufferSize() const noexcept;
 
@@ -28,7 +30,112 @@ protected:
   const std::string name_;
 };
 
-class AddNode : public Node {
+class SingleInputNode : virtual public Node {
+public:
+  SingleInputNode(std::string &&name, std::shared_ptr<Region> &&input,
+                  std::shared_ptr<Region> &&output);
+  SingleInputNode(const SingleInputNode &node) = delete;
+  SingleInputNode(SingleInputNode &&node) = default;
+  virtual ~SingleInputNode() = default;
+  virtual std::shared_ptr<Node> CloneAsNode() const override;
+  virtual std::shared_ptr<SingleInputNode> CloneAsSingleInputNode() const = 0;
+  std::shared_ptr<Region> GetInput() const noexcept;
+  std::shared_ptr<Region> GetOutput() const noexcept;
+  const std::string &GetInputAsString() const noexcept;
+  const std::string &GetOutputAsString() const noexcept;
+  void SetInput(std::shared_ptr<Region> &&input) noexcept;
+  void SetOutput(std::shared_ptr<Region> &&output) noexcept;
+
+protected:
+  std::shared_ptr<Region> input_;
+  std::shared_ptr<Region> output_;
+};
+
+class DoubleInputsNode : virtual public Node {
+public:
+  DoubleInputsNode(std::string &&name, std::shared_ptr<Region> &&lhs,
+                   std::shared_ptr<Region> &&rhs,
+                   std::shared_ptr<Region> &&output);
+  DoubleInputsNode(const DoubleInputsNode &node) = delete;
+  DoubleInputsNode(DoubleInputsNode &&node) = default;
+  virtual ~DoubleInputsNode() = default;
+  virtual std::shared_ptr<Node> CloneAsNode() const override;
+  virtual std::shared_ptr<DoubleInputsNode> CloneAsDoubleInputsNode() const = 0;
+  std::shared_ptr<Region> GetLhs() const noexcept;
+  std::shared_ptr<Region> GetRhs() const noexcept;
+  std::shared_ptr<Region> GetOutput() const noexcept;
+  const std::string &GetLhsAsString() const noexcept;
+  const std::string &GetRhsAsString() const noexcept;
+  const std::string &GetOutputAsString() const noexcept;
+  void SetLhs(std::shared_ptr<Region> &&lhs) noexcept;
+  void SetRhs(std::shared_ptr<Region> &&rhs) noexcept;
+  void SetOutput(std::shared_ptr<Region> &&output) noexcept;
+
+protected:
+  std::shared_ptr<Region> lhs_;
+  std::shared_ptr<Region> rhs_;
+  std::shared_ptr<Region> output_;
+};
+
+class SingleInputWithoutBufferNode : public SingleInputNode {
+public:
+  SingleInputWithoutBufferNode(std::string &&name,
+                               std::shared_ptr<Region> &&input,
+                               std::shared_ptr<Region> &&output);
+  SingleInputWithoutBufferNode(const SingleInputWithoutBufferNode &node) =
+      delete;
+  SingleInputWithoutBufferNode(SingleInputWithoutBufferNode &&node) = default;
+  virtual ~SingleInputWithoutBufferNode() = default;
+  virtual std::shared_ptr<SingleInputNode>
+  CloneAsSingleInputNode() const override;
+  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const = 0;
+};
+
+class SingleInputWithBufferNode : public SingleInputNode {
+public:
+  SingleInputWithBufferNode(std::string &&name, std::shared_ptr<Region> &&input,
+                            std::shared_ptr<Region> &&output);
+  SingleInputWithBufferNode(const SingleInputWithBufferNode &node) = delete;
+  SingleInputWithBufferNode(SingleInputWithBufferNode &&node) = default;
+  virtual ~SingleInputWithBufferNode() = default;
+  virtual std::shared_ptr<SingleInputNode>
+  CloneAsSingleInputNode() const override;
+  virtual std::shared_ptr<SingleInputWithBufferNode>
+  CloneAsSingleInputWithBufferNode() const = 0;
+};
+
+class DoubleInputsWithoutBufferNode : public DoubleInputsNode {
+public:
+  DoubleInputsWithoutBufferNode(std::string &&name,
+                                std::shared_ptr<Region> &&lhs,
+                                std::shared_ptr<Region> &&rhs,
+                                std::shared_ptr<Region> &&output);
+  DoubleInputsWithoutBufferNode(const DoubleInputsWithoutBufferNode &node) =
+      delete;
+  DoubleInputsWithoutBufferNode(DoubleInputsWithoutBufferNode &&node) = default;
+  virtual ~DoubleInputsWithoutBufferNode() = default;
+  virtual std::shared_ptr<DoubleInputsNode>
+  CloneAsDoubleInputsNode() const override;
+  virtual std::shared_ptr<DoubleInputsWithoutBufferNode>
+  CloneAsDoubleInputsWithoutBufferNode() const = 0;
+};
+
+class DoubleInputsWithBufferNode : virtual public DoubleInputsNode {
+public:
+  DoubleInputsWithBufferNode(std::string &&name, std::shared_ptr<Region> &&lhs,
+                             std::shared_ptr<Region> &&rhs,
+                             std::shared_ptr<Region> &&output);
+  DoubleInputsWithBufferNode(const DoubleInputsWithBufferNode &node) = delete;
+  DoubleInputsWithBufferNode(DoubleInputsWithBufferNode &&node) = default;
+  virtual ~DoubleInputsWithBufferNode() = default;
+  virtual std::shared_ptr<DoubleInputsNode>
+  CloneAsDoubleInputsNode() const override;
+  virtual std::shared_ptr<DoubleInputsWithBufferNode>
+  CloneAsDoubleInputsWithBufferNode() const = 0;
+};
+
+class AddNode : virtual public Node {
 public:
   AddNode(std::string &&name);
   AddNode(const AddNode &node) = delete;
@@ -36,30 +143,30 @@ public:
   virtual ~AddNode() = default;
 };
 
-class AddConstantNode : public AddNode {
+class AddConstantNode : public AddNode, public SingleInputWithoutBufferNode {
 public:
-  AddConstantNode(std::string &&name, std::shared_ptr<Edge> &&input,
-                  std::shared_ptr<Edge> &&output);
+  AddConstantNode(std::string &&name, std::shared_ptr<Region> &&input,
+                  std::shared_ptr<Region> &&output);
   AddConstantNode(const AddConstantNode &node) = delete;
   AddConstantNode(AddConstantNode &&node) = default;
   virtual ~AddConstantNode() = default;
+  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  virtual std::shared_ptr<AddConstantNode> CloneAsAddConstantNode() const = 0;
   virtual Type GetType() const noexcept = 0;
-  std::shared_ptr<Edge> GetInput() const noexcept;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
-
-protected:
-  std::shared_ptr<Edge> input_;
-  std::shared_ptr<Edge> output_;
 };
 
 class AddConstantScalarNode : public AddConstantNode {
 public:
   AddConstantScalarNode(std::string &&name, Type type, float64_t value,
-                        std::shared_ptr<Edge> &&input,
-                        std::shared_ptr<Edge> &&output);
+                        std::shared_ptr<Region> &&input,
+                        std::shared_ptr<Region> &&output);
   AddConstantScalarNode(const AddConstantScalarNode &node) = delete;
   AddConstantScalarNode(AddConstantScalarNode &&node) = default;
   virtual ~AddConstantScalarNode() = default;
+  virtual std::shared_ptr<AddConstantNode>
+  CloneAsAddConstantNode() const override;
+  std::shared_ptr<AddConstantScalarNode> Clone() const;
   Type GetType() const noexcept override;
   float64_t GetValue() const noexcept;
 
@@ -71,11 +178,14 @@ private:
 class AddConstantTensorNode : public AddConstantNode {
 public:
   AddConstantTensorNode(std::string &&name, Tensor &&tensor,
-                        std::shared_ptr<Edge> &&input,
-                        std::shared_ptr<Edge> &&output);
+                        std::shared_ptr<Region> &&input,
+                        std::shared_ptr<Region> &&output);
   AddConstantTensorNode(const AddConstantTensorNode &node) = delete;
   AddConstantTensorNode(AddConstantTensorNode &&node) = default;
   virtual ~AddConstantTensorNode() = default;
+  virtual std::shared_ptr<AddConstantNode>
+  CloneAsAddConstantNode() const override;
+  std::shared_ptr<AddConstantTensorNode> Clone() const;
   Type GetType() const noexcept override;
   const Tensor &GetTensor() const noexcept;
 
@@ -83,33 +193,32 @@ private:
   const Tensor tensor_;
 };
 
-class AddCommonNode : public AddNode {
+class AddCommonNode : public AddNode, public DoubleInputsWithoutBufferNode {
 public:
-  AddCommonNode(std::string &&name, std::shared_ptr<Edge> &&lhs,
-                std::shared_ptr<Edge> &&rhs, std::shared_ptr<Edge> &&output);
+  AddCommonNode(std::string &&name, std::shared_ptr<Region> &&lhs,
+                std::shared_ptr<Region> &&rhs,
+                std::shared_ptr<Region> &&output);
   AddCommonNode(const AddCommonNode &node) = delete;
   AddCommonNode(AddCommonNode &&node) = default;
   virtual ~AddCommonNode() = default;
-  std::shared_ptr<Edge> GetLhs() const noexcept;
-  std::shared_ptr<Edge> GetRhs() const noexcept;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
-
-private:
-  std::shared_ptr<Edge> lhs_;
-  std::shared_ptr<Edge> rhs_;
-  std::shared_ptr<Edge> output_;
+  virtual std::shared_ptr<DoubleInputsWithoutBufferNode>
+  CloneAsDoubleInputsWithoutBufferNode() const override;
+  std::shared_ptr<AddCommonNode> Clone() const;
 };
 
-class AddDivErfAddMulMulNode : public Node {
+class AddDivErfAddMulMulNode : public SingleInputWithoutBufferNode {
 public:
   AddDivErfAddMulMulNode(std::string &&name, Tensor &&add0_weight,
                          Type div_type, float64_t div_weight, Type add1_type,
                          float64_t add1_weight, Type mul1_type,
-                         float64_t mul1_weight, std::shared_ptr<Edge> &&input,
-                         std::shared_ptr<Edge> &&output);
+                         float64_t mul1_weight, std::shared_ptr<Region> &&input,
+                         std::shared_ptr<Region> &&output);
   AddDivErfAddMulMulNode(const AddDivErfAddMulMulNode &node) = delete;
   AddDivErfAddMulMulNode(AddDivErfAddMulMulNode &&node) = default;
   virtual ~AddDivErfAddMulMulNode() = default;
+  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<AddDivErfAddMulMulNode> Clone() const;
   const Tensor &GetAdd0Weight() const noexcept;
   Type GetDivType() const noexcept;
   float64_t GetDivWeight() const noexcept;
@@ -117,8 +226,6 @@ public:
   float64_t GetAdd1Weight() const noexcept;
   Type GetMul1Type() const noexcept;
   float64_t GetMul1Weight() const noexcept;
-  std::shared_ptr<Edge> GetInput() const noexcept;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
 
 private:
   const Tensor add0_weight_;
@@ -128,11 +235,9 @@ private:
   const float64_t add1_weight_;
   const Type mul1_type_;
   const float64_t mul1_weight_;
-  std::shared_ptr<Edge> input_;
-  std::shared_ptr<Edge> output_;
 };
 
-class DivNode : public Node {
+class DivNode : virtual public Node {
 public:
   DivNode(std::string &&name);
   DivNode(const DivNode &node) = delete;
@@ -140,120 +245,120 @@ public:
   virtual ~DivNode() = default;
 };
 
-class DivConstantScalarNode : public DivNode {
+class DivConstantScalarNode : public DivNode,
+                              public SingleInputWithoutBufferNode {
 public:
   DivConstantScalarNode(std::string &&name, Type type, float64_t value,
-                        std::shared_ptr<Edge> &&input,
-                        std::shared_ptr<Edge> &&output);
+                        std::shared_ptr<Region> &&input,
+                        std::shared_ptr<Region> &&output);
   DivConstantScalarNode(const DivConstantScalarNode &node) = delete;
   DivConstantScalarNode(DivConstantScalarNode &&node) = default;
   virtual ~DivConstantScalarNode() = default;
+  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<DivConstantScalarNode> Clone() const;
   Type GetType() const noexcept;
   float64_t GetValue() const noexcept;
-  std::shared_ptr<Edge> GetInput() const noexcept;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
 
 private:
   const Type type_;
   const float64_t value_;
-  std::shared_ptr<Edge> input_;
-  std::shared_ptr<Edge> output_;
 };
 
-class ErfNode : public Node {
+class ErfNode : public SingleInputWithoutBufferNode {
 public:
-  ErfNode(std::string &&name, std::shared_ptr<Edge> &&input,
-          std::shared_ptr<Edge> &&output);
+  ErfNode(std::string &&name, std::shared_ptr<Region> &&input,
+          std::shared_ptr<Region> &&output);
   ErfNode(const ErfNode &node) = delete;
   ErfNode(ErfNode &&node) = default;
   virtual ~ErfNode() = default;
-  std::shared_ptr<Edge> GetInput() const noexcept;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
-
-private:
-  std::shared_ptr<Edge> input_;
-  std::shared_ptr<Edge> output_;
+  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<ErfNode> Clone() const;
 };
 
-class GatherNode : public Node {
+class GatherNode : virtual public Node {
 public:
   constexpr static int64_t kAxis = 0;
   constexpr static const char *kAxisAttrName = "axis";
-  GatherNode(std::string &&name, std::shared_ptr<Edge> &&output,
-             int64_t axis = kAxis);
+  GatherNode(std::string &&name);
   GatherNode(const GatherNode &node) = delete;
   GatherNode(GatherNode &&node) = default;
   virtual ~GatherNode() = default;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
-  int64_t GetAxis() const noexcept;
-
-protected:
-  std::shared_ptr<Edge> output_;
-  const int64_t axis_;
 };
 
-class GatherConstantIndexScalarNode : public GatherNode {
+class GatherConstantIndexScalarNode : public GatherNode,
+                                      public SingleInputWithoutBufferNode {
 public:
-  GatherConstantIndexScalarNode(std::string &&name, std::shared_ptr<Edge> &&lhs,
-                                int64_t rhs, std::shared_ptr<Edge> &&output,
+  GatherConstantIndexScalarNode(std::string &&name,
+                                std::shared_ptr<Region> &&input,
+                                std::shared_ptr<Region> &&output, int64_t index,
                                 int64_t axis = kAxis);
   GatherConstantIndexScalarNode(const GatherConstantIndexScalarNode &node) =
       delete;
   GatherConstantIndexScalarNode(GatherConstantIndexScalarNode &&node) = default;
   virtual ~GatherConstantIndexScalarNode() = default;
-  std::shared_ptr<Edge> GetLhs() const noexcept;
-  int64_t GetRhs() const noexcept;
+  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<GatherConstantIndexScalarNode> Clone() const;
+  int64_t GetAxis() const noexcept;
+  int64_t GetIndex() const noexcept;
 
 private:
-  std::shared_ptr<Edge> lhs_;
-  const int64_t rhs_;
+  const int64_t axis_;
+  const int64_t index_;
 };
 
-class GatherConstantDataTensorNode : public GatherNode {
+class GatherConstantDataTensorNode : public GatherNode,
+                                     public SingleInputWithoutBufferNode {
 public:
-  GatherConstantDataTensorNode(std::string &&name, Tensor &&lhs,
-                               std::shared_ptr<Edge> &&rhs,
-                               std::shared_ptr<Edge> &&output,
+  GatherConstantDataTensorNode(std::string &&name,
+                               std::shared_ptr<Region> &&rhs,
+                               std::shared_ptr<Region> &&output, Tensor &&data,
                                int64_t axis = kAxis);
   GatherConstantDataTensorNode(const GatherConstantDataTensorNode &node) =
       delete;
   GatherConstantDataTensorNode(GatherConstantDataTensorNode &&node) = default;
   virtual ~GatherConstantDataTensorNode() = default;
-  const Tensor &GetLhs() const noexcept;
-  std::shared_ptr<Edge> GetRhs() const noexcept;
+  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<GatherConstantDataTensorNode> Clone() const;
+  int64_t GetAxis() const noexcept;
+  const Tensor &GetData() const noexcept;
 
 private:
-  const Tensor lhs_;
-  std::shared_ptr<Edge> rhs_;
+  const Tensor data_;
+  const int64_t axis_;
 };
 
-class GatherConstantDataTensorAddTensorLhsAddTensorLhsNode : public Node {
+class GatherConstantDataTensorAddTensorLhsAddTensorLhsNode
+    : public SingleInputWithoutBufferNode {
 public:
   GatherConstantDataTensorAddTensorLhsAddTensorLhsNode(
       std::string &&name, Tensor &&data, Tensor &&add0_weight,
-      Tensor &&add1_weight, std::shared_ptr<Edge> &&input,
-      std::shared_ptr<Edge> &&output);
+      Tensor &&add1_weight, std::shared_ptr<Region> &&input,
+      std::shared_ptr<Region> &&output);
   GatherConstantDataTensorAddTensorLhsAddTensorLhsNode(
       const GatherConstantDataTensorAddTensorLhsAddTensorLhsNode &node) =
       delete;
   GatherConstantDataTensorAddTensorLhsAddTensorLhsNode(
       GatherConstantDataTensorAddTensorLhsAddTensorLhsNode &&node) = default;
   virtual ~GatherConstantDataTensorAddTensorLhsAddTensorLhsNode() = default;
+  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<GatherConstantDataTensorAddTensorLhsAddTensorLhsNode>
+  Clone() const;
   const Tensor &GetData() const noexcept;
   const Tensor &GetAdd0Weight() const noexcept;
   const Tensor &GetAdd1Weight() const noexcept;
-  std::shared_ptr<Edge> GetInput() const noexcept;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
 
 private:
   const Tensor data_;
   const Tensor add0_weight_;
   const Tensor add1_weight_;
-  std::shared_ptr<Edge> input_;
-  std::shared_ptr<Edge> output_;
 };
 
-class GemmNode : public Node {
+class GemmNode : virtual public Node {
 public:
   GemmNode(std::string &&name, float64_t alpha, float64_t beta, bool transA,
            bool transB);
@@ -280,29 +385,29 @@ protected:
   const bool transB_;
 };
 
-class GemmConstantWeightsBiasNode : public GemmNode {
+class GemmConstantWeightsBiasNode : public GemmNode,
+                                    public SingleInputWithoutBufferNode {
 public:
-  GemmConstantWeightsBiasNode(std::string &&name, std::shared_ptr<Edge> &&input,
-                              Tensor &&weights, Tensor &&bias,
-                              std::shared_ptr<Edge> &&output, float64_t alpha,
+  GemmConstantWeightsBiasNode(std::string &&name,
+                              std::shared_ptr<Region> &&input,
+                              std::shared_ptr<Region> &&output,
+                              Tensor &&weights, Tensor &&bias, float64_t alpha,
                               float64_t beta, bool transA, bool transB);
   GemmConstantWeightsBiasNode(const GemmConstantWeightsBiasNode &node) = delete;
   GemmConstantWeightsBiasNode(GemmConstantWeightsBiasNode &&node) = default;
   virtual ~GemmConstantWeightsBiasNode() = default;
-  std::shared_ptr<Edge> GetInput() const noexcept;
+  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<GemmConstantWeightsBiasNode> Clone() const;
   const Tensor &GetWeights() const noexcept;
   const Tensor &GetBias() const noexcept;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
 
 private:
-  std::shared_ptr<Edge> input_;
   const Tensor weights_;
   const Tensor bias_;
-  std::shared_ptr<Edge> output_;
 };
 
-// TODO: Implement the kernrl for the LayerNormalization and its derivatives.
-class LayerNormalizationNode : public Node {
+class LayerNormalizationNode : virtual public Node {
 public:
   LayerNormalizationNode(std::string &&name, int64_t axis, float64_t epsilon);
   LayerNormalizationNode(const LayerNormalizationNode &node) = delete;
@@ -321,33 +426,34 @@ protected:
   const float64_t epsilon_;
 };
 
-class LayerNormalizationConstantScaleBiasNode : public LayerNormalizationNode {
+class LayerNormalizationConstantScaleBiasNode
+    : public LayerNormalizationNode,
+      public SingleInputWithBufferNode {
 public:
-  LayerNormalizationConstantScaleBiasNode(std::string &&name,
-                                          std::shared_ptr<Edge> &&input,
-                                          Tensor &&scale, Tensor &&bias,
-                                          std::shared_ptr<Edge> &&output,
+  LayerNormalizationConstantScaleBiasNode(std::string &&name, Tensor &&scale,
+                                          Tensor &&bias,
+                                          std::shared_ptr<Region> &&input,
+                                          std::shared_ptr<Region> &&output,
                                           int64_t axis, float64_t epsilon);
   LayerNormalizationConstantScaleBiasNode(
       const LayerNormalizationConstantScaleBiasNode &node) = delete;
   LayerNormalizationConstantScaleBiasNode(
       LayerNormalizationConstantScaleBiasNode &&node) = default;
   virtual ~LayerNormalizationConstantScaleBiasNode() = default;
+  virtual std::shared_ptr<SingleInputWithBufferNode>
+  CloneAsSingleInputWithBufferNode() const override;
+  std::shared_ptr<LayerNormalizationConstantScaleBiasNode> Clone() const;
   size_t GetBufferSize() const noexcept override;
   const Meta &GetMeta() const noexcept override;
-  std::shared_ptr<Edge> GetInput() const noexcept;
   const Tensor &GetScale() const noexcept;
   const Tensor &GetBias() const noexcept;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
 
 private:
-  std::shared_ptr<Edge> input_;
   const Tensor scale_;
   const Tensor bias_;
-  std::shared_ptr<Edge> output_;
 };
 
-class MatMulNode : public Node {
+class MatMulNode : virtual public Node {
 public:
   MatMulNode(std::string &&name);
   MatMulNode(const MatMulNode &node) = delete;
@@ -355,59 +461,57 @@ public:
   virtual ~MatMulNode() = default;
 };
 
-class MatMulConstantLhsNode : public MatMulNode {
+class MatMulConstantLhsNode : public MatMulNode,
+                              public SingleInputWithoutBufferNode {
 public:
-  MatMulConstantLhsNode(std::string &&name, Tensor &&lhs,
-                        std::shared_ptr<Edge> &&rhs,
-                        std::shared_ptr<Edge> &&output);
+  MatMulConstantLhsNode(std::string &&name, Tensor &&weight,
+                        std::shared_ptr<Region> &&input,
+                        std::shared_ptr<Region> &&output);
   MatMulConstantLhsNode(const MatMulConstantLhsNode &node) = delete;
   MatMulConstantLhsNode(MatMulConstantLhsNode &&node) = default;
   virtual ~MatMulConstantLhsNode() = default;
-  const Tensor &GetLhs() const noexcept;
-  std::shared_ptr<Edge> GetRhs() const noexcept;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
+  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<MatMulConstantLhsNode> Clone() const;
+  const Tensor &GetWeight() const noexcept;
 
 private:
-  const Tensor lhs_;
-  std::shared_ptr<Edge> rhs_;
-  std::shared_ptr<Edge> output_;
+  const Tensor weight_;
 };
 
-class MatMulConstantRhsNode : public MatMulNode {
+class MatMulConstantRhsNode : public MatMulNode,
+                              public SingleInputWithoutBufferNode {
 public:
-  MatMulConstantRhsNode(std::string &&name, std::shared_ptr<Edge> &&lhs,
-                        Tensor &&rhs, std::shared_ptr<Edge> &&output);
+  MatMulConstantRhsNode(std::string &&name, Tensor &&weight,
+                        std::shared_ptr<Region> &&input,
+                        std::shared_ptr<Region> &&output);
   MatMulConstantRhsNode(const MatMulConstantRhsNode &node) = delete;
   MatMulConstantRhsNode(MatMulConstantRhsNode &&node) = default;
   virtual ~MatMulConstantRhsNode() = default;
-  std::shared_ptr<Edge> GetLhs() const noexcept;
-  const Tensor &GetRhs() const noexcept;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
+  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<MatMulConstantRhsNode> Clone() const;
+  const Tensor &GetWeight() const noexcept;
 
 private:
-  std::shared_ptr<Edge> lhs_;
-  const Tensor rhs_;
-  std::shared_ptr<Edge> output_;
+  const Tensor weight_;
 };
 
-class MatMulCommonNode : public MatMulNode {
+class MatMulCommonNode : public MatMulNode,
+                         public DoubleInputsWithoutBufferNode {
 public:
-  MatMulCommonNode(std::string &&name, std::shared_ptr<Edge> &&lhs,
-                   std::shared_ptr<Edge> &&rhs, std::shared_ptr<Edge> &&output);
+  MatMulCommonNode(std::string &&name, std::shared_ptr<Region> &&lhs,
+                   std::shared_ptr<Region> &&rhs,
+                   std::shared_ptr<Region> &&output);
   MatMulCommonNode(const MatMulCommonNode &node) = delete;
   MatMulCommonNode(MatMulCommonNode &&node) = default;
   virtual ~MatMulCommonNode() = default;
-  std::shared_ptr<Edge> GetLhs() const noexcept;
-  std::shared_ptr<Edge> GetRhs() const noexcept;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
-
-private:
-  std::shared_ptr<Edge> lhs_;
-  std::shared_ptr<Edge> rhs_;
-  std::shared_ptr<Edge> output_;
+  virtual std::shared_ptr<DoubleInputsWithoutBufferNode>
+  CloneAsDoubleInputsWithoutBufferNode() const override;
+  std::shared_ptr<MatMulCommonNode> Clone() const;
 };
 
-class MulNode : public Node {
+class MulNode : virtual public Node {
 public:
   MulNode(std::string &&name);
   MulNode(const MulNode &node) = delete;
@@ -415,29 +519,29 @@ public:
   virtual ~MulNode() = default;
 };
 
-class MulConstantNode : public MulNode {
+class MulConstantNode : public MulNode, public SingleInputWithoutBufferNode {
 public:
-  MulConstantNode(std::string &&name, std::shared_ptr<Edge> &&input,
-                  std::shared_ptr<Edge> &&output);
+  MulConstantNode(std::string &&name, std::shared_ptr<Region> &&input,
+                  std::shared_ptr<Region> &&output);
   MulConstantNode(const MulConstantNode &node) = delete;
   MulConstantNode(MulConstantNode &&node) = default;
   virtual ~MulConstantNode() = default;
-  std::shared_ptr<Edge> GetInput() const noexcept;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
-
-protected:
-  std::shared_ptr<Edge> input_;
-  std::shared_ptr<Edge> output_;
+  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  virtual std::shared_ptr<MulConstantNode> CloneAsMulConstantNode() const = 0;
 };
 
 class MulConstantScalarNode : public MulConstantNode {
 public:
-  MulConstantScalarNode(std::string &&name, std::shared_ptr<Edge> &&input,
+  MulConstantScalarNode(std::string &&name, std::shared_ptr<Region> &&input,
                         Type type, float64_t value,
-                        std::shared_ptr<Edge> &&output);
+                        std::shared_ptr<Region> &&output);
   MulConstantScalarNode(const MulConstantScalarNode &node) = delete;
   MulConstantScalarNode(MulConstantScalarNode &&node) = default;
   virtual ~MulConstantScalarNode() = default;
+  virtual std::shared_ptr<MulConstantNode>
+  CloneAsMulConstantNode() const override;
+  std::shared_ptr<MulConstantScalarNode> Clone() const;
   Type GetType() const noexcept;
   float64_t GetValue() const noexcept;
 
@@ -448,110 +552,107 @@ private:
 
 class MulConstantTensorNode : public MulConstantNode {
 public:
-  MulConstantTensorNode(std::string &&name, std::shared_ptr<Edge> &&input,
-                        Tensor &&tensor, std::shared_ptr<Edge> &&output);
+  MulConstantTensorNode(std::string &&name, std::shared_ptr<Region> &&input,
+                        Tensor &&tensor, std::shared_ptr<Region> &&output);
   MulConstantTensorNode(const MulConstantTensorNode &node) = delete;
   MulConstantTensorNode(MulConstantTensorNode &&node) = default;
   virtual ~MulConstantTensorNode() = default;
+  virtual std::shared_ptr<MulConstantNode>
+  CloneAsMulConstantNode() const override;
+  std::shared_ptr<MulConstantTensorNode> Clone() const;
   const Tensor &GetTensor() const noexcept;
 
 private:
   const Tensor tensor_;
 };
 
-class MulCommonNode : public MulNode {
+class MulCommonNode : public MulNode, public DoubleInputsWithoutBufferNode {
 public:
-  MulCommonNode(std::string &&name, std::shared_ptr<Edge> &&lhs,
-                std::shared_ptr<Edge> &&rhs, std::shared_ptr<Edge> &&output);
+  MulCommonNode(std::string &&name, std::shared_ptr<Region> &&lhs,
+                std::shared_ptr<Region> &&rhs,
+                std::shared_ptr<Region> &&output);
   MulCommonNode(const MulCommonNode &node) = delete;
   MulCommonNode(MulCommonNode &&node) = default;
   virtual ~MulCommonNode() = default;
-  std::shared_ptr<Edge> GetLhs() const noexcept;
-  std::shared_ptr<Edge> GetRhs() const noexcept;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
-
-private:
-  std::shared_ptr<Edge> lhs_;
-  std::shared_ptr<Edge> rhs_;
-  std::shared_ptr<Edge> output_;
+  virtual std::shared_ptr<DoubleInputsWithoutBufferNode>
+  CloneAsDoubleInputsWithoutBufferNode() const override;
+  std::shared_ptr<MulCommonNode> Clone() const;
 };
 
-class PowNode : public Node {
+class PowNode : public SingleInputWithoutBufferNode {
 public:
-  PowNode(std::string &&name, std::shared_ptr<Edge> &&input, Type type,
-          float64_t exp, std::shared_ptr<Edge> &&output);
+  PowNode(std::string &&name, Type type, float64_t exp,
+          std::shared_ptr<Region> &&input, std::shared_ptr<Region> &&output);
   PowNode(const PowNode &node) = delete;
   PowNode(PowNode &&node) = default;
   virtual ~PowNode() = default;
-  std::shared_ptr<Edge> GetInput() const noexcept;
+  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<PowNode> Clone() const;
   Type GetType() const noexcept;
   float64_t GetExp() const noexcept;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
 
 private:
-  std::shared_ptr<Edge> input_;
   const Type type_;
   const float64_t exp_;
-  std::shared_ptr<Edge> output_;
 };
 
-class ReshapeNode : public Node {
+class ReshapeNode : public SingleInputWithoutBufferNode {
 public:
-  ReshapeNode(std::string &&name, std::shared_ptr<Edge> &&input,
-              std::shared_ptr<Edge> &&output);
+  ReshapeNode(std::string &&name, std::shared_ptr<Region> &&input,
+              std::shared_ptr<Region> &&output);
   ReshapeNode(const ReshapeNode &node) = delete;
   ReshapeNode(ReshapeNode &&node) = default;
   virtual ~ReshapeNode() = default;
-  std::shared_ptr<Edge> GetInput() const noexcept;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
-
-private:
-  std::shared_ptr<Edge> input_;
-  std::shared_ptr<Edge> output_;
+  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<ReshapeNode> Clone() const;
 };
 
-class SoftmaxNode : public Node {
+class SoftmaxNode : public SingleInputWithBufferNode {
 public:
   constexpr static int64_t kAxis = -1;
   constexpr static const char *kAxisAttrName = "axis";
-  SoftmaxNode(std::string &&name, std::shared_ptr<Edge> &&input,
-              std::shared_ptr<Edge> &&output, int64_t axis = kAxis);
+  SoftmaxNode(std::string &&name, std::shared_ptr<Region> &&input,
+              std::shared_ptr<Region> &&output, int64_t axis = kAxis);
   SoftmaxNode(const SoftmaxNode &node) = delete;
   SoftmaxNode(SoftmaxNode &&node) = default;
   virtual ~SoftmaxNode() = default;
+  virtual std::shared_ptr<SingleInputWithBufferNode>
+  CloneAsSingleInputWithBufferNode() const override;
+  std::shared_ptr<SoftmaxNode> Clone() const;
   size_t GetBufferSize() const noexcept override;
-  std::shared_ptr<Edge> GetInput() const noexcept;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
   int64_t GetAxis() const noexcept;
   const Meta &GetMeta() const noexcept;
 
 private:
-  std::shared_ptr<Edge> input_;
-  std::shared_ptr<Edge> output_;
   const int64_t axis_;
 };
 
+// TODO:
 class SplitNode : public Node {
 public:
   constexpr static int64_t kAxis = 0;
   constexpr static const char *kAxisAttrName = "axis";
-  SplitNode(std::string &&name, std::shared_ptr<Edge> &&input,
-            std::vector<std::shared_ptr<Edge>> &&outputs, int64_t axis);
+  SplitNode(std::string &&name, std::shared_ptr<Region> &&input,
+            std::vector<std::shared_ptr<Region>> &&outputs, int64_t axis);
   SplitNode(const SplitNode &node) = delete;
   SplitNode(SplitNode &&node) = default;
   virtual ~SplitNode() = default;
-  std::shared_ptr<Edge> GetInput() const noexcept;
-  const std::vector<std::shared_ptr<Edge>> &GetOutputs() const noexcept;
+  virtual std::shared_ptr<Node> CloneAsNode() const override;
+  std::shared_ptr<SplitNode> Clone() const;
+  std::shared_ptr<Region> GetInput() const noexcept;
+  const std::vector<std::shared_ptr<Region>> &GetOutputs() const noexcept;
   int64_t GetAxis() const noexcept;
   const Meta &GetMeta() const noexcept;
 
 private:
-  std::shared_ptr<Edge> input_;
-  std::vector<std::shared_ptr<Edge>> outputs_;
+  std::shared_ptr<Region> input_;
+  std::vector<std::shared_ptr<Region>> outputs_;
   const int64_t axis_;
 };
 
-class SubNode : public Node {
+class SubNode : virtual public Node {
 public:
   SubNode(std::string &&name);
   SubNode(const SubNode &node) = delete;
@@ -559,96 +660,90 @@ public:
   virtual ~SubNode() = default;
 };
 
-class SubConstantScalarLhsNode : public SubNode {
+class SubConstantScalarLhsNode : public SubNode,
+                                 public SingleInputWithoutBufferNode {
 public:
-  SubConstantScalarLhsNode(std::string &&name, std::shared_ptr<Edge> &&input,
-                           Type type, float64_t value,
-                           std::shared_ptr<Edge> &&output);
+  SubConstantScalarLhsNode(std::string &&name, Type type, float64_t value,
+                           std::shared_ptr<Region> &&input,
+                           std::shared_ptr<Region> &&output);
   SubConstantScalarLhsNode(const SubConstantScalarLhsNode &node) = delete;
   SubConstantScalarLhsNode(SubConstantScalarLhsNode &&node) = default;
   virtual ~SubConstantScalarLhsNode() = default;
-  std::shared_ptr<Edge> GetInput() const noexcept;
+  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<SubConstantScalarLhsNode> Clone() const;
   Type GetType() const noexcept;
   float64_t GetValue() const noexcept;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
 
 private:
-  std::shared_ptr<Edge> input_;
   const Type type_;
   const float64_t value_;
-  std::shared_ptr<Edge> output_;
 };
 
-class TanhNode : public Node {
+class TanhNode : public SingleInputWithoutBufferNode {
 public:
-  TanhNode(std::string &&name, std::shared_ptr<Edge> &&input,
-           std::shared_ptr<Edge> &&output);
+  TanhNode(std::string &&name, std::shared_ptr<Region> &&input,
+           std::shared_ptr<Region> &&output);
   TanhNode(const TanhNode &node) = delete;
   TanhNode(TanhNode &&node) = default;
   virtual ~TanhNode() = default;
-  std::shared_ptr<Edge> GetInput() const noexcept;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
-
-private:
-  std::shared_ptr<Edge> input_;
-  std::shared_ptr<Edge> output_;
+  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<TanhNode> Clone() const;
 };
 
-class TransposeNode : public Node {
+class TransposeNode : public SingleInputWithoutBufferNode {
 public:
   constexpr static const char *kPermAttrName = "perm";
-  TransposeNode(std::string &&name, std::shared_ptr<Edge> &&input,
-                std::shared_ptr<Edge> &&output, std::vector<int64_t> &&perm);
+  TransposeNode(std::string &&name, std::vector<int64_t> &&perm,
+                std::shared_ptr<Region> &&input,
+                std::shared_ptr<Region> &&output);
   TransposeNode(const TransposeNode &node) = delete;
   TransposeNode(TransposeNode &&node) = default;
   virtual ~TransposeNode() = default;
-  std::shared_ptr<Edge> GetInput() const noexcept;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
+  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<TransposeNode> Clone() const;
   const std::vector<int64_t> &GetPerm() const noexcept;
 
 private:
-  std::shared_ptr<Edge> input_;
-  std::shared_ptr<Edge> output_;
   const std::vector<int64_t> perm_;
 };
 
-class UnsqueezeNode : public Node {
+class UnsqueezeNode : public SingleInputWithoutBufferNode {
 public:
-  UnsqueezeNode(std::string &&name, std::shared_ptr<Edge> &&input,
-                std::shared_ptr<Edge> &&output, std::vector<int64_t> &&axes);
+  UnsqueezeNode(std::string &&name, std::vector<int64_t> &&axes,
+                std::shared_ptr<Region> &&input,
+                std::shared_ptr<Region> &&output);
   UnsqueezeNode(const UnsqueezeNode &node) = delete;
   UnsqueezeNode(UnsqueezeNode &&node) = default;
   virtual ~UnsqueezeNode() = default;
-  std::shared_ptr<Edge> GetInput() const noexcept;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
+  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<UnsqueezeNode> Clone() const;
   const std::vector<int64_t> &GetAxes() const noexcept;
 
 private:
-  std::shared_ptr<Edge> input_;
-  std::shared_ptr<Edge> output_;
   const std::vector<int64_t> axes_;
 };
 
-class UnsqueezeSubLhsScalarMulRhsScalarNode : public Node {
+class UnsqueezeSubLhsScalarMulRhsScalarNode
+    : public SingleInputWithoutBufferNode {
 public:
   UnsqueezeSubLhsScalarMulRhsScalarNode(std::string &&name,
-                                        std::shared_ptr<Edge> &&input,
-                                        std::shared_ptr<Edge> &&output,
                                         std::vector<int64_t> &&unsqueeze_axes,
                                         Type sub_type, float64_t sub_val,
-                                        Type mul_type, float64_t mul_val);
-  UnsqueezeSubLhsScalarMulRhsScalarNode(std::string &&name,
-                                        std::shared_ptr<Edge> &&unsqueeze_axes,
-                                        Type sub_type, float64_t sub_val,
                                         Type mul_type, float64_t mul_val,
-                                        std::shared_ptr<Edge> &&output);
+                                        std::shared_ptr<Region> &&input,
+                                        std::shared_ptr<Region> &&output);
   UnsqueezeSubLhsScalarMulRhsScalarNode(
       const UnsqueezeSubLhsScalarMulRhsScalarNode &node) = delete;
   UnsqueezeSubLhsScalarMulRhsScalarNode(
       UnsqueezeSubLhsScalarMulRhsScalarNode &&node) = default;
   virtual ~UnsqueezeSubLhsScalarMulRhsScalarNode() = default;
-  std::shared_ptr<Edge> GetInput() const noexcept;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
+  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<UnsqueezeSubLhsScalarMulRhsScalarNode> Clone() const;
   const std::vector<int64_t> &GetUnsqueezeAxes() const noexcept;
   Type GetSubType() const noexcept;
   float64_t GetSubVal() const noexcept;
@@ -656,8 +751,6 @@ public:
   float64_t GetMulVal() const noexcept;
 
 private:
-  std::shared_ptr<Edge> input_;
-  std::shared_ptr<Edge> output_;
   std::vector<int64_t> unsqueeze_axes_;
   const Type sub_type_;
   const float64_t sub_val_;
@@ -665,7 +758,7 @@ private:
   const float64_t mul_val_;
 };
 
-class WhereNode : public Node {
+class WhereNode : virtual public Node {
 public:
   WhereNode(std::string &&name);
   WhereNode(const WhereNode &node) = delete;
@@ -673,51 +766,54 @@ public:
   virtual ~WhereNode() = default;
 };
 
-class WhereConstantCondConstantScalarYNode : public WhereNode {
+class WhereConstantCondConstantScalarYNode
+    : public WhereNode,
+      public SingleInputWithoutBufferNode {
 public:
   WhereConstantCondConstantScalarYNode(std::string &&name, Tensor &&cond,
-                                       std::shared_ptr<Edge> &&x, Type type,
-                                       float64_t y,
-                                       std::shared_ptr<Edge> &&output);
+                                       Type type, float64_t y,
+                                       std::shared_ptr<Region> &&input,
+                                       std::shared_ptr<Region> &&output);
   WhereConstantCondConstantScalarYNode(
       const WhereConstantCondConstantScalarYNode &node) = delete;
   WhereConstantCondConstantScalarYNode(
       WhereConstantCondConstantScalarYNode &&node) = default;
   virtual ~WhereConstantCondConstantScalarYNode() = default;
+  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<WhereConstantCondConstantScalarYNode> Clone() const;
   const Tensor &GetCond() const noexcept;
-  std::shared_ptr<Edge> GetX() const noexcept;
   Type GetType() const noexcept;
   float64_t GetY() const noexcept;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
 
 private:
   const Tensor cond_;
-  std::shared_ptr<Edge> x_;
   const Type type_;
   const float64_t y_;
-  std::shared_ptr<Edge> output_;
 };
 
-class WhereConstantCondConstantTensorYNode : public WhereNode {
+class WhereConstantCondConstantTensorYNode
+    : public WhereNode,
+      public SingleInputWithoutBufferNode {
 public:
   WhereConstantCondConstantTensorYNode(std::string &&name, Tensor &&cond,
-                                       std::shared_ptr<Edge> &&x, Tensor &&y,
-                                       std::shared_ptr<Edge> &&output);
+                                       Tensor &&y,
+                                       std::shared_ptr<Region> &&input,
+                                       std::shared_ptr<Region> &&output);
   WhereConstantCondConstantTensorYNode(
       const WhereConstantCondConstantTensorYNode &node) = delete;
   WhereConstantCondConstantTensorYNode(
       WhereConstantCondConstantTensorYNode &&node) = default;
   virtual ~WhereConstantCondConstantTensorYNode() = default;
+  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<WhereConstantCondConstantTensorYNode> Clone() const;
   const Tensor &GetCond() const noexcept;
-  std::shared_ptr<Edge> GetX() const noexcept;
   const Tensor &GetY() const noexcept;
-  std::shared_ptr<Edge> GetOutput() const noexcept;
 
 private:
   const Tensor cond_;
-  std::shared_ptr<Edge> x_;
   const Tensor y_;
-  std::shared_ptr<Edge> output_;
 };
 
 } // namespace flow

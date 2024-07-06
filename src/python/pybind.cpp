@@ -8,7 +8,6 @@
 #include "structure/memory/greedy.h"
 #include "structure/memory/linear.h"
 #include "structure/memory/plan.h"
-#include "worker/builder.h"
 #include "worker/converter.h"
 #include "worker/lower.h"
 #include "worker/parser.h"
@@ -56,12 +55,6 @@ PYBIND11_MODULE(libCpuTransformers, m) {
   /* NOLINT(bugprone-unused-raii) */ pybind11::class_<
       cpu_transformers::memory::GreedyPlan>(m, "GreedyPlan");
 
-  pybind11::class_<cpu_transformers::worker::NaiveBuilder>(m, "NaiveBuilder")
-      .def(
-          pybind11::init<std::string &&,
-                         std::shared_ptr<cpu_transformers::context::Context>>())
-      .def("Run", &cpu_transformers::worker::Builder::Run);
-
   pybind11::class_<cpu_transformers::worker::Converter>(m, "Converter")
       .def(pybind11::init())
       .def("Run", &cpu_transformers::worker::Converter::Run);
@@ -76,15 +69,19 @@ PYBIND11_MODULE(libCpuTransformers, m) {
       .def("Run", pybind11::overload_cast<const std::string &>(
                       &cpu_transformers::worker::Parser::Run));
 
-  pybind11::class_<cpu_transformers::worker::LinearPlanner>(m, "LinearPlanner")
+  pybind11::class_<cpu_transformers::worker::PlainLinearPlanner>(
+      m, "PlainLinearPlanner")
       .def(pybind11::init())
-      .def("FlowToSequence", &cpu_transformers::worker::Planner::FlowToSequence)
-      .def("Run", &cpu_transformers::worker::Planner::Run);
+      .def("FlowToSequence",
+           &cpu_transformers::worker::PlainLinearPlanner::FlowToSequence)
+      .def("Run", &cpu_transformers::worker::PlainLinearPlanner::Run);
 
-  pybind11::class_<cpu_transformers::worker::GreedyPlanner>(m, "GreedyPlanner")
+  pybind11::class_<cpu_transformers::worker::PlainGreedyPlanner>(
+      m, "PlainGreedyPlanner")
       .def(pybind11::init())
-      .def("FlowToSequence", &cpu_transformers::worker::Planner::FlowToSequence)
-      .def("Run", &cpu_transformers::worker::Planner::Run);
+      .def("FlowToSequence",
+           &cpu_transformers::worker::PlainGreedyPlanner::FlowToSequence)
+      .def("Run", &cpu_transformers::worker::PlainGreedyPlanner::Run);
 
   pybind11::class_<cpu_transformers::worker::Runner>(m, "Runner")
       .def(

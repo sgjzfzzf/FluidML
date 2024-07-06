@@ -1,7 +1,9 @@
 #include "worker/planner.h"
+#include "evaluation/dp.h"
 #include "structure/flow/edge.h"
 #include "structure/flow/node.h"
 #include "structure/flow/region.h"
+#include "structure/flow/sequence.h"
 #include "structure/memory/greedy.h"
 #include "structure/memory/index.h"
 #include "structure/memory/info.h"
@@ -14,10 +16,8 @@
 
 namespace cpu_transformers {
 namespace worker {
-Planner::Planner(std::unique_ptr<memory::Plan> &&plan)
-    : plan_(std::move(plan)) {}
 
-flow::Sequence Planner::FlowToSequence(const flow::Flow &flow) const {
+flow::Sequence ExecutionPlanner::topologicalSort(const flow::Flow &flow) const {
   // Run the topological sort algorithm to get the sequence.
   flow::Sequence sequence;
   std::unordered_map<std::string, std::shared_ptr<flow::Node>> unvisited_nodes;
@@ -30,8 +30,9 @@ flow::Sequence Planner::FlowToSequence(const flow::Flow &flow) const {
   for (std::shared_ptr<flow::Edge> edge : edges) {
     if (std::shared_ptr<flow::InputEdge> input_edge =
             std::dynamic_pointer_cast<flow::InputEdge>(edge)) {
-      const std::string &to = input_edge->GetTo();
-      auto it = unvisited_nodes.find(to);
+      std::shared_ptr<flow::Node> to = input_edge->GetTo();
+      const std::string &to_name = to->GetName();
+      auto it = unvisited_nodes.find(to_name);
       if (it != unvisited_nodes.end()) {
         waiting_nodes.push_back(std::move(it->second));
         unvisited_nodes.erase(it);
@@ -42,9 +43,10 @@ flow::Sequence Planner::FlowToSequence(const flow::Flow &flow) const {
   for (std::shared_ptr<flow::Edge> edge : edges) {
     if (std::shared_ptr<flow::MemoryEdge> memory_edge =
             std::dynamic_pointer_cast<flow::MemoryEdge>(edge)) {
-      std::string from = memory_edge->GetFrom();
-      std::string to = memory_edge->GetTo();
-      prev_nodes.insert({std::move(to), std::move(from)});
+      std::shared_ptr<flow::Node> from = memory_edge->GetFrom(),
+                                  to = memory_edge->GetTo();
+      const std::string &from_name = from->GetName(), &to_name = to->GetName();
+      prev_nodes.insert({std::move(to_name), std::move(from_name)});
     }
   }
   while (!waiting_nodes.empty()) {
@@ -83,14 +85,36 @@ flow::Sequence Planner::FlowToSequence(const flow::Flow &flow) const {
   return sequence;
 }
 
-memory::Index Planner::Run(const flow::Sequence &sequence) const {
+flow::Sequence PlainPlanner::FlowToSequence(const flow::Flow &flow) const {
+  return topologicalSort(flow);
+}
+
+flow::Sequence
+DynamicProgrammingPlanner::FlowToSequence(const flow::Flow &flow) const {
+  flow::Sequence sequence = topologicalSort(flow);
+  std::shared_ptr<evaluation::DynamicProgrammingTable> dp_table =
+      evaluation::DynamicProgrammingTable::Make(flow);
+  evaluation::DynamicProgrammingPlan plan = dp_table->Run();
+  std::vector<std::shared_ptr<flow::Region>> regions = sequence.GetRegions();
+  for (std::shared_ptr<flow::Region> region : regions) {
+    const std::string &name = region->GetName();
+    std::vector<size_t> layout = plan.GetLayout(name);
+    region->SetLayout(std::move(layout));
+  }
+  return sequence;
+}
+
+MemoryPlanner::MemoryPlanner(std::unique_ptr<memory::Plan> &&plan)
+    : plan_(std::move(plan)) {}
+
+memory::Index MemoryPlanner::Run(const flow::Sequence &sequence) const {
   const std::vector<std::shared_ptr<flow::Node>> &nodes = sequence.GetNodes();
   const std::vector<std::shared_ptr<flow::Edge>> &edges = sequence.GetEdges();
   const std::vector<std::shared_ptr<flow::Region>> &regions =
       sequence.GetRegions();
   std::unordered_map<std::string, size_t> node_indices;
-  size_t nodesSize = nodes.size();
-  for (size_t i = 0; i < nodesSize; ++i) {
+  size_t nodes_size = nodes.size();
+  for (size_t i = 0; i < nodes_size; ++i) {
     const std::shared_ptr<flow::Node> &node = nodes[i];
     const std::string &name = node->GetName();
     node_indices.insert({name, i});
@@ -100,21 +124,20 @@ memory::Index Planner::Run(const flow::Sequence &sequence) const {
     if (std::shared_ptr<flow::MemoryEdge> memory_edge =
             std::dynamic_pointer_cast<flow::MemoryEdge>(edge)) {
       const std::string &name = memory_edge->GetName();
-      const std::string &from = memory_edge->GetFrom();
-      const std::string &to = memory_edge->GetTo();
-      edge_refs.insert({name, from});
-      edge_refs.insert({name, to});
+      std::shared_ptr<flow::Node> from = memory_edge->GetFrom(),
+                                  to = memory_edge->GetTo();
+      const std::string &from_name = from->GetName(), &to_name = to->GetName();
+      edge_refs.insert({name, from_name});
+      edge_refs.insert({name, to_name});
     }
   }
   std::unique_ptr<memory::Infos> infos = createInfos();
   for (const std::shared_ptr<flow::Region> &region : regions) {
     if (region->NeedMemoryAllocation()) {
       const Meta &meta = region->GetMeta();
-      size_t size = meta.GetSize();
+      size_t size = meta.GetSize(), min_index = -1, max_index = 0;
       std::string name = region->GetName();
       auto range = edge_refs.equal_range(name);
-      size_t min_index = -1;
-      size_t max_index = 0;
       for (auto it = range.first; it != range.second; ++it) {
         const std::string &ref = it->second;
         size_t index = node_indices.at(ref);
@@ -143,14 +166,14 @@ memory::Index Planner::Run(const flow::Sequence &sequence) const {
 }
 
 LinearPlanner::LinearPlanner()
-    : Planner(std::make_unique<memory::LinearPlan>()) {}
+    : Planner(), MemoryPlanner(std::make_unique<memory::LinearPlan>()) {}
 
 std::unique_ptr<memory::Infos> LinearPlanner::createInfos() const {
   return std::make_unique<memory::PlainInfos>();
 }
 
 GreedyPlanner::GreedyPlanner()
-    : Planner(std::make_unique<memory::GreedyPlan>()) {}
+    : Planner(), MemoryPlanner(std::make_unique<memory::GreedyPlan>()) {}
 
 std::unique_ptr<memory::Infos> GreedyPlanner::createInfos() const {
   return std::make_unique<memory::GreedyInfos>();

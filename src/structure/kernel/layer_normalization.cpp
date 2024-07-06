@@ -21,18 +21,21 @@ namespace cpu_transformers {
 namespace kernel {
 
 LayerNormalizationConstantScaleBiasKernel::
-    LayerNormalizationConstantScaleBiasKernel(int64_t axis, float64_t epsilon)
-    : axis_(axis), epsilon_(epsilon) {}
+    LayerNormalizationConstantScaleBiasKernel(int64_t axis, float64_t epsilon,
+                                              Tensor &&scale, Tensor &&bias)
+    : axis_(axis), epsilon_(epsilon), scale_(std::move(scale)),
+      bias_(std::move(bias)) {}
 
-void LayerNormalizationConstantScaleBiasKernel::Run(
-    mlir::OpBuilder &builder, mlir::Value &input, const Tensor &scale,
-    const Tensor &bias, mlir::Value &output, mlir::Value &buffer) {
+void LayerNormalizationConstantScaleBiasKernel::Run(mlir::OpBuilder &builder,
+                                                    mlir::Value &input,
+                                                    mlir::Value &output,
+                                                    mlir::Value &buffer) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::MemRefType input_type = mlir::cast<mlir::MemRefType>(input.getType());
-  const Meta &scale_meta = scale.GetMeta();
-  const Meta &bias_meta = bias.GetMeta();
-  const std::vector<float64_t> &scale_data = scale.Get();
-  const std::vector<float64_t> &bias_data = bias.Get();
+  const Meta &scale_meta = scale_.GetMeta();
+  const Meta &bias_meta = bias_.GetMeta();
+  const std::vector<float64_t> &scale_data = scale_.Get();
+  const std::vector<float64_t> &bias_data = bias_.Get();
   mlir::MemRefType output_type = mlir::cast<mlir::MemRefType>(output.getType());
   const int64_t rank = input_type.getRank();
   llvm::ArrayRef<int64_t> shape = input_type.getShape(),

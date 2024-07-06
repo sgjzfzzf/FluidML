@@ -18,7 +18,7 @@ namespace kernel {
 SoftmaxKernel::SoftmaxKernel(int64_t axis) : axis_(axis) {}
 
 void SoftmaxKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
-                        mlir::Value &output, mlir::Value &buffer) {
+                        mlir::Value &output, mlir::Value &buffer) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::MemRefType input_memref_type =
       mlir::cast<mlir::MemRefType>(input.getType());

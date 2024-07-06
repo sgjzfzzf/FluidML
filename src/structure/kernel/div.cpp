@@ -10,11 +10,12 @@
 
 namespace cpu_transformers {
 namespace kernel {
+
 DivConstScalarKernel::DivConstScalarKernel(Type type, float64_t constant)
     : type_(type), constant_(constant) {}
 
 void DivConstScalarKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
-                               mlir::Value &output) {
+                               mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::Value constant;
   if (type_ == Type::FLOAT32) {
@@ -66,5 +67,6 @@ void DivConstScalarKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
         b.create<mlir::linalg::YieldOp>(loc, div_op);
       });
 }
+
 } // namespace kernel
 } // namespace cpu_transformers

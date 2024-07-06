@@ -6,6 +6,7 @@
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/MLIRContext.h"
+#include "structure/tensor/tensor.h"
 #include "utils/float.h"
 #include "utils/type.h"
 #include <cstdint>
@@ -16,21 +17,23 @@
 namespace cpu_transformers {
 namespace kernel {
 
+WhereConstantCondConstantScalarYKernel::WhereConstantCondConstantScalarYKernel(
+    Tensor &&cond, Type type, float64_t y)
+    : cond_(std::move(cond)), type_(type), y_(y) {}
+
 void WhereConstantCondConstantScalarYKernel::Run(mlir::OpBuilder &builder,
-                                                 const Tensor &cond,
-                                                 mlir::Value &x, Type type,
-                                                 float64_t y,
-                                                 mlir::Value &output) {
+                                                 mlir::Value &input,
+                                                 mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
-  const std::vector<int64_t> cond_shape = cond.GetShape();
-  const std::vector<float64_t> cond_ref = cond.Get();
-  mlir::MemRefType x_type = mlir::cast<mlir::MemRefType>(x.getType());
+  const std::vector<int64_t> cond_shape = cond_.GetShape();
+  const std::vector<float64_t> cond_ref = cond_.Get();
+  mlir::MemRefType x_type = mlir::cast<mlir::MemRefType>(input.getType());
   mlir::MemRefType output_type = mlir::cast<mlir::MemRefType>(output.getType());
   const size_t rank = output_type.getRank();
 #ifdef DEBUG
-  assert(cond.GetType() == Type::BOOL);
+  assert(cond_.GetType() == Type::BOOL);
   // TODO: add support for other types in the future
-  assert(type == Type::FLOAT32);
+  assert(type_ == Type::FLOAT32);
 #endif
   mlir::RankedTensorType cond_tensor_type =
       mlir::RankedTensorType::get(cond_shape, builder.getI1Type());
@@ -42,7 +45,7 @@ void WhereConstantCondConstantScalarYKernel::Run(mlir::OpBuilder &builder,
   mlir::arith::ConstantOp cond_value = builder.create<mlir::arith::ConstantOp>(
       builder.getUnknownLoc(), cond_elements);
   mlir::arith::ConstantOp y_value = builder.create<mlir::arith::ConstantOp>(
-      builder.getUnknownLoc(), builder.getF32FloatAttr(y));
+      builder.getUnknownLoc(), builder.getF32FloatAttr(y_));
   mlir::bufferization::ToMemrefOp cond_memref =
       builder.create<mlir::bufferization::ToMemrefOp>(
           builder.getUnknownLoc(), cond_memref_type, cond_value);
@@ -53,7 +56,7 @@ void WhereConstantCondConstantScalarYKernel::Run(mlir::OpBuilder &builder,
       rank, mlir::utils::IteratorType::parallel);
   builder.create<mlir::linalg::GenericOp>(
       builder.getUnknownLoc(), mlir::TypeRange{},
-      mlir::ValueRange{cond_memref, x}, mlir::ValueRange{output}, maps,
+      mlir::ValueRange{cond_memref, input}, mlir::ValueRange{output}, maps,
       iterator_types,
       [&](mlir::OpBuilder &b, mlir::Location loc, mlir::ValueRange inputs) {
 #ifdef DEBUG
@@ -66,23 +69,25 @@ void WhereConstantCondConstantScalarYKernel::Run(mlir::OpBuilder &builder,
       });
 }
 
+WhereConstantCondConstantTensorYKernel::WhereConstantCondConstantTensorYKernel(
+    Tensor &&cond, Tensor &&y)
+    : cond_(std::move(cond)), y_(std::move(y)) {}
+
 void WhereConstantCondConstantTensorYKernel::Run(mlir::OpBuilder &builder,
-                                                 const Tensor &cond,
-                                                 mlir::Value &x,
-                                                 const Tensor &y,
-                                                 mlir::Value &output) {
+                                                 mlir::Value &input,
+                                                 mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
-  const std::vector<int64_t> cond_shape = cond.GetShape();
-  const std::vector<int64_t> y_shape = y.GetShape();
-  const std::vector<float64_t> cond_ref = cond.Get();
-  const std::vector<float64_t> y_ref = y.Get();
-  mlir::MemRefType x_type = mlir::cast<mlir::MemRefType>(x.getType());
+  const std::vector<int64_t> cond_shape = cond_.GetShape();
+  const std::vector<int64_t> y_shape = y_.GetShape();
+  const std::vector<float64_t> cond_ref = cond_.Get();
+  const std::vector<float64_t> y_ref = y_.Get();
+  mlir::MemRefType x_type = mlir::cast<mlir::MemRefType>(input.getType());
   mlir::MemRefType output_type = mlir::cast<mlir::MemRefType>(output.getType());
   const size_t rank = output_type.getRank();
 #ifdef DEBUG
-  assert(cond.GetType() == Type::BOOL);
+  assert(cond_.GetType() == Type::BOOL);
   // TODO: add support for other types in the future
-  assert(y.GetType() == Type::FLOAT32);
+  assert(y_.GetType() == Type::FLOAT32);
 #endif
   llvm::SmallVector<bool> cond_data(cond_ref.begin(), cond_ref.end());
   mlir::RankedTensorType cond_tensor_type =
@@ -115,7 +120,7 @@ void WhereConstantCondConstantTensorYKernel::Run(mlir::OpBuilder &builder,
       rank, mlir::utils::IteratorType::parallel);
   builder.create<mlir::linalg::GenericOp>(
       builder.getUnknownLoc(), mlir::TypeRange{},
-      mlir::ValueRange{cond_memref, x, y_memref}, mlir::ValueRange{output},
+      mlir::ValueRange{cond_memref, input, y_memref}, mlir::ValueRange{output},
       maps, iterator_types,
       [&](mlir::OpBuilder &b, mlir::Location loc, mlir::ValueRange inputs) {
 #ifdef DEBUG

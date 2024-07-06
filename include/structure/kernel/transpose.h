@@ -7,12 +7,13 @@
 namespace cpu_transformers {
 namespace kernel {
 
-class TransposeKernel : public Kernel {
+class TransposeKernel : public SingleInputWithoutBufferKernel {
 public:
   TransposeKernel(std::vector<int64_t> perms);
   TransposeKernel(const TransposeKernel &) = delete;
   TransposeKernel(TransposeKernel &&) = default;
-  void Run(mlir::OpBuilder &builder, mlir::Value &input, mlir::Value &output);
+  void Run(mlir::OpBuilder &builder, mlir::Value &input,
+           mlir::Value &output) const;
 
 private:
   std::vector<int64_t> perms_;

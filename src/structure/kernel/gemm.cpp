@@ -16,29 +16,28 @@
 
 namespace cpu_transformers {
 namespace kernel {
-GemmConstantWeightsBiasKernel::GemmConstantWeightsBiasKernel(float64_t alpha,
-                                                             float64_t beta,
-                                                             bool transA,
-                                                             bool transB)
-    : alpha_(alpha), beta_(beta), transA_(transA), transB_(transB) {}
+
+GemmConstantWeightsBiasKernel::GemmConstantWeightsBiasKernel(
+    float64_t alpha, float64_t beta, bool transA, bool transB, Tensor &&weights,
+    Tensor &&bias)
+    : alpha_(alpha), beta_(beta), transA_(transA), transB_(transB),
+      weights_(weights), bias_(bias) {}
 
 void GemmConstantWeightsBiasKernel::Run(mlir::OpBuilder &builder,
-                                        mlir::Value input,
-                                        const Tensor &weights,
-                                        const Tensor &bias,
-                                        mlir::Value output) {
+                                        mlir::Value &input,
+                                        mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::MemRefType input_memref_type =
       mlir::cast<mlir::MemRefType>(input.getType());
   const int64_t input_rank = input_memref_type.getRank();
   llvm::ArrayRef<int64_t> input_shape = input_memref_type.getShape();
-  Type weights_raw_type = weights.GetType();
-  const std::vector<int64_t> &weights_shape = weights.GetShape();
-  const std::vector<float64_t> &weights_ref = weights.Get();
+  Type weights_raw_type = weights_.GetType();
+  const std::vector<int64_t> &weights_shape = weights_.GetShape();
+  const std::vector<float64_t> &weights_ref = weights_.Get();
   const int64_t weights_rank = weights_shape.size();
-  Type bias_raw_type = bias.GetType();
-  const std::vector<int64_t> &bias_shape = bias.GetShape();
-  const std::vector<float64_t> &bias_ref = bias.Get();
+  Type bias_raw_type = bias_.GetType();
+  const std::vector<int64_t> &bias_shape = bias_.GetShape();
+  const std::vector<float64_t> &bias_ref = bias_.Get();
   const int64_t bias_rank = bias_shape.size();
   mlir::MemRefType output_memref_type =
       mlir::cast<mlir::MemRefType>(output.getType());
@@ -197,5 +196,6 @@ void GemmConstantWeightsBiasKernel::Run(mlir::OpBuilder &builder,
         b.create<mlir::linalg::YieldOp>(loc, add_op);
       });
 }
+
 } // namespace kernel
 } // namespace cpu_transformers

@@ -5,14 +5,17 @@
 
 namespace cpu_transformers {
 namespace kernel {
-class ErfKernel : public Kernel {
+
+class ErfKernel : public SingleInputWithoutBufferKernel {
 public:
   ErfKernel() = default;
   ErfKernel(const ErfKernel &erf_kernel) = delete;
   ErfKernel(ErfKernel &&erf_kernel) = default;
   ~ErfKernel() = default;
-  void Run(mlir::OpBuilder &builder, mlir::Value &input, mlir::Value &output);
+  void Run(mlir::OpBuilder &builder, mlir::Value &input,
+           mlir::Value &output) const override;
 };
+
 } // namespace kernel
 } // namespace cpu_transformers
 

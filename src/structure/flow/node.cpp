@@ -1,4 +1,5 @@
 #include "structure/flow/node.h"
+#include "structure/flow/region.h"
 #include "structure/tensor/meta.h"
 #include "structure/tensor/tensor.h"
 #include "utils/float.h"
@@ -14,19 +15,168 @@
 
 namespace cpu_transformers {
 namespace flow {
+
 Node::Node(std::string &&name) : name_(std::move(name)) {}
 
 const std::string &Node::GetName() const noexcept { return name_; }
 
 size_t Node::GetBufferSize() const noexcept { return 0; }
 
+SingleInputNode::SingleInputNode(std::string &&name,
+                                 std::shared_ptr<Region> &&input,
+                                 std::shared_ptr<Region> &&output)
+    : Node(std::move(name)), input_(std::move(input)),
+      output_(std::move(output)) {}
+
+std::shared_ptr<Node> SingleInputNode::CloneAsNode() const {
+  return CloneAsSingleInputNode();
+}
+
+std::shared_ptr<Region> SingleInputNode::GetInput() const noexcept {
+  return input_;
+}
+
+std::shared_ptr<Region> SingleInputNode::GetOutput() const noexcept {
+  return output_;
+}
+
+const std::string &SingleInputNode::GetInputAsString() const noexcept {
+  std::shared_ptr<Region> input = GetInput();
+#ifdef DEBUG
+  assert(input != nullptr);
+#endif
+  return input->GetName();
+}
+
+const std::string &SingleInputNode::GetOutputAsString() const noexcept {
+  std::shared_ptr<Region> output = GetOutput();
+#ifdef DEBUG
+  assert(output != nullptr);
+#endif
+  return output->GetName();
+}
+
+void SingleInputNode::SetInput(std::shared_ptr<Region> &&input) noexcept {
+  input_ = std::move(input);
+}
+
+void SingleInputNode::SetOutput(std::shared_ptr<Region> &&output) noexcept {
+  output_ = std::move(output);
+}
+
+DoubleInputsNode::DoubleInputsNode(std::string &&name,
+                                   std::shared_ptr<Region> &&lhs,
+                                   std::shared_ptr<Region> &&rhs,
+                                   std::shared_ptr<Region> &&output)
+    : Node(std::move(name)), lhs_(std::move(lhs)), rhs_(std::move(rhs)),
+      output_(std::move(output)) {}
+
+std::shared_ptr<Node> DoubleInputsNode::CloneAsNode() const {
+  return CloneAsDoubleInputsNode();
+}
+
+std::shared_ptr<Region> DoubleInputsNode::GetLhs() const noexcept {
+  return lhs_;
+}
+
+std::shared_ptr<Region> DoubleInputsNode::GetRhs() const noexcept {
+  return rhs_;
+}
+
+std::shared_ptr<Region> DoubleInputsNode::GetOutput() const noexcept {
+  return output_;
+}
+
+const std::string &DoubleInputsNode::GetLhsAsString() const noexcept {
+  std::shared_ptr<Region> lhs = GetLhs();
+#ifdef DEBUG
+  assert(lhs != nullptr);
+#endif
+  return lhs->GetName();
+}
+
+const std::string &DoubleInputsNode::GetRhsAsString() const noexcept {
+  std::shared_ptr<Region> rhs = GetRhs();
+#ifdef DEBUG
+  assert(rhs != nullptr);
+#endif
+  return rhs->GetName();
+}
+
+const std::string &DoubleInputsNode::GetOutputAsString() const noexcept {
+  std::shared_ptr<Region> output = GetOutput();
+#ifdef DEBUG
+  assert(output != nullptr);
+#endif
+  return output->GetName();
+}
+
+void DoubleInputsNode::SetLhs(std::shared_ptr<Region> &&lhs) noexcept {
+  lhs_ = std::move(lhs);
+}
+
+void DoubleInputsNode::SetRhs(std::shared_ptr<Region> &&rhs) noexcept {
+  rhs_ = std::move(rhs);
+}
+
+void DoubleInputsNode::SetOutput(std::shared_ptr<Region> &&output) noexcept {
+  output_ = std::move(output);
+}
+
+SingleInputWithoutBufferNode::SingleInputWithoutBufferNode(
+    std::string &&name, std::shared_ptr<Region> &&input,
+    std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputNode(std::move(name), std::move(input), std::move(output)) {}
+
+std::shared_ptr<SingleInputNode>
+SingleInputWithoutBufferNode::CloneAsSingleInputNode() const {
+  return CloneAsSingleInputWithoutBufferNode();
+}
+
+SingleInputWithBufferNode::SingleInputWithBufferNode(
+    std::string &&name, std::shared_ptr<Region> &&input,
+    std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputNode(std::move(name), std::move(input), std::move(output)) {}
+
+std::shared_ptr<SingleInputNode>
+SingleInputWithBufferNode::CloneAsSingleInputNode() const {
+  return CloneAsSingleInputWithBufferNode();
+}
+
+DoubleInputsWithoutBufferNode::DoubleInputsWithoutBufferNode(
+    std::string &&name, std::shared_ptr<Region> &&lhs,
+    std::shared_ptr<Region> &&rhs, std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      DoubleInputsNode(std::move(name), std::move(lhs), std::move(rhs),
+                       std::move(output)) {}
+
+std::shared_ptr<DoubleInputsNode>
+DoubleInputsWithoutBufferNode::CloneAsDoubleInputsNode() const {
+  return CloneAsDoubleInputsWithoutBufferNode();
+}
+
+DoubleInputsWithBufferNode::DoubleInputsWithBufferNode(
+    std::string &&name, std::shared_ptr<Region> &&lhs,
+    std::shared_ptr<Region> &&rhs, std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      DoubleInputsNode(std::move(name), std::move(lhs), std::move(rhs),
+                       std::move(output)) {}
+
+std::shared_ptr<DoubleInputsNode>
+DoubleInputsWithBufferNode::CloneAsDoubleInputsNode() const {
+  return CloneAsDoubleInputsWithBufferNode();
+}
+
 AddNode::AddNode(std::string &&name) : Node(std::move(name)) {}
 
 AddConstantNode::AddConstantNode(std::string &&name,
-                                 std::shared_ptr<Edge> &&input,
-                                 std::shared_ptr<Edge> &&output)
-    : AddNode(std::move(name)), input_(std::move(input)),
-      output_(std::move(output)) {
+                                 std::shared_ptr<Region> &&input,
+                                 std::shared_ptr<Region> &&output)
+    : AddNode(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)) {
 #ifdef DEBUG
   const Meta &input_Meta = input_->GetMeta();
   const Meta &output_Meta = output_->GetMeta();
@@ -37,20 +187,29 @@ AddConstantNode::AddConstantNode(std::string &&name,
 #endif
 }
 
-std::shared_ptr<Edge> AddConstantNode::GetInput() const noexcept {
-  return input_;
-}
-
-std::shared_ptr<Edge> AddConstantNode::GetOutput() const noexcept {
-  return output_;
+std::shared_ptr<SingleInputWithoutBufferNode>
+AddConstantNode::CloneAsSingleInputWithoutBufferNode() const {
+  return CloneAsAddConstantNode();
 }
 
 AddConstantScalarNode::AddConstantScalarNode(std::string &&name, Type type,
                                              float64_t value,
-                                             std::shared_ptr<Edge> &&input,
-                                             std::shared_ptr<Edge> &&output)
-    : AddConstantNode(std::move(name), std::move(input), std::move(output)),
+                                             std::shared_ptr<Region> &&input,
+                                             std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      AddConstantNode(std::move(name), std::move(input), std::move(output)),
       type_(type), value_(value) {}
+
+std::shared_ptr<AddConstantNode>
+AddConstantScalarNode::CloneAsAddConstantNode() const {
+  return Clone();
+}
+
+std::shared_ptr<AddConstantScalarNode> AddConstantScalarNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<AddConstantScalarNode>(
+      std::move(name), GetType(), GetValue(), GetInput(), GetOutput());
+}
 
 Type AddConstantScalarNode::GetType() const noexcept { return type_; }
 
@@ -58,9 +217,10 @@ float64_t AddConstantScalarNode::GetValue() const noexcept { return value_; }
 
 AddConstantTensorNode::AddConstantTensorNode(std::string &&name,
                                              Tensor &&tensor,
-                                             std::shared_ptr<Edge> &&input,
-                                             std::shared_ptr<Edge> &&output)
-    : AddConstantNode(std::move(name), std::move(input), std::move(output)),
+                                             std::shared_ptr<Region> &&input,
+                                             std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      AddConstantNode(std::move(name), std::move(input), std::move(output)),
       tensor_(std::move(tensor)) {
 #ifdef DEBUG
   const Meta &input_meta = input_->GetMeta();
@@ -73,6 +233,18 @@ AddConstantTensorNode::AddConstantTensorNode(std::string &&name,
 #endif
 }
 
+std::shared_ptr<AddConstantNode>
+AddConstantTensorNode::CloneAsAddConstantNode() const {
+  return Clone();
+}
+
+std::shared_ptr<AddConstantTensorNode> AddConstantTensorNode::Clone() const {
+  std::string name = GetName();
+  Tensor tensor = GetTensor();
+  return std::make_shared<AddConstantTensorNode>(
+      std::move(name), std::move(tensor), GetInput(), GetOutput());
+}
+
 Type AddConstantTensorNode::GetType() const noexcept {
   return GetTensor().GetType();
 }
@@ -81,11 +253,13 @@ const Tensor &AddConstantTensorNode::GetTensor() const noexcept {
   return tensor_;
 }
 
-AddCommonNode::AddCommonNode(std::string &&name, std::shared_ptr<Edge> &&lhs,
-                             std::shared_ptr<Edge> &&rhs,
-                             std::shared_ptr<Edge> &&output)
-    : AddNode(std::move(name)), lhs_(lhs), rhs_(rhs),
-      output_(std::move(output)) {
+AddCommonNode::AddCommonNode(std::string &&name, std::shared_ptr<Region> &&lhs,
+                             std::shared_ptr<Region> &&rhs,
+                             std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      DoubleInputsWithoutBufferNode(std::move(name), std::move(lhs),
+                                    std::move(rhs), std::move(output)),
+      AddNode(std::move(name)) {
 #ifdef DEBUG
   const Meta &lhs_meta = lhs_->GetMeta();
   const Meta &rhs_meta = rhs_->GetMeta();
@@ -97,28 +271,47 @@ AddCommonNode::AddCommonNode(std::string &&name, std::shared_ptr<Edge> &&lhs,
 #endif
 }
 
-std::shared_ptr<Edge> AddCommonNode::GetLhs() const noexcept { return lhs_; }
+std::shared_ptr<DoubleInputsWithoutBufferNode>
+AddCommonNode::CloneAsDoubleInputsWithoutBufferNode() const {
+  return Clone();
+}
 
-std::shared_ptr<Edge> AddCommonNode::GetRhs() const noexcept { return rhs_; }
-
-std::shared_ptr<Edge> AddCommonNode::GetOutput() const noexcept {
-  return output_;
+std::shared_ptr<AddCommonNode> AddCommonNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<AddCommonNode>(std::move(name), GetLhs(), GetRhs(),
+                                         GetOutput());
 }
 
 AddDivErfAddMulMulNode::AddDivErfAddMulMulNode(
     std::string &&name, Tensor &&add0_weight, Type div_type,
     float64_t div_weight, Type add1_type, float64_t add1_weight, Type mul1_type,
-    float64_t mul1_weight, std::shared_ptr<Edge> &&input,
-    std::shared_ptr<Edge> &&output)
-    : Node(std::move(name)), add0_weight_(add0_weight), div_type_(div_type),
-      div_weight_(div_weight), add1_type_(add1_type), add1_weight_(add1_weight),
-      mul1_type_(mul1_type), mul1_weight_(mul1_weight),
-      input_(std::move(input)), output_(std::move(output)) {
+    float64_t mul1_weight, std::shared_ptr<Region> &&input,
+    std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      add0_weight_(add0_weight), div_type_(div_type), div_weight_(div_weight),
+      add1_type_(add1_type), add1_weight_(add1_weight), mul1_type_(mul1_type),
+      mul1_weight_(mul1_weight) {
 #ifdef DEBUG
   const Meta &input_meta = input_->GetMeta();
   const Meta &output_meta = output_->GetMeta();
   assert(input_meta == output_meta);
 #endif
+}
+
+std::shared_ptr<SingleInputWithoutBufferNode>
+AddDivErfAddMulMulNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<AddDivErfAddMulMulNode> AddDivErfAddMulMulNode::Clone() const {
+  std::string name = GetName();
+  Tensor add0_weight = GetAdd0Weight();
+  return std::make_shared<AddDivErfAddMulMulNode>(
+      std::move(name), std::move(add0_weight), GetDivType(), GetDivWeight(),
+      GetAdd1Type(), GetAdd1Weight(), GetMul1Type(), GetMul1Weight(),
+      GetInput(), GetOutput());
 }
 
 const Tensor &AddDivErfAddMulMulNode::GetAdd0Weight() const noexcept {
@@ -143,22 +336,16 @@ float64_t AddDivErfAddMulMulNode::GetMul1Weight() const noexcept {
   return mul1_weight_;
 }
 
-std::shared_ptr<Edge> AddDivErfAddMulMulNode::GetInput() const noexcept {
-  return input_;
-}
-
-std::shared_ptr<Edge> AddDivErfAddMulMulNode::GetOutput() const noexcept {
-  return output_;
-}
-
 DivNode::DivNode(std::string &&name) : Node(std::move(name)) {}
 
 DivConstantScalarNode::DivConstantScalarNode(std::string &&name, Type type,
                                              float64_t value,
-                                             std::shared_ptr<Edge> &&input,
-                                             std::shared_ptr<Edge> &&output)
-    : DivNode(std::move(name)), type_(type), value_(value),
-      input_(std::move(input)), output_(std::move(output)) {
+                                             std::shared_ptr<Region> &&input,
+                                             std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      DivNode(std::move(name)), type_(type), value_(value) {
 #ifdef DEBUG
   const Meta &input_meta = input_->GetMeta();
   const Meta &output_meta = output_->GetMeta();
@@ -166,46 +353,50 @@ DivConstantScalarNode::DivConstantScalarNode(std::string &&name, Type type,
 #endif
 }
 
+std::shared_ptr<SingleInputWithoutBufferNode>
+DivConstantScalarNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<DivConstantScalarNode> DivConstantScalarNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<DivConstantScalarNode>(
+      std::move(name), GetType(), GetValue(), GetInput(), GetOutput());
+}
+
 Type DivConstantScalarNode::GetType() const noexcept { return type_; }
 
 float64_t DivConstantScalarNode::GetValue() const noexcept { return value_; }
 
-std::shared_ptr<Edge> DivConstantScalarNode::GetInput() const noexcept {
-  return input_;
+ErfNode::ErfNode(std::string &&name, std::shared_ptr<Region> &&input,
+                 std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)) {}
+
+std::shared_ptr<SingleInputWithoutBufferNode>
+ErfNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
 }
 
-std::shared_ptr<Edge> DivConstantScalarNode::GetOutput() const noexcept {
-  return output_;
+std::shared_ptr<ErfNode> ErfNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<ErfNode>(std::move(name), GetInput(), GetOutput());
 }
 
-ErfNode::ErfNode(std::string &&name, std::shared_ptr<Edge> &&input,
-                 std::shared_ptr<Edge> &&output)
-    : Node(std::move(name)), input_(std::move(input)),
-      output_(std::move(output)) {}
-
-std::shared_ptr<Edge> ErfNode::GetInput() const noexcept { return input_; }
-
-std::shared_ptr<Edge> ErfNode::GetOutput() const noexcept { return output_; }
-
-GatherNode::GatherNode(std::string &&name, std::shared_ptr<Edge> &&output,
-                       int64_t axis)
-    : Node(std::move(name)), output_(std::move(output)), axis_(axis) {
-#ifdef DEBUG
-  assert(output_ != nullptr);
-#endif
-}
-
-std::shared_ptr<Edge> GatherNode::GetOutput() const noexcept { return output_; }
-
-int64_t GatherNode::GetAxis() const noexcept { return axis_; }
+GatherNode::GatherNode(std::string &&name) : Node(std::move(name)) {}
 
 GatherConstantIndexScalarNode::GatherConstantIndexScalarNode(
-    std::string &&name, std::shared_ptr<Edge> &&lhs, int64_t rhs,
-    std::shared_ptr<Edge> &&output, int64_t axis)
-    : GatherNode(std::move(name), std::move(output), axis), lhs_(lhs),
-      rhs_(rhs) {
+    std::string &&name, std::shared_ptr<Region> &&input,
+    std::shared_ptr<Region> &&output, int64_t index, int64_t axis)
+    : Node(std::move(name)), GatherNode(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      index_(index), axis_(axis) {
 #ifdef DEBUG
-  const Meta &lhs_meta = lhs_->GetMeta();
+  assert(input_ != nullptr);
+  assert(output_ != nullptr);
+  const Meta &lhs_meta = input_->GetMeta();
   const Meta &output_meta = output_->GetMeta();
   const std::vector<int64_t> &lhs_shape = lhs_meta.GetShape();
   const std::vector<int64_t> &output_shape = output_meta.GetShape();
@@ -215,23 +406,41 @@ GatherConstantIndexScalarNode::GatherConstantIndexScalarNode(
 #endif
 }
 
-std::shared_ptr<Edge> GatherConstantIndexScalarNode::GetLhs() const noexcept {
-  return lhs_;
+std::shared_ptr<SingleInputWithoutBufferNode>
+GatherConstantIndexScalarNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
 }
 
-int64_t GatherConstantIndexScalarNode::GetRhs() const noexcept { return rhs_; }
+std::shared_ptr<GatherConstantIndexScalarNode>
+GatherConstantIndexScalarNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<GatherConstantIndexScalarNode>(
+      std::move(name), GetInput(), GetOutput(), GetIndex(), GetAxis());
+}
+
+int64_t GatherConstantIndexScalarNode::GetAxis() const noexcept {
+  return axis_;
+}
+
+int64_t GatherConstantIndexScalarNode::GetIndex() const noexcept {
+  return index_;
+}
 
 GatherConstantDataTensorNode::GatherConstantDataTensorNode(
-    std::string &&name, Tensor &&lhs, std::shared_ptr<Edge> &&rhs,
-    std::shared_ptr<Edge> &&output, int64_t axis)
-    : GatherNode(std::move(name), std::move(output), axis), lhs_(lhs),
-      rhs_(std::move(rhs)) {
+    std::string &&name, std::shared_ptr<Region> &&input,
+    std::shared_ptr<Region> &&output, Tensor &&data, int64_t axis)
+    : Node(std::move(name)), GatherNode(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      data_(data), axis_(axis) {
 #ifdef DEBUG
+  assert(input_ != nullptr);
+  assert(output_ != nullptr);
   // Only the gather index of 0 is supported currently. If new cases occur, the
   // code should be updated.
   assert(axis == 0);
-  const Meta &lhs_meta = lhs_.GetMeta();
-  const Meta &rhs_meta = rhs_->GetMeta();
+  const Meta &lhs_meta = data_.GetMeta();
+  const Meta &rhs_meta = input_->GetMeta();
   const Meta &output_meta = output_->GetMeta();
   const std::vector<int64_t> &lhs_shape = lhs_meta.GetShape();
   const std::vector<int64_t> &rhs_shape = rhs_meta.GetShape();
@@ -243,23 +452,51 @@ GatherConstantDataTensorNode::GatherConstantDataTensorNode(
 #endif
 }
 
-const Tensor &GatherConstantDataTensorNode::GetLhs() const noexcept {
-  return lhs_;
+std::shared_ptr<SingleInputWithoutBufferNode>
+GatherConstantDataTensorNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
 }
 
-std::shared_ptr<Edge> GatherConstantDataTensorNode::GetRhs() const noexcept {
-  return rhs_;
+std::shared_ptr<GatherConstantDataTensorNode>
+GatherConstantDataTensorNode::Clone() const {
+  std::string name = GetName();
+  Tensor data = GetData();
+  return std::make_shared<GatherConstantDataTensorNode>(
+      std::move(name), GetInput(), GetOutput(), std::move(data), GetAxis());
+}
+
+int64_t GatherConstantDataTensorNode::GetAxis() const noexcept { return axis_; }
+
+const Tensor &GatherConstantDataTensorNode::GetData() const noexcept {
+  return data_;
 }
 
 GatherConstantDataTensorAddTensorLhsAddTensorLhsNode::
     GatherConstantDataTensorAddTensorLhsAddTensorLhsNode(
         std::string &&name, Tensor &&data, Tensor &&add0_weight,
-        Tensor &&add1_weight, std::shared_ptr<Edge> &&input,
-        std::shared_ptr<Edge> &&output)
+        Tensor &&add1_weight, std::shared_ptr<Region> &&input,
+        std::shared_ptr<Region> &&output)
     : Node(std::move(name)), data_(std::move(data)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
       add0_weight_(std::move(add0_weight)),
-      add1_weight_(std::move(add1_weight)), input_(std::move(input)),
-      output_(std::move(output)) {}
+      add1_weight_(std::move(add1_weight)) {}
+
+std::shared_ptr<SingleInputWithoutBufferNode>
+GatherConstantDataTensorAddTensorLhsAddTensorLhsNode::
+    CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<GatherConstantDataTensorAddTensorLhsAddTensorLhsNode>
+GatherConstantDataTensorAddTensorLhsAddTensorLhsNode::Clone() const {
+  std::string name = GetName();
+  Tensor data = GetData(), add0_weight = GetAdd0Weight(),
+         add1_weight = GetAdd1Weight();
+  return std::make_shared<GatherConstantDataTensorAddTensorLhsAddTensorLhsNode>(
+      std::move(name), std::move(data), std::move(add0_weight),
+      std::move(add1_weight), GetInput(), GetOutput());
+}
 
 const Tensor &
 GatherConstantDataTensorAddTensorLhsAddTensorLhsNode::GetData() const noexcept {
@@ -278,18 +515,6 @@ GatherConstantDataTensorAddTensorLhsAddTensorLhsNode::GetAdd1Weight()
   return add1_weight_;
 }
 
-std::shared_ptr<Edge>
-GatherConstantDataTensorAddTensorLhsAddTensorLhsNode::GetInput()
-    const noexcept {
-  return input_;
-}
-
-std::shared_ptr<Edge>
-GatherConstantDataTensorAddTensorLhsAddTensorLhsNode::GetOutput()
-    const noexcept {
-  return output_;
-}
-
 GemmNode::GemmNode(std::string &&name, float64_t alpha = GemmNode::kAlpha,
                    float64_t beta = GemmNode::kBeta,
                    bool transA = GemmNode::kTransA,
@@ -306,13 +531,15 @@ bool GemmNode::GetTransA() const noexcept { return transA_; }
 bool GemmNode::GetTransB() const noexcept { return transB_; }
 
 GemmConstantWeightsBiasNode::GemmConstantWeightsBiasNode(
-    std::string &&name, std::shared_ptr<Edge> &&input, Tensor &&weights,
-    Tensor &&bias, std::shared_ptr<Edge> &&output,
+    std::string &&name, std::shared_ptr<Region> &&input,
+    std::shared_ptr<Region> &&output, Tensor &&weights, Tensor &&bias,
     float64_t alpha = GemmNode::kAlpha, float64_t beta = GemmNode::kBeta,
     bool transA = GemmNode::kTransA, bool transB = GemmNode::kTransB)
-    : GemmNode(std::move(name), alpha, beta, transA, transB),
-      input_(std::move(input)), weights_(std::move(weights)),
-      bias_(std::move(bias)), output_(std::move(output)) {
+    : Node(std::move(name)),
+      GemmNode(std::move(name), alpha, beta, transA, transB),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      weights_(std::move(weights)), bias_(std::move(bias)) {
 #ifdef DEBUG
   const Meta &input_meta = input_->GetMeta();
   const Meta &output_meta = output_->GetMeta();
@@ -340,8 +567,18 @@ GemmConstantWeightsBiasNode::GemmConstantWeightsBiasNode(
 #endif
 }
 
-std::shared_ptr<Edge> GemmConstantWeightsBiasNode::GetInput() const noexcept {
-  return input_;
+std::shared_ptr<SingleInputWithoutBufferNode>
+GemmConstantWeightsBiasNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<GemmConstantWeightsBiasNode>
+GemmConstantWeightsBiasNode::Clone() const {
+  std::string name = GetName();
+  Tensor weights = GetWeights(), bias = GetBias();
+  return std::make_shared<GemmConstantWeightsBiasNode>(
+      std::move(name), GetInput(), GetOutput(), std::move(weights),
+      std::move(bias), GetAlpha(), GetBeta(), GetTransA(), GetTransB());
 }
 
 const Tensor &GemmConstantWeightsBiasNode::GetWeights() const noexcept {
@@ -350,10 +587,6 @@ const Tensor &GemmConstantWeightsBiasNode::GetWeights() const noexcept {
 
 const Tensor &GemmConstantWeightsBiasNode::GetBias() const noexcept {
   return bias_;
-}
-
-std::shared_ptr<Edge> GemmConstantWeightsBiasNode::GetOutput() const noexcept {
-  return output_;
 }
 
 LayerNormalizationNode::LayerNormalizationNode(
@@ -370,19 +603,36 @@ float64_t LayerNormalizationNode::GetEpsilon() const noexcept {
 }
 
 LayerNormalizationConstantScaleBiasNode::
-    LayerNormalizationConstantScaleBiasNode(std::string &&name,
-                                            std::shared_ptr<Edge> &&input,
-                                            Tensor &&scale, Tensor &&bias,
-                                            std::shared_ptr<Edge> &&output,
+    LayerNormalizationConstantScaleBiasNode(std::string &&name, Tensor &&scale,
+                                            Tensor &&bias,
+                                            std::shared_ptr<Region> &&input,
+                                            std::shared_ptr<Region> &&output,
                                             int64_t axis, float64_t epsilon)
-    : LayerNormalizationNode(std::move(name), axis, epsilon),
-      input_(std::move(input)), scale_(std::move(scale)),
-      bias_(std::move(bias)), output_(std::move(output)) {
+    : Node(std::move(name)),
+      LayerNormalizationNode(std::move(name), axis, epsilon),
+      SingleInputWithBufferNode(std::move(name), std::move(input),
+                                std::move(output)),
+      scale_(std::move(scale)), bias_(std::move(bias)) {
 #ifdef DEBUG
   const Meta &input_meta = input_->GetMeta();
   const Meta &output_meta = output_->GetMeta();
   assert(input_meta == output_meta);
 #endif
+}
+
+std::shared_ptr<SingleInputWithBufferNode>
+LayerNormalizationConstantScaleBiasNode::CloneAsSingleInputWithBufferNode()
+    const {
+  return Clone();
+}
+
+std::shared_ptr<LayerNormalizationConstantScaleBiasNode>
+LayerNormalizationConstantScaleBiasNode::Clone() const {
+  std::string name = GetName();
+  Tensor scale = GetScale(), bias = GetBias();
+  return std::make_shared<LayerNormalizationConstantScaleBiasNode>(
+      std::move(name), std::move(scale), std::move(bias), GetInput(),
+      GetOutput(), GetAxis(), GetEpsilon());
 }
 
 size_t LayerNormalizationConstantScaleBiasNode::GetBufferSize() const noexcept {
@@ -404,11 +654,6 @@ const Meta &LayerNormalizationConstantScaleBiasNode::GetMeta() const noexcept {
   return input_->GetMeta();
 }
 
-std::shared_ptr<Edge>
-LayerNormalizationConstantScaleBiasNode::GetInput() const noexcept {
-  return input_;
-}
-
 const Tensor &
 LayerNormalizationConstantScaleBiasNode::GetScale() const noexcept {
   return scale_;
@@ -419,64 +664,70 @@ LayerNormalizationConstantScaleBiasNode::GetBias() const noexcept {
   return bias_;
 }
 
-std::shared_ptr<Edge>
-LayerNormalizationConstantScaleBiasNode::GetOutput() const noexcept {
-  return output_;
-}
-
 MatMulNode::MatMulNode(std::string &&name) : Node(std::move(name)) {}
 
-MatMulConstantLhsNode::MatMulConstantLhsNode(std::string &&name, Tensor &&lhs,
-                                             std::shared_ptr<Edge> &&rhs,
-                                             std::shared_ptr<Edge> &&output)
-    : MatMulNode(std::move(name)), lhs_(std::move(lhs)), rhs_(std::move(rhs)),
-      output_(std::move(output)) {
+MatMulConstantLhsNode::MatMulConstantLhsNode(std::string &&name,
+                                             Tensor &&weight,
+                                             std::shared_ptr<Region> &&input,
+                                             std::shared_ptr<Region> &&output)
+    : Node(std::move(name)), MatMulNode(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      weight_(std::move(weight)) {
 #ifdef DEBUG
-  const Meta &rhs_meta = rhs_->GetMeta();
+  const Meta &input_meta = input_->GetMeta();
   const Meta &output_meta = output_->GetMeta();
-  const std::vector<int64_t> &lhs_shape = lhs_.GetShape();
-  const std::vector<int64_t> &rhs_shape = rhs_meta.GetShape();
+  const std::vector<int64_t> &weight_shape = weight_.GetShape();
+  const std::vector<int64_t> &input_shape = input_meta.GetShape();
   const std::vector<int64_t> &output_shape = output_meta.GetShape();
-  size_t lhs_shapeLen = lhs_shape.size();
-  size_t rhs_shape_len = rhs_shape.size();
+  size_t weight_shape_len = weight_shape.size();
+  size_t input_shape_len = input_shape.size();
   size_t output_shape_len = output_shape.size();
-  assert(lhs_shapeLen >= 2);
-  assert(rhs_shape_len >= 2);
+  assert(weight_shape_len >= 2);
+  assert(input_shape_len >= 2);
   assert(output_shape_len >= 2);
-  size_t m = lhs_shape[lhs_shapeLen - 2];
-  size_t k = lhs_shape[lhs_shapeLen - 1];
-  size_t n = rhs_shape[rhs_shape_len - 1];
-  assert(rhs_shape[rhs_shape_len - 2] == k);
+  size_t m = weight_shape[weight_shape_len - 2];
+  size_t k = weight_shape[weight_shape_len - 1];
+  size_t n = input_shape[input_shape_len - 1];
+  assert(input_shape[input_shape_len - 2] == k);
   assert(output_shape[output_shape_len - 2] == m);
   assert(output_shape[output_shape_len - 1] == n);
-  std::optional<Meta> expected_output_meta_opt =
-      BroadcastMatMulShape(lhs_.GetMeta(), rhs_meta, output_meta.GetType());
+  std::optional<Meta> expected_output_meta_opt = BroadcastMatMulShape(
+      weight_.GetMeta(), input_meta, output_meta.GetType());
   assert(expected_output_meta_opt.has_value());
   assert(*expected_output_meta_opt == output_meta);
 #endif
 }
 
-const Tensor &MatMulConstantLhsNode::GetLhs() const noexcept { return lhs_; }
-
-std::shared_ptr<Edge> MatMulConstantLhsNode::GetRhs() const noexcept {
-  return rhs_;
+std::shared_ptr<SingleInputWithoutBufferNode>
+MatMulConstantLhsNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
 }
 
-std::shared_ptr<Edge> MatMulConstantLhsNode::GetOutput() const noexcept {
-  return output_;
+std::shared_ptr<MatMulConstantLhsNode> MatMulConstantLhsNode::Clone() const {
+  std::string name = GetName();
+  Tensor weight = GetWeight();
+  return std::make_shared<MatMulConstantLhsNode>(
+      std::move(name), std::move(weight), GetInput(), GetOutput());
+}
+
+const Tensor &MatMulConstantLhsNode::GetWeight() const noexcept {
+  return weight_;
 }
 
 MatMulConstantRhsNode::MatMulConstantRhsNode(std::string &&name,
-                                             std::shared_ptr<Edge> &&lhs,
-                                             Tensor &&rhs,
-                                             std::shared_ptr<Edge> &&output)
-    : MatMulNode(std::move(name)), lhs_(std::move(lhs)), rhs_(std::move(rhs)),
-      output_(std::move(output)) {
+                                             Tensor &&weight,
+                                             std::shared_ptr<Region> &&input,
+                                             std::shared_ptr<Region> &&output)
+    : Node(std::move(name)), MatMulNode(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      weight_(std::move(weight)) {
 #ifdef DEBUG
-  const Meta &lhs_meta = lhs_->GetMeta();
+  const Meta &lhs_meta = input_->GetMeta();
   const Meta &output_meta = output_->GetMeta();
   const std::vector<int64_t> &lhs_shape = lhs_meta.GetShape();
-  const std::vector<int64_t> &rhs_shape = rhs_.GetShape();
+  const std::vector<int64_t> &rhs_shape = weight_.GetShape();
   const std::vector<int64_t> &output_shape = output_meta.GetShape();
   size_t lhs_shapeLen = lhs_shape.size();
   size_t rhs_shape_len = rhs_shape.size();
@@ -491,28 +742,35 @@ MatMulConstantRhsNode::MatMulConstantRhsNode(std::string &&name,
   assert(output_shape[output_shape_len - 2] == m);
   assert(output_shape[output_shape_len - 1] == n);
   std::optional<Meta> expected_output_meta_opt =
-      BroadcastMatMulShape(lhs_meta, rhs_.GetMeta(), output_meta.GetType());
+      BroadcastMatMulShape(lhs_meta, weight_.GetMeta(), output_meta.GetType());
   assert(expected_output_meta_opt.has_value());
   assert(*expected_output_meta_opt == output_meta);
 #endif
 }
 
-std::shared_ptr<Edge> MatMulConstantRhsNode::GetLhs() const noexcept {
-  return lhs_;
+std::shared_ptr<SingleInputWithoutBufferNode>
+MatMulConstantRhsNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
 }
 
-const Tensor &MatMulConstantRhsNode::GetRhs() const noexcept { return rhs_; }
+std::shared_ptr<MatMulConstantRhsNode> MatMulConstantRhsNode::Clone() const {
+  std::string name = GetName();
+  Tensor weight = GetWeight();
+  return std::make_shared<MatMulConstantRhsNode>(
+      std::move(name), std::move(weight), GetInput(), GetOutput());
+}
 
-std::shared_ptr<Edge> MatMulConstantRhsNode::GetOutput() const noexcept {
-  return output_;
+const Tensor &MatMulConstantRhsNode::GetWeight() const noexcept {
+  return weight_;
 }
 
 MatMulCommonNode::MatMulCommonNode(std::string &&name,
-                                   std::shared_ptr<Edge> &&lhs,
-                                   std::shared_ptr<Edge> &&rhs,
-                                   std::shared_ptr<Edge> &&output)
-    : MatMulNode(std::move(name)), lhs_(std::move(lhs)), rhs_(std::move(rhs)),
-      output_(std::move(output)) {
+                                   std::shared_ptr<Region> &&lhs,
+                                   std::shared_ptr<Region> &&rhs,
+                                   std::shared_ptr<Region> &&output)
+    : Node(std::move(name)), MatMulNode(std::move(name)),
+      DoubleInputsWithoutBufferNode(std::move(name), std::move(lhs),
+                                    std::move(rhs), std::move(output)) {
 #ifdef DEBUG
   const Meta &lhs_meta = lhs_->GetMeta();
   const Meta &rhs_meta = rhs_->GetMeta();
@@ -539,35 +797,37 @@ MatMulCommonNode::MatMulCommonNode(std::string &&name,
 #endif
 }
 
-std::shared_ptr<Edge> MatMulCommonNode::GetLhs() const noexcept { return lhs_; }
+std::shared_ptr<DoubleInputsWithoutBufferNode>
+MatMulCommonNode::CloneAsDoubleInputsWithoutBufferNode() const {
+  return Clone();
+}
 
-std::shared_ptr<Edge> MatMulCommonNode::GetRhs() const noexcept { return rhs_; }
-
-std::shared_ptr<Edge> MatMulCommonNode::GetOutput() const noexcept {
-  return output_;
+std::shared_ptr<MatMulCommonNode> MatMulCommonNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<MatMulCommonNode>(std::move(name), GetLhs(), GetRhs(),
+                                            GetOutput());
 }
 
 MulNode::MulNode(std::string &&name) : Node(std::move(name)) {}
 
 MulConstantNode::MulConstantNode(std::string &&name,
-                                 std::shared_ptr<Edge> &&input,
-                                 std::shared_ptr<Edge> &&output)
-    : MulNode(std::move(name)), input_(std::move(input)),
-      output_(std::move(output)) {}
+                                 std::shared_ptr<Region> &&input,
+                                 std::shared_ptr<Region> &&output)
+    : Node(std::move(name)), MulNode(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)) {}
 
-std::shared_ptr<Edge> MulConstantNode::GetInput() const noexcept {
-  return input_;
-}
-
-std::shared_ptr<Edge> MulConstantNode::GetOutput() const noexcept {
-  return output_;
+std::shared_ptr<SingleInputWithoutBufferNode>
+MulConstantNode::CloneAsSingleInputWithoutBufferNode() const {
+  return CloneAsMulConstantNode();
 }
 
 MulConstantScalarNode::MulConstantScalarNode(std::string &&name,
-                                             std::shared_ptr<Edge> &&input,
+                                             std::shared_ptr<Region> &&input,
                                              Type type, float64_t value,
-                                             std::shared_ptr<Edge> &&output)
-    : MulConstantNode(std::move(name), std::move(input), std::move(output)),
+                                             std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      MulConstantNode(std::move(name), std::move(input), std::move(output)),
       type_(type), value_(value) {
 #ifdef DEBUG
   const Meta &input_meta = input_->GetMeta();
@@ -576,15 +836,27 @@ MulConstantScalarNode::MulConstantScalarNode(std::string &&name,
 #endif
 }
 
+std::shared_ptr<MulConstantNode>
+MulConstantScalarNode::CloneAsMulConstantNode() const {
+  return Clone();
+}
+
+std::shared_ptr<MulConstantScalarNode> MulConstantScalarNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<MulConstantScalarNode>(
+      std::move(name), GetInput(), GetType(), GetValue(), GetOutput());
+}
+
 Type MulConstantScalarNode::GetType() const noexcept { return type_; }
 
 float64_t MulConstantScalarNode::GetValue() const noexcept { return value_; }
 
 MulConstantTensorNode::MulConstantTensorNode(std::string &&name,
-                                             std::shared_ptr<Edge> &&input,
+                                             std::shared_ptr<Region> &&input,
                                              Tensor &&tensor,
-                                             std::shared_ptr<Edge> &&output)
-    : MulConstantNode(std::move(name), std::move(input), std::move(output)),
+                                             std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      MulConstantNode(std::move(name), std::move(input), std::move(output)),
       tensor_(std::move(tensor)) {
 #ifdef DEBUG
   const Meta &input_meta = input_->GetMeta();
@@ -594,41 +866,68 @@ MulConstantTensorNode::MulConstantTensorNode(std::string &&name,
 #endif
 }
 
+std::shared_ptr<MulConstantNode>
+MulConstantTensorNode::CloneAsMulConstantNode() const {
+  return Clone();
+}
+
+std::shared_ptr<MulConstantTensorNode> MulConstantTensorNode::Clone() const {
+  std::string name = GetName();
+  Tensor tensor = GetTensor();
+  return std::make_shared<MulConstantTensorNode>(
+      std::move(name), GetInput(), std::move(tensor), GetOutput());
+}
+
 const Tensor &MulConstantTensorNode::GetTensor() const noexcept {
   return tensor_;
 }
 
-MulCommonNode::MulCommonNode(std::string &&name, std::shared_ptr<Edge> &&lhs,
-                             std::shared_ptr<Edge> &&rhs,
-                             std::shared_ptr<Edge> &&output)
-    : MulNode(std::move(name)), lhs_(std::move(lhs)), rhs_(std::move(rhs)),
-      output_(std::move(output)) {}
+MulCommonNode::MulCommonNode(std::string &&name, std::shared_ptr<Region> &&lhs,
+                             std::shared_ptr<Region> &&rhs,
+                             std::shared_ptr<Region> &&output)
+    : Node(std::move(name)), MulNode(std::move(name)),
+      DoubleInputsWithoutBufferNode(std::move(name), std::move(lhs),
+                                    std::move(rhs), std::move(output)) {}
 
-std::shared_ptr<Edge> MulCommonNode::GetLhs() const noexcept { return lhs_; }
-
-std::shared_ptr<Edge> MulCommonNode::GetRhs() const noexcept { return rhs_; }
-
-std::shared_ptr<Edge> MulCommonNode::GetOutput() const noexcept {
-  return output_;
+std::shared_ptr<DoubleInputsWithoutBufferNode>
+MulCommonNode::CloneAsDoubleInputsWithoutBufferNode() const {
+  return Clone();
 }
 
-PowNode::PowNode(std::string &&name, std::shared_ptr<Edge> &&input, Type type,
-                 float64_t exp, std::shared_ptr<Edge> &&output)
-    : Node(std::move(name)), input_(std::move(input)), type_(type), exp_(exp),
-      output_(std::move(output)) {}
+std::shared_ptr<MulCommonNode> MulCommonNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<MulCommonNode>(std::move(name), GetLhs(), GetRhs(),
+                                         GetOutput());
+}
 
-std::shared_ptr<Edge> PowNode::GetInput() const noexcept { return input_; }
+PowNode::PowNode(std::string &&name, Type type, float64_t exp,
+                 std::shared_ptr<Region> &&input,
+                 std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      type_(type), exp_(exp) {}
+
+std::shared_ptr<SingleInputWithoutBufferNode>
+PowNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<PowNode> PowNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<PowNode>(std::move(name), GetType(), GetExp(),
+                                   GetInput(), GetOutput());
+}
 
 Type PowNode::GetType() const noexcept { return type_; }
 
 float64_t PowNode::GetExp() const noexcept { return exp_; }
 
-std::shared_ptr<Edge> PowNode::GetOutput() const noexcept { return output_; }
-
-ReshapeNode::ReshapeNode(std::string &&name, std::shared_ptr<Edge> &&input,
-                         std::shared_ptr<Edge> &&output)
-    : Node(std::move(name)), input_(std::move(input)),
-      output_(std::move(output)) {
+ReshapeNode::ReshapeNode(std::string &&name, std::shared_ptr<Region> &&input,
+                         std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)) {
 #ifdef DEBUG
   const Meta &input_meta = input_->GetMeta();
   const Meta &output_meta = output_->GetMeta();
@@ -641,21 +940,39 @@ ReshapeNode::ReshapeNode(std::string &&name, std::shared_ptr<Edge> &&input,
 #endif
 }
 
-std::shared_ptr<Edge> ReshapeNode::GetInput() const noexcept { return input_; }
-
-std::shared_ptr<Edge> ReshapeNode::GetOutput() const noexcept {
-  return output_;
+std::shared_ptr<SingleInputWithoutBufferNode>
+ReshapeNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
 }
 
-SoftmaxNode::SoftmaxNode(std::string &&name, std::shared_ptr<Edge> &&input,
-                         std::shared_ptr<Edge> &&output, int64_t axis)
-    : Node(std::move(name)), input_(std::move(input)),
-      output_(std::move(output)), axis_(axis) {
+std::shared_ptr<ReshapeNode> ReshapeNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<ReshapeNode>(std::move(name), GetInput(),
+                                       GetOutput());
+}
+
+SoftmaxNode::SoftmaxNode(std::string &&name, std::shared_ptr<Region> &&input,
+                         std::shared_ptr<Region> &&output, int64_t axis)
+    : Node(std::move(name)),
+      SingleInputWithBufferNode(std::move(name), std::move(input),
+                                std::move(output)),
+      axis_(axis) {
 #ifdef DEBUG
   const Meta &input_meta = input_->GetMeta();
   const Meta &output_meta = output_->GetMeta();
   assert(input_meta == output_meta);
 #endif
+}
+
+std::shared_ptr<SingleInputWithBufferNode>
+SoftmaxNode::CloneAsSingleInputWithBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<SoftmaxNode> SoftmaxNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<SoftmaxNode>(std::move(name), GetInput(), GetOutput(),
+                                       GetAxis());
 }
 
 size_t SoftmaxNode::GetBufferSize() const noexcept {
@@ -673,12 +990,6 @@ size_t SoftmaxNode::GetBufferSize() const noexcept {
   return size;
 }
 
-std::shared_ptr<Edge> SoftmaxNode::GetInput() const noexcept { return input_; }
-
-std::shared_ptr<Edge> SoftmaxNode::GetOutput() const noexcept {
-  return output_;
-}
-
 int64_t SoftmaxNode::GetAxis() const noexcept {
   return axis_ >= 0 ? axis_ : GetMeta().GetShape().size() + axis_;
 }
@@ -692,8 +1003,9 @@ const Meta &SoftmaxNode::GetMeta() const noexcept {
   return input_->GetMeta();
 }
 
-SplitNode::SplitNode(std::string &&name, std::shared_ptr<Edge> &&input,
-                     std::vector<std::shared_ptr<Edge>> &&outputs, int64_t axis)
+SplitNode::SplitNode(std::string &&name, std::shared_ptr<Region> &&input,
+                     std::vector<std::shared_ptr<Region>> &&outputs,
+                     int64_t axis)
     : Node(std::move(name)), input_(std::move(input)),
       outputs_(std::move(outputs)), axis_(axis) {
 #ifdef DEBUG
@@ -702,7 +1014,7 @@ SplitNode::SplitNode(std::string &&name, std::shared_ptr<Edge> &&input,
   size_t input_shape_len = input_shape.size();
   assert(axis < input_shape_len);
   size_t sum = 0;
-  for (const std::shared_ptr<Edge> &output : outputs_) {
+  for (const std::shared_ptr<Region> &output : outputs_) {
     const Meta &output_meta = output->GetMeta();
     const std::vector<int64_t> &output_shape = output_meta.GetShape();
     size_t output_shape_len = output_shape.size();
@@ -720,9 +1032,18 @@ SplitNode::SplitNode(std::string &&name, std::shared_ptr<Edge> &&input,
 #endif
 }
 
-std::shared_ptr<Edge> SplitNode::GetInput() const noexcept { return input_; }
+std::shared_ptr<Node> SplitNode::CloneAsNode() const { return Clone(); }
 
-const std::vector<std::shared_ptr<Edge>> &
+std::shared_ptr<SplitNode> SplitNode::Clone() const {
+  std::string name = GetName();
+  std::vector<std::shared_ptr<Region>> outputs = GetOutputs();
+  return std::make_shared<SplitNode>(std::move(name), GetInput(),
+                                     std::move(outputs), GetAxis());
+}
+
+std::shared_ptr<Region> SplitNode::GetInput() const noexcept { return input_; }
+
+const std::vector<std::shared_ptr<Region>> &
 SplitNode::GetOutputs() const noexcept {
   return outputs_;
 }
@@ -736,37 +1057,52 @@ const Meta &SplitNode::GetMeta() const noexcept { return input_->GetMeta(); }
 SubNode::SubNode(std::string &&name) : Node(std::move(name)) {}
 
 SubConstantScalarLhsNode::SubConstantScalarLhsNode(
-    std::string &&name, std::shared_ptr<Edge> &&input, Type type,
-    float64_t value, std::shared_ptr<Edge> &&output)
-    : SubNode(std::move(name)), input_(std::move(input)), type_(type),
-      value_(value), output_(std::move(output)) {}
+    std::string &&name, Type type, float64_t value,
+    std::shared_ptr<Region> &&input, std::shared_ptr<Region> &&output)
+    : Node(std::move(name)), SubNode(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      type_(type), value_(value) {}
 
-std::shared_ptr<Edge> SubConstantScalarLhsNode::GetInput() const noexcept {
-  return input_;
+std::shared_ptr<SingleInputWithoutBufferNode>
+SubConstantScalarLhsNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<SubConstantScalarLhsNode>
+SubConstantScalarLhsNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<SubConstantScalarLhsNode>(
+      std::move(name), GetType(), GetValue(), GetInput(), GetOutput());
 }
 
 Type SubConstantScalarLhsNode::GetType() const noexcept { return type_; }
 
 float64_t SubConstantScalarLhsNode::GetValue() const noexcept { return value_; }
 
-std::shared_ptr<Edge> SubConstantScalarLhsNode::GetOutput() const noexcept {
-  return output_;
+TanhNode::TanhNode(std::string &&name, std::shared_ptr<Region> &&input,
+                   std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)) {}
+
+std::shared_ptr<SingleInputWithoutBufferNode>
+TanhNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
 }
 
-TanhNode::TanhNode(std::string &&name, std::shared_ptr<Edge> &&input,
-                   std::shared_ptr<Edge> &&output)
-    : Node(std::move(name)), input_(std::move(input)),
-      output_(std::move(output)) {}
+std::shared_ptr<TanhNode> TanhNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<TanhNode>(std::move(name), GetInput(), GetOutput());
+}
 
-std::shared_ptr<Edge> TanhNode::GetInput() const noexcept { return input_; }
-
-std::shared_ptr<Edge> TanhNode::GetOutput() const noexcept { return output_; }
-
-TransposeNode::TransposeNode(std::string &&name, std::shared_ptr<Edge> &&input,
-                             std::shared_ptr<Edge> &&output,
-                             std::vector<int64_t> &&perm)
-    : Node(std::move(name)), input_(std::move(input)),
-      output_(std::move(output)), perm_(std::move(perm)) {
+TransposeNode::TransposeNode(std::string &&name, std::vector<int64_t> &&perm,
+                             std::shared_ptr<Region> &&input,
+                             std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      perm_(std::move(perm)) {
 #ifdef DEBUG
   const Meta &input_meta = input_->GetMeta();
   const Meta &output_meta = output_->GetMeta();
@@ -785,23 +1121,29 @@ TransposeNode::TransposeNode(std::string &&name, std::shared_ptr<Edge> &&input,
 #endif
 }
 
-std::shared_ptr<Edge> TransposeNode::GetInput() const noexcept {
-  return input_;
+std::shared_ptr<SingleInputWithoutBufferNode>
+TransposeNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
 }
 
-std::shared_ptr<Edge> TransposeNode::GetOutput() const noexcept {
-  return output_;
+std::shared_ptr<TransposeNode> TransposeNode::Clone() const {
+  std::string name = GetName();
+  std::vector<int64_t> perm = GetPerm();
+  return std::make_shared<TransposeNode>(std::move(name), std::move(perm),
+                                         GetInput(), GetOutput());
 }
 
 const std::vector<int64_t> &TransposeNode::GetPerm() const noexcept {
   return perm_;
 }
 
-UnsqueezeNode::UnsqueezeNode(std::string &&name, std::shared_ptr<Edge> &&input,
-                             std::shared_ptr<Edge> &&output,
-                             std::vector<int64_t> &&axes)
-    : Node(std::move(name)), input_(std::move(input)),
-      output_(std::move(output)), axes_(std::move(axes)) {
+UnsqueezeNode::UnsqueezeNode(std::string &&name, std::vector<int64_t> &&axes,
+                             std::shared_ptr<Region> &&input,
+                             std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      axes_(std::move(axes)) {
 #ifdef DEBUG
   const Meta &input_meta = input_->GetMeta();
   const Meta &output_meta = output_->GetMeta();
@@ -820,12 +1162,16 @@ UnsqueezeNode::UnsqueezeNode(std::string &&name, std::shared_ptr<Edge> &&input,
 #endif
 }
 
-std::shared_ptr<Edge> UnsqueezeNode::GetInput() const noexcept {
-  return input_;
+std::shared_ptr<SingleInputWithoutBufferNode>
+UnsqueezeNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
 }
 
-std::shared_ptr<Edge> UnsqueezeNode::GetOutput() const noexcept {
-  return output_;
+std::shared_ptr<UnsqueezeNode> UnsqueezeNode::Clone() const {
+  std::string name = GetName();
+  std::vector<int64_t> axes = GetAxes();
+  return std::make_shared<UnsqueezeNode>(std::move(name), std::move(axes),
+                                         GetInput(), GetOutput());
 }
 
 const std::vector<int64_t> &UnsqueezeNode::GetAxes() const noexcept {
@@ -833,13 +1179,14 @@ const std::vector<int64_t> &UnsqueezeNode::GetAxes() const noexcept {
 }
 
 UnsqueezeSubLhsScalarMulRhsScalarNode::UnsqueezeSubLhsScalarMulRhsScalarNode(
-    std::string &&name, std::shared_ptr<Edge> &&input,
-    std::shared_ptr<Edge> &&output, std::vector<int64_t> &&unsqueeze_axes,
-    Type sub_type, float64_t sub_val, Type mul_type, float64_t mul_val)
-    : Node(std::move(name)), input_(std::move(input)),
-      output_(std::move(output)), unsqueeze_axes_(std::move(unsqueeze_axes)),
-      sub_type_(sub_type), sub_val_(sub_val), mul_type_(mul_type),
-      mul_val_(mul_val) {
+    std::string &&name, std::vector<int64_t> &&unsqueeze_axes, Type sub_type,
+    float64_t sub_val, Type mul_type, float64_t mul_val,
+    std::shared_ptr<Region> &&input, std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      unsqueeze_axes_(std::move(unsqueeze_axes)), sub_type_(sub_type),
+      sub_val_(sub_val), mul_type_(mul_type), mul_val_(mul_val) {
 #ifdef DEBUG
   const Meta &input_meta = input_->GetMeta();
   const Meta &output_meta = output_->GetMeta();
@@ -858,14 +1205,19 @@ UnsqueezeSubLhsScalarMulRhsScalarNode::UnsqueezeSubLhsScalarMulRhsScalarNode(
 #endif
 }
 
-std::shared_ptr<Edge>
-UnsqueezeSubLhsScalarMulRhsScalarNode::GetInput() const noexcept {
-  return input_;
+std::shared_ptr<SingleInputWithoutBufferNode>
+UnsqueezeSubLhsScalarMulRhsScalarNode::CloneAsSingleInputWithoutBufferNode()
+    const {
+  return Clone();
 }
 
-std::shared_ptr<Edge>
-UnsqueezeSubLhsScalarMulRhsScalarNode::GetOutput() const noexcept {
-  return output_;
+std::shared_ptr<UnsqueezeSubLhsScalarMulRhsScalarNode>
+UnsqueezeSubLhsScalarMulRhsScalarNode::Clone() const {
+  std::string name = GetName();
+  std::vector<int64_t> unsqueeze_axes = GetUnsqueezeAxes();
+  return std::make_shared<UnsqueezeSubLhsScalarMulRhsScalarNode>(
+      std::move(name), std::move(unsqueeze_axes), GetSubType(), GetSubVal(),
+      GetMulType(), GetMulVal(), GetInput(), GetOutput());
 }
 
 const std::vector<int64_t> &
@@ -892,28 +1244,40 @@ float64_t UnsqueezeSubLhsScalarMulRhsScalarNode::GetMulVal() const noexcept {
 WhereNode::WhereNode(std::string &&name) : Node(std::move(name)) {}
 
 WhereConstantCondConstantScalarYNode::WhereConstantCondConstantScalarYNode(
-    std::string &&name, Tensor &&cond, std::shared_ptr<Edge> &&x, Type type,
-    float64_t y, std::shared_ptr<Edge> &&output)
-    : WhereNode(std::move(name)), cond_(std::move(cond)), x_(std::move(x)),
-      type_(type), y_(y), output_(std::move(output)) {
+    std::string &&name, Tensor &&cond, Type type, float64_t y,
+    std::shared_ptr<Region> &&input, std::shared_ptr<Region> &&output)
+    : Node(std::move(name)), WhereNode(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      cond_(std::move(cond)), type_(type), y_(y) {
 #ifdef DEBUG
   assert(cond_.GetType() == Type::BOOL);
-  const Meta &x_meta = x_->GetMeta();
+  const Meta &input_meta = input_->GetMeta();
   const Meta &output_meta = output_->GetMeta();
   std::optional<Meta> broadcasted_meta_opt =
-      BroadcastShape(cond_.GetMeta(), x_meta, output_meta.GetType());
+      BroadcastShape(cond_.GetMeta(), input_meta, output_meta.GetType());
   assert(broadcasted_meta_opt.has_value());
   assert(*broadcasted_meta_opt == output_meta);
 #endif
 }
 
-const Tensor &WhereConstantCondConstantScalarYNode::GetCond() const noexcept {
-  return cond_;
+std::shared_ptr<SingleInputWithoutBufferNode>
+WhereConstantCondConstantScalarYNode::CloneAsSingleInputWithoutBufferNode()
+    const {
+  return Clone();
 }
 
-std::shared_ptr<Edge>
-WhereConstantCondConstantScalarYNode::GetX() const noexcept {
-  return x_;
+std::shared_ptr<WhereConstantCondConstantScalarYNode>
+WhereConstantCondConstantScalarYNode::Clone() const {
+  std::string name = GetName();
+  Tensor cond = GetCond();
+  return std::make_shared<WhereConstantCondConstantScalarYNode>(
+      std::move(name), std::move(cond), GetType(), GetY(), GetInput(),
+      GetOutput());
+}
+
+const Tensor &WhereConstantCondConstantScalarYNode::GetCond() const noexcept {
+  return cond_;
 }
 
 Type WhereConstantCondConstantScalarYNode::GetType() const noexcept {
@@ -924,42 +1288,43 @@ float64_t WhereConstantCondConstantScalarYNode::GetY() const noexcept {
   return y_;
 }
 
-std::shared_ptr<Edge>
-WhereConstantCondConstantScalarYNode::GetOutput() const noexcept {
-  return output_;
-}
-
 WhereConstantCondConstantTensorYNode::WhereConstantCondConstantTensorYNode(
-    std::string &&name, Tensor &&cond, std::shared_ptr<Edge> &&x, Tensor &&y,
-    std::shared_ptr<Edge> &&output)
-    : WhereNode(std::move(name)), cond_(std::move(cond)), x_(std::move(x)),
-      y_(std::move(y)), output_(std::move(output)) {
+    std::string &&name, Tensor &&cond, Tensor &&y,
+    std::shared_ptr<Region> &&input, std::shared_ptr<Region> &&output)
+    : Node(std::move(name)), WhereNode(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      cond_(std::move(cond)), y_(std::move(y)) {
 #ifdef DEBUG
   assert(cond_.GetType() == Type::BOOL);
-  const Meta &x_meta = x_->GetMeta();
+  const Meta &input_meta = input_->GetMeta();
   const Meta &output_meta = output_->GetMeta();
-  assert(x_meta == cond_.GetMeta());
-  assert(x_meta == y_.GetMeta());
-  assert(x_meta == output_meta);
+  assert(input_meta == cond_.GetMeta());
+  assert(input_meta == y_.GetMeta());
+  assert(input_meta == output_meta);
 #endif
+}
+
+std::shared_ptr<SingleInputWithoutBufferNode>
+WhereConstantCondConstantTensorYNode::CloneAsSingleInputWithoutBufferNode()
+    const {
+  return Clone();
+}
+
+std::shared_ptr<WhereConstantCondConstantTensorYNode>
+WhereConstantCondConstantTensorYNode::Clone() const {
+  std::string name = GetName();
+  Tensor cond = GetCond(), y = GetY();
+  return std::make_shared<WhereConstantCondConstantTensorYNode>(
+      std::move(name), std::move(cond), std::move(y), GetInput(), GetOutput());
 }
 
 const Tensor &WhereConstantCondConstantTensorYNode::GetCond() const noexcept {
   return cond_;
 }
 
-std::shared_ptr<Edge>
-WhereConstantCondConstantTensorYNode::GetX() const noexcept {
-  return x_;
-}
-
 const Tensor &WhereConstantCondConstantTensorYNode::GetY() const noexcept {
   return y_;
-}
-
-std::shared_ptr<Edge>
-WhereConstantCondConstantTensorYNode::GetOutput() const noexcept {
-  return output_;
 }
 
 } // namespace flow

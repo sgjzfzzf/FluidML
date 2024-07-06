@@ -1,13 +1,13 @@
 #ifndef CPU_TRANSFORMERS_STRUCTURE_FLOW_SEQUENCE_H_
 #define CPU_TRANSFORMERS_STRUCTURE_FLOW_SEQUENCE_H_
 
-#include "structure/flow/edge.h"
-#include "structure/flow/node.h"
+#include "structure/flow/object.h"
 #include <memory>
 #include <vector>
 
 namespace cpu_transformers {
 namespace flow {
+
 class Sequence {
 public:
   Sequence() = default;
@@ -26,6 +26,7 @@ private:
   std::vector<std::shared_ptr<Edge>> edges_;
   std::vector<std::shared_ptr<Region>> regions_;
 };
+
 } // namespace flow
 } // namespace cpu_transformers
 

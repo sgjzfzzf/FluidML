@@ -13,7 +13,7 @@ namespace kernel {
 PowKernel::PowKernel(Type type, float64_t exp) : type_(type), exp_(exp) {}
 
 void PowKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
-                    mlir::Value &output) {
+                    mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::Value exp;
   if (type_ == Type::FLOAT32) {

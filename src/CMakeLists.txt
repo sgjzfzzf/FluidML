@@ -1,4 +1,4 @@
-file(GLOB_RECURSE SRCS "exception/*.cpp" "optimization/*.cpp" "structure/*.cpp" "utils/*.cpp" "worker/*.cpp")
+file(GLOB_RECURSE SRCS "evaluation/*.cpp" "exception/*.cpp" "optimization/*.cpp" "structure/*.cpp" "utils/*.cpp" "worker/*.cpp")
 file(GLOB_RECURSE PYTHON_BINDS "python/*.cpp")
 
 add_library(${PROJECT_NAME}Static ${SRCS})

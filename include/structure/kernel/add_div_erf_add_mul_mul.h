@@ -7,7 +7,7 @@
 namespace cpu_transformers {
 namespace kernel {
 
-class AddDivErfAddMulMulKernel : public Kernel {
+class AddDivErfAddMulMulKernel : public SingleInputWithoutBufferKernel {
 public:
   AddDivErfAddMulMulKernel(Tensor &&add0_weight, Type div_type,
                            float64_t div_weight, Type add1_type,
@@ -18,7 +18,8 @@ public:
   AddDivErfAddMulMulKernel(
       AddDivErfAddMulMulKernel &&add_div_erf_add_mul_mul_kernel) = default;
   ~AddDivErfAddMulMulKernel() = default;
-  void Run(mlir::OpBuilder &builder, mlir::Value &input, mlir::Value &output);
+  void Run(mlir::OpBuilder &builder, mlir::Value &input,
+           mlir::Value &output) const override;
 
 private:
   const Tensor add0_weight_;

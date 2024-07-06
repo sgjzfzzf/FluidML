@@ -33,8 +33,11 @@ class ImportTest(unittest.TestCase):
     def test_parser(self):
         self.assertTrue(hasattr(libCpuTransformers, "Parser"))
 
-    def test_linear_planner(self):
-        self.assertTrue(hasattr(libCpuTransformers, "LinearPlanner"))
+    def test_linear_plain_linear_planner(self):
+        self.assertTrue(hasattr(libCpuTransformers, "PlainLinearPlanner"))
+
+    def test_linear_plain_greedy_planner(self):
+        self.assertTrue(hasattr(libCpuTransformers, "PlainGreedyPlanner"))
 
     def test_runner(self):
         self.assertTrue(hasattr(libCpuTransformers, "Runner"))

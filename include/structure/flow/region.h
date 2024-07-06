@@ -1,6 +1,7 @@
 #ifndef CPU_TRANSFORMERS_STRUCTURE_FLOW_REGION_H_
 #define CPU_TRANSFORMERS_STRUCTURE_FLOW_REGION_H_
 
+#include "structure/flow/object.h"
 #include "structure/tensor/meta.h"
 #include <string>
 
@@ -9,16 +10,22 @@ namespace flow {
 class Region {
 public:
   Region(std::string &&name, Meta &&meta);
+  Region(std::string &&name, Meta &&meta, std::vector<size_t> &&layout);
   Region(const Region &region) = delete;
   Region(Region &&region) = default;
   virtual ~Region() = default;
   const std::string &GetName() const;
   const Meta &GetMeta() const;
+  const std::vector<size_t> &GetLayout() const;
+  std::vector<int64_t> GetPhysicalShape() const;
+  std::vector<int64_t> GetStrides() const;
+  void SetLayout(std::vector<size_t> &&layout);
   virtual bool NeedMemoryAllocation() const = 0;
 
 private:
-  const std::string name_;
-  const Meta meta_;
+  std::string name_;
+  Meta meta_;
+  std::vector<size_t> layout_;
 };
 
 class InnerRegion : public Region {

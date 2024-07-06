@@ -63,16 +63,9 @@ if(${BUILD_TESTS})
 endif()
 
 find_program(CLANG_FORMAT clang-format REQUIRED)
-if (${BUILD_TESTS})
-    find_program(BLACK_FORMAT black REQUIRED)
-    add_custom_target(
-        format
-        COMMAND find ${CMAKE_CURRENT_SOURCE_DIR}/test -name "*.py" | xargs ${BLACK_FORMAT}
-        COMMAND find ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/test -name "*.cpp" -o -name "*.h" -o -name "*.hpp" | xargs ${CLANG_FORMAT} -i
-    )
-else()
-    add_custom_target(
-        format
-        COMMAND find ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src -name "*.cpp" -o -name "*.h" -o -name "*.hpp" | xargs ${CLANG_FORMAT} -i
-    )
-endif()
+find_program(BLACK_FORMAT black REQUIRED)
+add_custom_target(
+    format
+    COMMAND find ${CMAKE_CURRENT_SOURCE_DIR}/test -name "\"*.py\"" | xargs ${BLACK_FORMAT}
+    COMMAND find ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/test -name "\"*.cpp\"" -o -name "\"*.h\"" -o -name "\"*.hpp\"" | xargs ${CLANG_FORMAT} -i
+)

@@ -7,43 +7,48 @@
 
 namespace cpu_transformers {
 namespace kernel {
-class MulKernel : public Kernel {
+class MulKernelInterface : virtual public Kernel {
 public:
-  MulKernel() = default;
-  MulKernel(const MulKernel &other) = delete;
-  MulKernel(MulKernel &&other) = default;
+  MulKernelInterface() = default;
+  MulKernelInterface(const MulKernelInterface &other) = delete;
+  MulKernelInterface(MulKernelInterface &&other) = default;
 };
 
-class MulConstantScalarKernel : public MulKernel {
+class MulConstantScalarKernel : public SingleInputWithoutBufferKernel,
+                                public MulKernelInterface {
 public:
   MulConstantScalarKernel(Type type, float64_t constant);
   MulConstantScalarKernel(const MulConstantScalarKernel &other) = delete;
   MulConstantScalarKernel(MulConstantScalarKernel &&other) = default;
-  void Run(mlir::OpBuilder &builder, mlir::Value &lhs, mlir::Value &output);
+  void Run(mlir::OpBuilder &builder, mlir::Value &lhs,
+           mlir::Value &output) const;
 
 private:
   const Type type_;
   const float64_t constant_;
 };
 
-class MulConstantTensorKernel : public MulKernel {
+class MulConstantTensorKernel : public SingleInputWithoutBufferKernel,
+                                public MulKernelInterface {
 public:
   MulConstantTensorKernel(const Tensor &constant);
   MulConstantTensorKernel(const MulConstantTensorKernel &other) = delete;
   MulConstantTensorKernel(MulConstantTensorKernel &&other) = default;
-  void Run(mlir::OpBuilder &builder, mlir::Value &lhs, mlir::Value &output);
+  void Run(mlir::OpBuilder &builder, mlir::Value &lhs,
+           mlir::Value &output) const;
 
 private:
   const Tensor constant_;
 };
 
-class MulCommonKernel : public MulKernel {
+class MulCommonKernel : public DoubleInputsWithoutBufferKernel,
+                        public MulKernelInterface {
 public:
   MulCommonKernel() = default;
   MulCommonKernel(const MulCommonKernel &other) = delete;
   MulCommonKernel(MulCommonKernel &&other) = default;
   void Run(mlir::OpBuilder &builder, mlir::Value &lhs, mlir::Value &rhs,
-           mlir::Value &output);
+           mlir::Value &output) const;
 };
 
 } // namespace kernel

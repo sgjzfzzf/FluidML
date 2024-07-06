@@ -1,41 +1,71 @@
 #ifndef CPU_TRANSFORMERS_STRUCTURE_FLOW_EDGE_H_
 #define CPU_TRANSFORMERS_STRUCTURE_FLOW_EDGE_H_
 
-#include "structure/flow/region.h"
+#include "structure/flow/object.h"
 #include "structure/tensor/meta.h"
 #include <string>
 
 namespace cpu_transformers {
 namespace flow {
+
 class Edge {
 public:
   Edge(std::shared_ptr<Region> &&region);
   Edge(const Edge &edge) = delete;
   Edge(Edge &&edge) = default;
   virtual ~Edge() = default;
+  std::shared_ptr<Region> GetRegion();
   const std::string &GetName() const;
   const Meta &GetMeta() const;
+  const std::vector<size_t> &GetLayout() const;
+  std::vector<int64_t> GePhysicalShape() const;
 
 protected:
   std::shared_ptr<Region> region_;
 };
 
-class MemoryEdge : public Edge {
+class EmptyEdge : public Edge {
 public:
-  MemoryEdge(std::shared_ptr<Region> &&region, std::string &&from,
-             std::string &&to);
+  EmptyEdge(std::shared_ptr<Region> &&region);
+  EmptyEdge(const EmptyEdge &edge) = delete;
+  EmptyEdge(EmptyEdge &&edge) = default;
+  virtual ~EmptyEdge() = default;
+};
+
+class OwnFromEdge : virtual public Edge {
+public:
+  OwnFromEdge(std::shared_ptr<Region> &&region, std::shared_ptr<Node> &&from);
+  OwnFromEdge(const OwnFromEdge &edge) = delete;
+  OwnFromEdge(OwnFromEdge &&edge) = default;
+  virtual ~OwnFromEdge() = default;
+  std::shared_ptr<Node> GetFrom() const;
+
+protected:
+  std::shared_ptr<Node> from_;
+};
+
+class OwnToEdge : virtual public Edge {
+public:
+  OwnToEdge(std::shared_ptr<Region> &&region, std::shared_ptr<Node> &&to);
+  OwnToEdge(const OwnToEdge &edge) = delete;
+  OwnToEdge(OwnToEdge &&edge) = default;
+  virtual ~OwnToEdge() = default;
+  std::shared_ptr<Node> GetTo() const;
+
+protected:
+  std::shared_ptr<Node> to_;
+};
+
+class MemoryEdge : public OwnFromEdge, public OwnToEdge {
+public:
+  MemoryEdge(std::shared_ptr<Region> &&region, std::shared_ptr<Node> &&from,
+             std::shared_ptr<Node> &&to);
   MemoryEdge(const MemoryEdge &edge) = delete;
   MemoryEdge(MemoryEdge &&edge) = default;
   virtual ~MemoryEdge() = default;
-  const std::string &GetFrom() const;
-  const std::string &GetTo() const;
-
-private:
-  const std::string from_;
-  const std::string to_;
 };
 
-class InterfaceEdge : public Edge {
+class InterfaceEdge : virtual public Edge {
 public:
   InterfaceEdge(std::shared_ptr<Region> &&region);
   InterfaceEdge(const InterfaceEdge &edge) = delete;
@@ -43,29 +73,22 @@ public:
   virtual ~InterfaceEdge() = default;
 };
 
-class InputEdge : public InterfaceEdge {
+class InputEdge : public InterfaceEdge, public OwnToEdge {
 public:
-  InputEdge(std::shared_ptr<Region> &&region, std::string &&to);
+  InputEdge(std::shared_ptr<Region> &&region, std::shared_ptr<Node> &&to);
   InputEdge(const InputEdge &edge) = delete;
   InputEdge(InputEdge &&edge) = default;
   virtual ~InputEdge() = default;
-  const std::string &GetTo() const;
-
-private:
-  const std::string to_;
 };
 
-class OutputEdge : public InterfaceEdge {
+class OutputEdge : public InterfaceEdge, public OwnFromEdge {
 public:
-  OutputEdge(std::shared_ptr<Region> &&region, std::string &&from);
+  OutputEdge(std::shared_ptr<Region> &&region, std::shared_ptr<Node> &&from);
   OutputEdge(const OutputEdge &edge) = delete;
   OutputEdge(OutputEdge &&edge) = default;
   virtual ~OutputEdge() = default;
-  const std::string &GetFrom() const;
-
-private:
-  const std::string from_;
 };
+
 } // namespace flow
 } // namespace cpu_transformers
 

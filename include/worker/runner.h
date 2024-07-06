@@ -15,7 +15,8 @@ public:
   Runner(const Runner &runner) = delete;
   Runner(Runner &&runner) = default;
   virtual ~Runner() = default;
-  size_t Run(const std::unordered_map<std::string, void *> &args);
+  size_t Run(const std::unordered_map<std::string, void *> &args,
+             size_t epoch = 1);
 #ifdef BUILD_PYTHON
   size_t Run(const std::unordered_map<std::string, pybind11::array> &args);
 #endif

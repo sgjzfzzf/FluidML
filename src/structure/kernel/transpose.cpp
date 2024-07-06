@@ -13,7 +13,7 @@ namespace kernel {
 TransposeKernel::TransposeKernel(std::vector<int64_t> perms) : perms_(perms) {}
 
 void TransposeKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
-                          mlir::Value &output) {
+                          mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   int64_t rank = perms_.size();
   mlir::MemRefType input_type = mlir::cast<mlir::MemRefType>(input.getType());

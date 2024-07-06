@@ -7,19 +7,23 @@
 
 namespace cpu_transformers {
 namespace kernel {
-class LayerNormalizationConstantScaleBiasKernel : public Kernel {
+class LayerNormalizationConstantScaleBiasKernel
+    : public SingleInputWithBufferKernel {
 public:
-  LayerNormalizationConstantScaleBiasKernel(int64_t axis, float64_t epsilon);
+  LayerNormalizationConstantScaleBiasKernel(int64_t axis, float64_t epsilon,
+                                            Tensor &&scale, Tensor &&bias);
   LayerNormalizationConstantScaleBiasKernel(
       const LayerNormalizationConstantScaleBiasKernel &other) = delete;
   LayerNormalizationConstantScaleBiasKernel(
       LayerNormalizationConstantScaleBiasKernel &&other) = default;
-  void Run(mlir::OpBuilder &builder, mlir::Value &input, const Tensor &scale,
-           const Tensor &bias, mlir::Value &output, mlir::Value &buffer);
+  void Run(mlir::OpBuilder &builder, mlir::Value &input, mlir::Value &output,
+           mlir::Value &buffer) const override;
 
 private:
   int64_t axis_;
   float64_t epsilon_;
+  Tensor scale_;
+  Tensor bias_;
 };
 } // namespace kernel
 } // namespace cpu_transformers

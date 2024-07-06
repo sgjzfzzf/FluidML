@@ -18,7 +18,8 @@ namespace worker {
 Lower::Lower(std::shared_ptr<context::Context> context)
     : context_(context ? std::move(context) : context::Context::Make()),
       pm_(&context_->GetMLIRContext()) {
-  pm_.addPass(mlir::createConvertLinalgToLoopsPass());
+  pm_.addPass(mlir::createConvertLinalgToAffineLoopsPass());
+  pm_.addPass(mlir::createLowerAffinePass());
   pm_.addPass(mlir::createConvertSCFToCFPass());
   pm_.addPass(mlir::arith::createConstantBufferizePass());
   pm_.addPass(mlir::memref::createExpandStridedMetadataPass());

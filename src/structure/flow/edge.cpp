@@ -1,34 +1,57 @@
 #include "structure/flow/edge.h"
+#include "structure/flow/region.h"
 
 namespace cpu_transformers {
 namespace flow {
 
 Edge::Edge(std::shared_ptr<Region> &&region) : region_(region) {}
 
+std::shared_ptr<Region> Edge::GetRegion() { return region_; }
+
 const std::string &Edge::GetName() const { return region_->GetName(); }
 
 const Meta &Edge::GetMeta() const { return region_->GetMeta(); }
 
-const std::string &MemoryEdge::GetFrom() const { return from_; }
+const std::vector<size_t> &Edge::GetLayout() const {
+  return region_->GetLayout();
+}
 
-const std::string &MemoryEdge::GetTo() const { return to_; }
+std::vector<int64_t> Edge::GePhysicalShape() const {
+  return region_->GetPhysicalShape();
+}
 
-MemoryEdge::MemoryEdge(std::shared_ptr<Region> &&region, std::string &&from,
-                       std::string &&to)
-    : Edge(std::move(region)), from_(std::move(from)), to_(std::move(to)) {}
+EmptyEdge::EmptyEdge(std::shared_ptr<Region> &&region)
+    : Edge(std::move(region)) {}
+
+OwnFromEdge::OwnFromEdge(std::shared_ptr<Region> &&region,
+                         std::shared_ptr<Node> &&from)
+    : Edge(std::move(region)), from_(std::move(from)) {}
+
+std::shared_ptr<Node> OwnFromEdge::GetFrom() const { return from_; }
+
+OwnToEdge::OwnToEdge(std::shared_ptr<Region> &&region,
+                     std::shared_ptr<Node> &&to)
+    : Edge(std::move(region)), to_(std::move(to)) {}
+
+std::shared_ptr<Node> OwnToEdge::GetTo() const { return to_; }
+
+MemoryEdge::MemoryEdge(std::shared_ptr<Region> &&region,
+                       std::shared_ptr<Node> &&from, std::shared_ptr<Node> &&to)
+    : Edge(std::move(region)), OwnFromEdge(std::move(region), std::move(from)),
+      OwnToEdge(std::move(region), std::move(to)) {}
 
 InterfaceEdge::InterfaceEdge(std::shared_ptr<Region> &&region)
     : Edge(std::move(region)) {}
 
-InputEdge::InputEdge(std::shared_ptr<Region> &&region, std::string &&to)
-    : InterfaceEdge(std::move(region)), to_(std::move(to)) {}
+InputEdge::InputEdge(std::shared_ptr<Region> &&region,
+                     std::shared_ptr<Node> &&to)
+    : Edge(std::move(region)), InterfaceEdge(std::move(region)),
+      OwnToEdge(std::move(region), std::move(to)) {}
 
-const std::string &InputEdge::GetTo() const { return to_; }
-
-OutputEdge::OutputEdge(std::shared_ptr<Region> &&region, std::string &&from)
-    : InterfaceEdge(std::move(region)), from_(std::move(from)) {}
-
-const std::string &OutputEdge::GetFrom() const { return from_; }
+OutputEdge::OutputEdge(std::shared_ptr<Region> &&region,
+                       std::shared_ptr<Node> &&from)
+    : Edge(std::move(region)), InterfaceEdge(std::move(region)),
+      OwnFromEdge(std::move(region), std::move(from)) {}
 
 } // namespace flow
 } // namespace cpu_transformers

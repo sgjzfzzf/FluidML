@@ -7,26 +7,37 @@
 namespace cpu_transformers {
 namespace kernel {
 
-class WhereConstantCondConstantScalarYKernel : public Kernel {
+class WhereConstantCondConstantScalarYKernel
+    : public SingleInputWithoutBufferKernel {
 public:
-  WhereConstantCondConstantScalarYKernel() = default;
+  WhereConstantCondConstantScalarYKernel(Tensor &&cond, Type type, float64_t y);
   WhereConstantCondConstantScalarYKernel(
       const WhereConstantCondConstantScalarYKernel &) = delete;
   WhereConstantCondConstantScalarYKernel(
       WhereConstantCondConstantScalarYKernel &&) = default;
-  void Run(mlir::OpBuilder &builder, const Tensor &cond, mlir::Value &x,
-           Type type, float64_t y, mlir::Value &output);
+  void Run(mlir::OpBuilder &builder, mlir::Value &input,
+           mlir::Value &output) const override;
+
+private:
+  Tensor cond_;
+  Type type_;
+  float64_t y_;
 };
 
-class WhereConstantCondConstantTensorYKernel : public Kernel {
+class WhereConstantCondConstantTensorYKernel
+    : public SingleInputWithoutBufferKernel {
 public:
-  WhereConstantCondConstantTensorYKernel() = default;
+  WhereConstantCondConstantTensorYKernel(Tensor &&cond, Tensor &&y);
   WhereConstantCondConstantTensorYKernel(
       const WhereConstantCondConstantTensorYKernel &) = delete;
   WhereConstantCondConstantTensorYKernel(
       WhereConstantCondConstantTensorYKernel &&) = default;
-  void Run(mlir::OpBuilder &builder, const Tensor &cond, mlir::Value &x,
-           const Tensor &y, mlir::Value &output);
+  void Run(mlir::OpBuilder &builder, mlir::Value &input,
+           mlir::Value &output) const override;
+
+private:
+  Tensor cond_;
+  Tensor y_;
 };
 
 } // namespace kernel

@@ -15,7 +15,7 @@ UnSqueezeKernel::UnSqueezeKernel(std::vector<int64_t> &&axes)
     : axes_(std::move(axes)) {}
 
 void UnSqueezeKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
-                          mlir::Value &output) {
+                          mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::MemRefType output_type = mlir::cast<mlir::MemRefType>(output.getType());
   const size_t output_rank = output_type.getRank();

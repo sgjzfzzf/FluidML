@@ -1,13 +1,23 @@
 #include "worker/builder.h"
+#include "evaluation/utils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
+#include "mlir/IR/BuiltinAttributeInterfaces.h"
+#include "mlir/IR/BuiltinAttributes.h"
+#include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/Verifier.h"
 #include "structure/context/attr.h"
+#include "structure/flow/node.h"
 #include "structure/flow/region.h"
+#include "structure/kernel/kernel.h"
 #include "utils/isa.hpp"
 #include "utils/type.h"
+#include "worker/scheduler.h"
+#include <cstddef>
+#include <llvm-18/llvm/ADT/ArrayRef.h>
+#include <memory>
 #include <string>
 #ifdef DEBUG
 #include "exception/unreachable_exception.h"
@@ -17,12 +27,16 @@
 namespace cpu_transformers {
 namespace worker {
 
-Builder::Builder(std::string &&function_name,
-                 std::shared_ptr<context::Context> context)
-    : function_name_(std::move(function_name)),
+GeneralBuilder::GeneralBuilder(std::string &&function_name,
+                               std::shared_ptr<context::Context> context)
+    : scheduler_(std::make_unique<Scheduler>()),
+      function_name_(std::move(function_name)),
       context_(context ? std::move(context) : context::Context::Make()) {}
 
-void Builder::Run(const flow::Sequence &sequence, const memory::Index &index) {
+GeneralBuilder::~GeneralBuilder() = default;
+
+void GeneralBuilder::Run(const flow::Sequence &sequence,
+                         const memory::Index &index) {
   mlir::MLIRContext &mlir_context = context_->GetMLIRContext();
   mlir::OpBuilder builder(&mlir_context);
   mlir::ModuleOp module = mlir::ModuleOp::create(builder.getUnknownLoc());
@@ -106,17 +120,37 @@ void Builder::Run(const flow::Sequence &sequence, const memory::Index &index) {
     const Meta &meta = inner_region->GetMeta();
     Type type = meta.GetType();
     const std::vector<int64_t> &shape = meta.GetShape();
+    const std::vector<size_t> &layout = inner_region->GetLayout();
     const size_t offset = index.Get(name);
     mlir::arith::ConstantOp offset_constant =
         builder.create<mlir::arith::ConstantOp>(builder.getUnknownLoc(),
                                                 builder.getIndexType(),
                                                 builder.getIndexAttr(offset));
-    mlir::MemRefType memref_type =
-        mlir::MemRefType::get(shape, GetMLIRType(type, builder));
-    mlir::Value value = builder.create<mlir::memref::ViewOp>(
-        builder.getUnknownLoc(), memref_type, buffer_arg, offset_constant,
-        mlir::ValueRange{});
-    symbol_table.insert({std::move(name), std::move(value)});
+    const size_t shape_len = shape.size();
+#ifdef DEBUG
+    assert(shape_len == layout.size());
+#endif
+    llvm::SmallVector<mlir::AffineExpr> layout_exprs;
+    for (size_t dim : layout) {
+      layout_exprs.push_back(builder.getAffineDimExpr(dim));
+    }
+    const std::vector<int64_t> &physical_shape =
+                                   inner_region->GetPhysicalShape(),
+                               &strides = inner_region->GetStrides();
+    mlir::StridedLayoutAttr strided_layout =
+        mlir::StridedLayoutAttr::get(&mlir_context, 0, strides);
+    mlir::MemRefType plain_memref_type = mlir::MemRefType::get(
+                         physical_shape, GetMLIRType(type, builder)),
+                     strided_memref_type = mlir::MemRefType::get(
+                         shape, GetMLIRType(type, builder), strided_layout);
+    mlir::Value view_op = builder.create<mlir::memref::ViewOp>(
+                    builder.getUnknownLoc(), plain_memref_type, buffer_arg,
+                    offset_constant, mlir::ValueRange{}),
+                reinterpret_cast_op =
+                    builder.create<mlir::memref::ReinterpretCastOp>(
+                        builder.getUnknownLoc(), strided_memref_type, view_op,
+                        0, shape, strides);
+    symbol_table.insert({std::move(name), std::move(reinterpret_cast_op)});
   }
   // Allocate memory for the nodes and put them into the symbol table.
   for (std::shared_ptr<flow::Node> node : sequence.GetNodes()) {
@@ -137,7 +171,7 @@ void Builder::Run(const flow::Sequence &sequence, const memory::Index &index) {
     }
   }
   // Run the scheduler.
-  getScheduler().Run(builder, sequence, symbol_table);
+  scheduler_->Run(builder, sequence, symbol_table);
   builder.create<mlir::func::ReturnOp>(builder.getUnknownLoc());
   module.push_back(function);
 #ifdef DEBUG
@@ -147,12 +181,252 @@ void Builder::Run(const flow::Sequence &sequence, const memory::Index &index) {
   context_->SetFuncAttr(std::move(func_attr));
 }
 
-NaiveBuilder::NaiveBuilder(std::string &&function_name,
-                           std::shared_ptr<context::Context> context)
-    : Builder(std::move(function_name), std::move(context)),
-      scheduler_(NaiveScheduler()) {}
+KernelBuilder::KernelBuilder(std::string &&function_name,
+                             std::shared_ptr<context::Context> context)
+    : function_name_(std::move(function_name)), context_(std::move(context)) {}
 
-Scheduler &NaiveBuilder::getScheduler() { return scheduler_; }
+void KernelBuilder::RunOnSingleInputWithoutBuffer(
+    const kernel::SingleInputWithoutBufferKernel &kernel,
+    const Meta &input_meta, const Meta &output_meta) {
+  const std::vector<int64_t> input_shape = input_meta.GetShape(),
+                             output_shape = output_meta.GetShape();
+  const size_t input_len = input_shape.size(), output_len = output_shape.size();
+  std::vector<size_t> input_layout(input_len), output_layout(output_len);
+  for (size_t i = 0; i < input_len; ++i) {
+    input_layout[i] = i;
+  }
+  for (size_t i = 0; i < output_len; ++i) {
+    output_layout[i] = i;
+  }
+  RunOnSingleInputWithoutBuffer(kernel, input_meta, input_layout, output_meta,
+                                output_layout);
+}
+
+void KernelBuilder::RunOnSingleInputWithoutBuffer(
+    const kernel::SingleInputWithoutBufferKernel &kernel,
+    const Meta &input_meta, const std::vector<size_t> &input_layout,
+    const Meta &output_meta, const std::vector<size_t> &output_layout) {
+  mlir::MLIRContext &mlir_context = context_->GetMLIRContext();
+  mlir::OpBuilder builder(&mlir_context);
+  mlir::ModuleOp module = mlir::ModuleOp::create(builder.getUnknownLoc());
+  mlir::Type input_elem_type = GetMLIRType(input_meta.GetType(), builder),
+             output_elem_type = GetMLIRType(output_meta.GetType(), builder);
+  const std::vector<int64_t> &input_shape = input_meta.GetShape(),
+                             &output_shape = output_meta.GetShape();
+  std::vector<int64_t> input_strides =
+                           evaluation::GenStrides(input_shape, input_layout),
+                       output_strides =
+                           evaluation::GenStrides(output_shape, output_layout);
+  mlir::StridedLayoutAttr input_strided_layout = mlir::StridedLayoutAttr::get(
+                              &mlir_context, 0, input_strides),
+                          output_strided_layout = mlir::StridedLayoutAttr::get(
+                              &mlir_context, 0, output_strides);
+  mlir::MemRefType input_memref_type = mlir::MemRefType::get(
+                       input_shape, input_elem_type, input_strided_layout),
+                   output_memref_type = mlir::MemRefType::get(
+                       output_shape, output_elem_type, output_strided_layout);
+  mlir::FunctionType function_type = mlir::FunctionType::get(
+      &mlir_context, {input_memref_type, output_memref_type}, {});
+  mlir::func::FuncOp function = builder.create<mlir::func::FuncOp>(
+      builder.getUnknownLoc(), function_name_, function_type);
+  function->setAttr(mlir::LLVM::LLVMDialect::getEmitCWrapperAttrName(),
+                    builder.getUnitAttr());
+  mlir::Block *block = function.addEntryBlock();
+  builder.setInsertionPointToStart(block);
+  mlir::Value input = block->getArgument(0);
+  mlir::Value output = block->getArgument(1);
+  kernel.Run(builder, input, output);
+  builder.create<mlir::func::ReturnOp>(builder.getUnknownLoc());
+  module.push_back(std::move(function));
+#ifdef DEBUG
+  assert(
+#endif
+      mlir::verify(module).succeeded()
+#ifdef DEBUG
+  )
+#endif
+      ;
+  context_->SetModule(module);
+  std::string function_name = function_name_;
+  context::FuncAttr func_attr(std::move(function_name), 0);
+  context::ArgumentAttr input_arg_attr(context::ArgumentAttr::Type::Input,
+                                       kInputKey, std::move(input_memref_type)),
+      output_arg_attr(context::ArgumentAttr::Type::Output, kOutputKey,
+                      std::move(output_memref_type));
+  func_attr.PutArgument(std::move(input_arg_attr));
+  func_attr.PutArgument(std::move(output_arg_attr));
+  context_->SetFuncAttr(std::move(func_attr));
+}
+
+void KernelBuilder::RunOnSingleInputWithBuffer(
+    const kernel::SingleInputWithBufferKernel &kernel, const Meta &input_meta,
+    const Meta &output_meta, size_t buffer_size) {
+  const std::vector<int64_t> input_shape = input_meta.GetShape(),
+                             output_shape = output_meta.GetShape();
+  const size_t input_len = input_shape.size(), output_len = output_shape.size();
+  std::vector<size_t> input_layout(input_len), output_layout(output_len);
+  for (size_t i = 0; i < input_len; ++i) {
+    input_layout[i] = i;
+  }
+  for (size_t i = 0; i < output_len; ++i) {
+    output_layout[i] = i;
+  }
+  RunOnSingleInputWithBuffer(kernel, input_meta, input_layout, output_meta,
+                             output_layout, buffer_size);
+}
+
+void KernelBuilder::RunOnSingleInputWithBuffer(
+    const kernel::SingleInputWithBufferKernel &kernel, const Meta &input_meta,
+    const std::vector<size_t> &input_layout, const Meta &output_meta,
+    const std::vector<size_t> &output_layout, size_t buffer_size) {
+  mlir::MLIRContext &mlir_context = context_->GetMLIRContext();
+  mlir::OpBuilder builder(&mlir_context);
+  mlir::ModuleOp module = mlir::ModuleOp::create(builder.getUnknownLoc());
+  mlir::Type input_elem_type = GetMLIRType(input_meta.GetType(), builder),
+             output_elem_type = GetMLIRType(output_meta.GetType(), builder);
+  const std::vector<int64_t> &input_shape = input_meta.GetShape(),
+                             &output_shape = output_meta.GetShape();
+  std::vector<int64_t> input_strides =
+                           evaluation::GenStrides(input_shape, input_layout),
+                       output_strides =
+                           evaluation::GenStrides(output_shape, output_layout);
+  mlir::StridedLayoutAttr input_strided_layout = mlir::StridedLayoutAttr::get(
+                              &mlir_context, 0, input_strides),
+                          output_strided_layout = mlir::StridedLayoutAttr::get(
+                              &mlir_context, 0, output_strides);
+  mlir::MemRefType input_memref_type = mlir::MemRefType::get(
+                       input_meta.GetShape(), input_elem_type,
+                       input_strided_layout),
+                   output_memref_type = mlir::MemRefType::get(
+                       output_meta.GetShape(), output_elem_type,
+                       output_strided_layout),
+                   buffer_memref_type = mlir::MemRefType::get(
+                       llvm::ArrayRef<int64_t>{
+                           static_cast<int64_t>(buffer_size)},
+                       builder.getI8Type());
+  mlir::FunctionType function_type = mlir::FunctionType::get(
+      &mlir_context,
+      {input_memref_type, output_memref_type, buffer_memref_type}, {});
+  mlir::func::FuncOp function = builder.create<mlir::func::FuncOp>(
+      builder.getUnknownLoc(), function_name_, function_type);
+  function->setAttr(mlir::LLVM::LLVMDialect::getEmitCWrapperAttrName(),
+                    builder.getUnitAttr());
+  mlir::Block *block = function.addEntryBlock();
+  builder.setInsertionPointToStart(block);
+  mlir::Value input = block->getArgument(0);
+  mlir::Value output = block->getArgument(1);
+  mlir::Value buffer = block->getArgument(2);
+  kernel.Run(builder, input, output, buffer);
+  builder.create<mlir::func::ReturnOp>(builder.getUnknownLoc());
+  module.push_back(std::move(function));
+#ifdef DEBUG
+  assert(mlir::verify(module).succeeded());
+#endif
+  context_->SetModule(module);
+  const size_t input_size = input_memref_type.getNumElements(),
+               output_size = output_memref_type.getNumElements();
+  std::string function_name = function_name_;
+  context::FuncAttr func_attr(std::move(function_name), buffer_size);
+  context::ArgumentAttr input_arg_attr(context::ArgumentAttr::Type::Input,
+                                       kInputKey, std::move(input_memref_type)),
+      output_arg_attr(context::ArgumentAttr::Type::Output, kOutputKey,
+                      std::move(output_memref_type));
+  func_attr.PutArgument(std::move(input_arg_attr));
+  func_attr.PutArgument(std::move(output_arg_attr));
+  context_->SetFuncAttr(std::move(func_attr));
+}
+
+void KernelBuilder::RunOnDoubleInputsWithoutBuffer(
+    const kernel::DoubleInputsWithoutBufferKernel &kernel, const Meta &lhs_meta,
+    const Meta &rhs_meta, const Meta &output_meta) {
+  const std::vector<int64_t> lhs_shape = lhs_meta.GetShape(),
+                             rhs_shape = rhs_meta.GetShape(),
+                             output_shape = output_meta.GetShape();
+  const size_t lhs_len = lhs_shape.size(), rhs_len = rhs_shape.size(),
+               output_len = output_shape.size();
+  std::vector<size_t> lhs_layout(lhs_len), rhs_layout(rhs_len),
+      output_layout(output_len);
+  for (size_t i = 0; i < lhs_len; ++i) {
+    lhs_layout[i] = i;
+  }
+  for (size_t i = 0; i < rhs_len; ++i) {
+    rhs_layout[i] = i;
+  }
+  for (size_t i = 0; i < output_len; ++i) {
+    output_layout[i] = i;
+  }
+  RunOnDoubleInputsWithoutBuffer(kernel, lhs_meta, lhs_layout, rhs_meta,
+                                 rhs_layout, output_meta, output_layout);
+}
+
+void KernelBuilder::RunOnDoubleInputsWithoutBuffer(
+    const kernel::DoubleInputsWithoutBufferKernel &kernel, const Meta &lhs_meta,
+    const std::vector<size_t> &lhs_layout, const Meta &rhs_meta,
+    const std::vector<size_t> &rhs_layout, const Meta &output_meta,
+    const std::vector<size_t> &output_layout) {
+  mlir::MLIRContext &mlir_context = context_->GetMLIRContext();
+  mlir::OpBuilder builder(&mlir_context);
+  mlir::ModuleOp module = mlir::ModuleOp::create(builder.getUnknownLoc());
+  mlir::Type lhs_elem_type = GetMLIRType(lhs_meta.GetType(), builder),
+             rhs_elem_type = GetMLIRType(rhs_meta.GetType(), builder),
+             output_elem_type = GetMLIRType(output_meta.GetType(), builder);
+  const std::vector<int64_t> &lhs_shape = lhs_meta.GetShape(),
+                             &rhs_shape = rhs_meta.GetShape(),
+                             &output_shape = output_meta.GetShape();
+  std::vector<int64_t> lhs_strides =
+                           evaluation::GenStrides(lhs_shape, lhs_layout),
+                       rhs_strides =
+                           evaluation::GenStrides(rhs_shape, rhs_layout),
+                       output_strides =
+                           evaluation::GenStrides(output_shape, output_layout);
+  mlir::StridedLayoutAttr lhs_strided_layout = mlir::StridedLayoutAttr::get(
+                              &mlir_context, 0, lhs_strides),
+                          rhs_strided_layout = mlir::StridedLayoutAttr::get(
+                              &mlir_context, 0, rhs_strides),
+                          output_strided_layout = mlir::StridedLayoutAttr::get(
+                              &mlir_context, 0, output_strides);
+  mlir::MemRefType lhs_memref_type = mlir::MemRefType::get(
+                       lhs_meta.GetShape(), lhs_elem_type, lhs_strided_layout),
+                   rhs_memref_type = mlir::MemRefType::get(
+                       rhs_meta.GetShape(), rhs_elem_type, rhs_strided_layout),
+                   output_memref_type = mlir::MemRefType::get(
+                       output_meta.GetShape(), output_elem_type,
+                       output_strided_layout);
+  mlir::FunctionType function_type = mlir::FunctionType::get(
+      &mlir_context, {lhs_memref_type, rhs_memref_type, output_memref_type},
+      {});
+  mlir::func::FuncOp function = builder.create<mlir::func::FuncOp>(
+      builder.getUnknownLoc(), function_name_, function_type);
+  function->setAttr(mlir::LLVM::LLVMDialect::getEmitCWrapperAttrName(),
+                    builder.getUnitAttr());
+  mlir::Block *block = function.addEntryBlock();
+  builder.setInsertionPointToStart(block);
+  mlir::Value lhs = block->getArgument(0);
+  mlir::Value rhs = block->getArgument(1);
+  mlir::Value output = block->getArgument(2);
+  kernel.Run(builder, lhs, rhs, output);
+  builder.create<mlir::func::ReturnOp>(builder.getUnknownLoc());
+  module.push_back(std::move(function));
+#ifdef DEBUG
+  assert(mlir::verify(module).succeeded());
+#endif
+  context_->SetModule(module);
+  const size_t lhs_size = lhs_memref_type.getNumElements(),
+               rhs_size = rhs_memref_type.getNumElements(),
+               output_size = output_memref_type.getNumElements();
+  std::string function_name = function_name_;
+  context::FuncAttr func_attr(std::move(function_name), 0);
+  context::ArgumentAttr lhs_arg_attr(context::ArgumentAttr::Type::Input,
+                                     kLhsKey, std::move(lhs_memref_type)),
+      rhs_arg_attr(context::ArgumentAttr::Type::Input, kRhsKey,
+                   std::move(rhs_memref_type)),
+      output_arg_attr(context::ArgumentAttr::Type::Output, kOutputKey,
+                      std::move(output_memref_type));
+  func_attr.PutArgument(std::move(lhs_arg_attr));
+  func_attr.PutArgument(std::move(rhs_arg_attr));
+  func_attr.PutArgument(std::move(output_arg_attr));
+  context_->SetFuncAttr(std::move(func_attr));
+}
 
 } // namespace worker
 } // namespace cpu_transformers
