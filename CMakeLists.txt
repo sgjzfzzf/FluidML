@@ -5,6 +5,8 @@ project(CpuTransformers)
 set(CMAKE_CXX_STANDARD_REQUIRED 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+include(ExternalProject)
+
 option(CMAKE_BUILD_TYPE "Build type" Debug)
 option(BUILD_TESTS "Build tests" OFF)
 option(BUILD_PYTHON "Build python bindings" OFF)
@@ -30,8 +32,17 @@ if(BUILD_PYTHON)
     add_compile_definitions(BUILD_PYTHON=ON)
 endif()
 
+ExternalProject_Add(
+    protobuf
+    PREFIX ${CMAKE_BINARY_DIR}/deps
+    GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
+    GIT_TAG v27.2
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/deps -DCMAKE_POSITION_INDEPENDENT_CODE=ON -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    BUILD_COMMAND ${CMAKE_COMMAND} --build . --target all
+    INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
+)
+
 find_package(LLVM 18.1.6 REQUIRED CONFIG)
-find_package(Protobuf REQUIRED CONFIG)
 
 include_directories(include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmt/include)
