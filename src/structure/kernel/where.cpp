@@ -6,6 +6,7 @@
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/MLIRContext.h"
+#include "mlir/Support/LLVM.h"
 #include "structure/tensor/tensor.h"
 #include "utils/float.h"
 #include "utils/type.h"
@@ -39,7 +40,10 @@ void WhereConstantCondConstantScalarYKernel::Run(mlir::OpBuilder &builder,
       mlir::RankedTensorType::get(cond_shape, builder.getI1Type());
   mlir::MemRefType cond_memref_type =
       mlir::MemRefType::get(cond_shape, builder.getI1Type());
-  llvm::SmallVector<bool> cond_data(cond_ref.begin(), cond_ref.end());
+  llvm::SmallVector<mlir::APInt> cond_data;
+  for (bool i : cond_ref) {
+    cond_data.push_back(mlir::APInt(1, i, true));
+  }
   mlir::DenseElementsAttr cond_elements =
       mlir::DenseElementsAttr::get(cond_tensor_type, cond_data);
   mlir::arith::ConstantOp cond_value = builder.create<mlir::arith::ConstantOp>(
@@ -89,7 +93,10 @@ void WhereConstantCondConstantTensorYKernel::Run(mlir::OpBuilder &builder,
   // TODO: add support for other types in the future
   assert(y_.GetType() == Type::FLOAT32);
 #endif
-  llvm::SmallVector<bool> cond_data(cond_ref.begin(), cond_ref.end());
+  llvm::SmallVector<mlir::APInt> cond_data;
+  for (bool i : cond_ref) {
+    cond_data.push_back(mlir::APInt(1, i, true));
+  }
   mlir::RankedTensorType cond_tensor_type =
       mlir::RankedTensorType::get(cond_shape, builder.getI1Type());
   mlir::MemRefType cond_memref_type =
@@ -101,13 +108,13 @@ void WhereConstantCondConstantTensorYKernel::Run(mlir::OpBuilder &builder,
   mlir::bufferization::ToMemrefOp cond_memref =
       builder.create<mlir::bufferization::ToMemrefOp>(
           builder.getUnknownLoc(), cond_memref_type, cond_value);
-  llvm::SmallVector<float32_t> y_data(y_ref.begin(), y_ref.end());
+  llvm::SmallVector<mlir::APFloat> y_data(y_ref.begin(), y_ref.end());
   mlir::RankedTensorType y_tensor_type =
       mlir::RankedTensorType::get(y_shape, builder.getF32Type());
   mlir::MemRefType y_memref_type =
       mlir::MemRefType::get(y_shape, builder.getF32Type());
-  mlir::DenseElementsAttr y_elements = mlir::DenseElementsAttr::get(
-      y_tensor_type, llvm::ArrayRef<float32_t>(y_data));
+  mlir::DenseElementsAttr y_elements =
+      mlir::DenseElementsAttr::get(y_tensor_type, y_data);
   mlir::arith::ConstantOp y_value = builder.create<mlir::arith::ConstantOp>(
       builder.getUnknownLoc(), y_elements);
   mlir::bufferization::ToMemrefOp y_memref =

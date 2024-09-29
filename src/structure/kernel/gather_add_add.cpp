@@ -60,9 +60,8 @@ void GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel::Run(
   mlir::DenseElementsAttr data_elements, add0_weight_elements,
       add1_weight_elements;
   if (data_.GetType() == Type::FLOAT32) {
-    std::vector<float32_t> data(data_ref.begin(), data_ref.end());
-    data_elements =
-        mlir::DenseElementsAttr::get(data_shaped_type, llvm::ArrayRef(data));
+    std::vector<mlir::APFloat> data(data_ref.begin(), data_ref.end());
+    data_elements = mlir::DenseElementsAttr::get(data_shaped_type, data);
   } else {
 #ifdef DEBUG
     assert(false && "unreachable");
@@ -71,10 +70,10 @@ void GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel::Run(
 #endif
   }
   if (add0_weight_.GetType() == Type::FLOAT32) {
-    std::vector<float32_t> add0_weight(add0_weight_ref.begin(),
-                                       add0_weight_ref.end());
-    add0_weight_elements = mlir::DenseElementsAttr::get(
-        add0_weight_shaped_type, llvm::ArrayRef(add0_weight));
+    std::vector<mlir::APFloat> add0_weight(add0_weight_ref.begin(),
+                                           add0_weight_ref.end());
+    add0_weight_elements =
+        mlir::DenseElementsAttr::get(add0_weight_shaped_type, add0_weight);
   } else {
 #ifdef DEBUG
     assert(false && "unreachable");
@@ -83,10 +82,10 @@ void GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel::Run(
 #endif
   }
   if (add1_weight_.GetType() == Type::FLOAT32) {
-    std::vector<float32_t> add1_weight(add1_weight_ref.begin(),
-                                       add1_weight_ref.end());
-    add1_weight_elements = mlir::DenseElementsAttr::get(
-        add1_weight_shaped_type, llvm::ArrayRef(add1_weight));
+    std::vector<mlir::APFloat> add1_weight(add1_weight_ref.begin(),
+                                           add1_weight_ref.end());
+    add1_weight_elements =
+        mlir::DenseElementsAttr::get(add1_weight_shaped_type, add1_weight);
   } else {
 #ifdef DEBUG
     assert(false && "unreachable");

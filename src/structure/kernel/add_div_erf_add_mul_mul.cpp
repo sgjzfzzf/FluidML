@@ -6,6 +6,7 @@
 #include "mlir/Dialect/Utils/StructuredOpsUtils.h"
 #include "mlir/IR/AffineMap.h"
 #include "mlir/IR/BuiltinTypes.h"
+#include "mlir/Support/LLVM.h"
 #ifdef DEBUG
 #include <cassert>
 #endif
@@ -44,10 +45,10 @@ void AddDivErfAddMulMulKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
   const std::vector<float64_t> &add0_weight_data = add0_weight_.Get();
   mlir::DenseElementsAttr add0_weight_elements;
   if (add0_weight_.GetType() == Type::FLOAT32) {
-    std::vector<float32_t> add0_weight(add0_weight_data.begin(),
-                                       add0_weight_data.end());
-    add0_weight_elements = mlir::DenseElementsAttr::get(
-        add0_weight_tensor_type, llvm::ArrayRef<float32_t>(add0_weight));
+    std::vector<mlir::APFloat> add0_weight(add0_weight_data.begin(),
+                                           add0_weight_data.end());
+    add0_weight_elements =
+        mlir::DenseElementsAttr::get(add0_weight_tensor_type, add0_weight);
   } else {
 #ifdef DEBUG
     assert(false && "unimplemented type");
