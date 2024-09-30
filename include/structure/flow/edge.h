@@ -24,14 +24,6 @@ protected:
   std::shared_ptr<Region> region_;
 };
 
-class EmptyEdge : public Edge {
-public:
-  EmptyEdge(std::shared_ptr<Region> &&region);
-  EmptyEdge(const EmptyEdge &edge) = delete;
-  EmptyEdge(EmptyEdge &&edge) = default;
-  virtual ~EmptyEdge() = default;
-};
-
 class OwnFromEdge : virtual public Edge {
 public:
   OwnFromEdge(std::shared_ptr<Region> &&region, std::shared_ptr<Node> &&from);

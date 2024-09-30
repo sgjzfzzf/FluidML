@@ -20,9 +20,6 @@ std::vector<int64_t> Edge::GePhysicalShape() const {
   return region_->GetPhysicalShape();
 }
 
-EmptyEdge::EmptyEdge(std::shared_ptr<Region> &&region)
-    : Edge(std::move(region)) {}
-
 OwnFromEdge::OwnFromEdge(std::shared_ptr<Region> &&region,
                          std::shared_ptr<Node> &&from)
     : Edge(std::move(region)), from_(std::move(from)) {}
