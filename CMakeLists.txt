@@ -33,11 +33,19 @@ if(BUILD_PYTHON)
 endif()
 
 ExternalProject_Add(
-    protobuf
-    PREFIX ${CMAKE_BINARY_DIR}/deps
-    GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
-    GIT_TAG v27.2
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/deps -DCMAKE_POSITION_INDEPENDENT_CODE=ON -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    benchmark
+    GIT_REPOSITORY https://github.com/google/benchmark.git
+    GIT_TAG v1.9.0
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/external -DBENCHMARK_DOWNLOAD_DEPENDENCIES=ON -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    BUILD_COMMAND ${CMAKE_COMMAND} --build . --target all
+    INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
+)
+
+ExternalProject_Add(
+    fmtlib
+    GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+    GIT_TAG 10.2.1
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/external -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
     BUILD_COMMAND ${CMAKE_COMMAND} --build . --target all
     INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
 )
@@ -45,12 +53,10 @@ ExternalProject_Add(
 find_package(LLVM 18.1.6 REQUIRED CONFIG)
 
 include_directories(include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmt/include)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/third_party/onnx)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/onnx)
 include_directories(${LLVM_INCLUDE_DIRS})
 
-link_directories(${CMAKE_CURRENT_BINARY_DIR}/third_party/fmt)
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/third_party/onnx)
 link_directories(${LLVM_LIBRARY_DIRS})
 

@@ -1,9 +1,12 @@
+include_directories(${CMAKE_BINARY_DIR}/external/include)
+
+link_directories(${CMAKE_BINARY_DIR}/external/lib)
+
 file(GLOB_RECURSE SRCS "evaluation/*.cpp" "exception/*.cpp" "optimization/*.cpp" "structure/*.cpp" "utils/*.cpp" "worker/*.cpp")
 file(GLOB_RECURSE PYTHON_BINDS "python/*.cpp")
 
 add_library(${PROJECT_NAME}Static ${SRCS})
 target_link_libraries(${PROJECT_NAME}Static fmt onnx LLVM MLIR ${Python3_LIBRARIES})
-target_link_directories(${PROJECT_NAME}Static PUBLIC /usr/local/lib/)
 set_target_properties(${PROJECT_NAME}Static PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 
 if (${BUILD_PYTHON})
