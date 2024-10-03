@@ -108,13 +108,13 @@ void WhereConstantCondConstantTensorYKernel::Run(mlir::OpBuilder &builder,
   mlir::bufferization::ToMemrefOp cond_memref =
       builder.create<mlir::bufferization::ToMemrefOp>(
           builder.getUnknownLoc(), cond_memref_type, cond_value);
-  llvm::SmallVector<mlir::APFloat> y_data(y_ref.begin(), y_ref.end());
+  llvm::SmallVector<float32_t> y_data(y_ref.begin(), y_ref.end());
   mlir::RankedTensorType y_tensor_type =
       mlir::RankedTensorType::get(y_shape, builder.getF32Type());
   mlir::MemRefType y_memref_type =
       mlir::MemRefType::get(y_shape, builder.getF32Type());
   mlir::DenseElementsAttr y_elements =
-      mlir::DenseElementsAttr::get(y_tensor_type, y_data);
+      mlir::DenseElementsAttr::get(y_tensor_type, llvm::ArrayRef(y_data));
   mlir::arith::ConstantOp y_value = builder.create<mlir::arith::ConstantOp>(
       builder.getUnknownLoc(), y_elements);
   mlir::bufferization::ToMemrefOp y_memref =

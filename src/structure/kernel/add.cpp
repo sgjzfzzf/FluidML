@@ -102,7 +102,7 @@ void AddConstantTensorKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
   const std::vector<float64_t> &tensor_ref = tensor_.Get();
   mlir::DenseElementsAttr elements;
   if (tensor_meta.GetType() == Type::FLOAT32) {
-    std::vector<mlir::APFloat> tensor(tensor_ref.begin(), tensor_ref.end());
+    llvm::SmallVector<float32_t> tensor(tensor_ref.begin(), tensor_ref.end());
     elements =
         mlir::DenseElementsAttr::get(tensor_type, llvm::ArrayRef(tensor));
   } else {

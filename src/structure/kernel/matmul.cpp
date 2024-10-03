@@ -68,9 +68,9 @@ void MatMulConstantLhsKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
       mlir::RankedTensorType::get(weight_shape, weight_type);
   mlir::DenseElementsAttr weight_elements;
   if (weight_raw_type == Type::FLOAT32) {
-    std::vector<mlir::APFloat> lhs_data(weight_ref.begin(), weight_ref.end());
-    weight_elements =
-        mlir::DenseElementsAttr::get(weight_tensor_type, lhs_data);
+    llvm::SmallVector<float32_t> lhs_data(weight_ref.begin(), weight_ref.end());
+    weight_elements = mlir::DenseElementsAttr::get(weight_tensor_type,
+                                                   llvm::ArrayRef(lhs_data));
   } else {
 #ifdef DEBUG
     throw UnreachableException();
@@ -101,9 +101,9 @@ void MatMulConstantRhsKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
       mlir::RankedTensorType::get(weight_shape, rhs_type);
   mlir::DenseElementsAttr weight_elements;
   if (weight_raw_type == Type::FLOAT32) {
-    std::vector<mlir::APFloat> rhs_data(weight_ref.begin(), weight_ref.end());
-    weight_elements =
-        mlir::DenseElementsAttr::get(weight_tensor_type, rhs_data);
+    llvm::SmallVector<float32_t> rhs_data(weight_ref.begin(), weight_ref.end());
+    weight_elements = mlir::DenseElementsAttr::get(weight_tensor_type,
+                                                   llvm::ArrayRef(rhs_data));
   } else {
 #ifdef DEBUG
     throw UnreachableException();

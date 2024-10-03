@@ -74,10 +74,10 @@ void MulConstantTensorKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
       mlir::RankedTensorType::get(weight_shape, weight_type);
   mlir::DenseElementsAttr weight_elements;
   if (constant_.GetType() == Type::FLOAT32) {
-    std::vector<mlir::APFloat> weight_data(weight_ref.begin(),
-                                           weight_ref.end());
-    weight_elements =
-        mlir::DenseElementsAttr::get(weight_tensor_type, weight_data);
+    llvm::SmallVector<float32_t> weight_data(weight_ref.begin(),
+                                             weight_ref.end());
+    weight_elements = mlir::DenseElementsAttr::get(weight_tensor_type,
+                                                   llvm::ArrayRef(weight_data));
   } else {
 #ifdef DEBUG
     throw UnreachableException();

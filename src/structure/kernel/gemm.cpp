@@ -72,10 +72,10 @@ void GemmConstantWeightsBiasKernel::Run(mlir::OpBuilder &builder,
       mlir::RankedTensorType::get(bias_shape, bias_type);
   mlir::DenseElementsAttr weights_elements, bias_elements;
   if (weights_raw_type == Type::FLOAT32) {
-    std::vector<mlir::APFloat> weights_data(weights_ref.begin(),
-                                            weights_ref.end());
-    weights_elements =
-        mlir::DenseElementsAttr::get(weights_shaped_type, weights_data);
+    llvm::SmallVector<float32_t> weights_data(weights_ref.begin(),
+                                              weights_ref.end());
+    weights_elements = mlir::DenseElementsAttr::get(
+        weights_shaped_type, llvm::ArrayRef(weights_data));
   } else {
 #ifdef DEBUG
     throw UnreachableException();
@@ -84,8 +84,9 @@ void GemmConstantWeightsBiasKernel::Run(mlir::OpBuilder &builder,
 #endif
   }
   if (bias_raw_type == Type::FLOAT32) {
-    std::vector<mlir::APFloat> bias_data(bias_ref.begin(), bias_ref.end());
-    bias_elements = mlir::DenseElementsAttr::get(bias_shaped_type, bias_data);
+    llvm::SmallVector<float32_t> bias_data(bias_ref.begin(), bias_ref.end());
+    bias_elements = mlir::DenseElementsAttr::get(bias_shaped_type,
+                                                 llvm::ArrayRef(bias_data));
   } else {
 #ifdef DEBUG
     throw UnreachableException();

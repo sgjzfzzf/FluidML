@@ -19,19 +19,19 @@ public:
   virtual ~Context() = default;
   static std::shared_ptr<Context> Make();
   mlir::MLIRContext &GetMLIRContext();
-  mlir::ModuleOp &GetModule();
+  mlir::ModuleOp GetModule();
   FuncAttr &GetFuncAttr();
 #ifdef DEBUG
   void DumpModule(std::string_view filename);
 #endif
-  void SetModule(mlir::ModuleOp module);
+  void SetModule(mlir::OwningOpRef<mlir::ModuleOp> &&module);
   void SetFuncAttr(FuncAttr &&func_attr);
   std::unique_ptr<mlir::ExecutionEngine> MakeExecutionEngine();
   std::string ExportHeaderFile();
 
 private:
   mlir::MLIRContext mlir_context_;
-  mlir::ModuleOp module_;
+  mlir::OwningOpRef<mlir::ModuleOp> module_;
   std::optional<FuncAttr> func_attr_opt_;
 };
 

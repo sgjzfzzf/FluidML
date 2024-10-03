@@ -39,7 +39,8 @@ void GeneralBuilder::Run(const flow::Sequence &sequence,
                          const memory::Index &index) {
   mlir::MLIRContext &mlir_context = context_->GetMLIRContext();
   mlir::OpBuilder builder(&mlir_context);
-  mlir::ModuleOp module = mlir::ModuleOp::create(builder.getUnknownLoc());
+  mlir::OwningOpRef<mlir::ModuleOp> module =
+      mlir::ModuleOp::create(builder.getUnknownLoc());
   std::unordered_map<std::string, mlir::Value> symbol_table;
   int64_t buffer_size = index.GetMaximum();
   std::string function_name = function_name_;
@@ -173,11 +174,11 @@ void GeneralBuilder::Run(const flow::Sequence &sequence,
   // Run the scheduler.
   scheduler_->Run(builder, sequence, symbol_table);
   builder.create<mlir::func::ReturnOp>(builder.getUnknownLoc());
-  module.push_back(function);
+  module->push_back(function);
 #ifdef DEBUG
-  assert(mlir::verify(module).succeeded());
+  assert(mlir::verify(*module).succeeded());
 #endif
-  context_->SetModule(module);
+  context_->SetModule(std::move(module));
   context_->SetFuncAttr(std::move(func_attr));
 }
 
@@ -208,7 +209,8 @@ void KernelBuilder::RunOnSingleInputWithoutBuffer(
     const Meta &output_meta, const std::vector<size_t> &output_layout) {
   mlir::MLIRContext &mlir_context = context_->GetMLIRContext();
   mlir::OpBuilder builder(&mlir_context);
-  mlir::ModuleOp module = mlir::ModuleOp::create(builder.getUnknownLoc());
+  mlir::OwningOpRef<mlir::ModuleOp> module =
+      mlir::ModuleOp::create(builder.getUnknownLoc());
   mlir::Type input_elem_type = GetMLIRType(input_meta.GetType(), builder),
              output_elem_type = GetMLIRType(output_meta.GetType(), builder);
   const std::vector<int64_t> &input_shape = input_meta.GetShape(),
@@ -237,16 +239,16 @@ void KernelBuilder::RunOnSingleInputWithoutBuffer(
   mlir::Value output = block->getArgument(1);
   kernel.Run(builder, input, output);
   builder.create<mlir::func::ReturnOp>(builder.getUnknownLoc());
-  module.push_back(std::move(function));
+  module->push_back(std::move(function));
 #ifdef DEBUG
   assert(
 #endif
-      mlir::verify(module).succeeded()
+      mlir::verify(*module).succeeded()
 #ifdef DEBUG
   )
 #endif
       ;
-  context_->SetModule(module);
+  context_->SetModule(std::move(module));
   std::string function_name = function_name_;
   context::FuncAttr func_attr(std::move(function_name), 0);
   context::ArgumentAttr input_arg_attr(context::ArgumentAttr::Type::Input,
@@ -281,7 +283,8 @@ void KernelBuilder::RunOnSingleInputWithBuffer(
     const std::vector<size_t> &output_layout, size_t buffer_size) {
   mlir::MLIRContext &mlir_context = context_->GetMLIRContext();
   mlir::OpBuilder builder(&mlir_context);
-  mlir::ModuleOp module = mlir::ModuleOp::create(builder.getUnknownLoc());
+  mlir::OwningOpRef<mlir::ModuleOp> module =
+      mlir::ModuleOp::create(builder.getUnknownLoc());
   mlir::Type input_elem_type = GetMLIRType(input_meta.GetType(), builder),
              output_elem_type = GetMLIRType(output_meta.GetType(), builder);
   const std::vector<int64_t> &input_shape = input_meta.GetShape(),
@@ -318,11 +321,11 @@ void KernelBuilder::RunOnSingleInputWithBuffer(
   mlir::Value buffer = block->getArgument(2);
   kernel.Run(builder, input, output, buffer);
   builder.create<mlir::func::ReturnOp>(builder.getUnknownLoc());
-  module.push_back(std::move(function));
+  module->push_back(std::move(function));
 #ifdef DEBUG
-  assert(mlir::verify(module).succeeded());
+  assert(mlir::verify(*module).succeeded());
 #endif
-  context_->SetModule(module);
+  context_->SetModule(std::move(module));
   const size_t input_size = input_memref_type.getNumElements(),
                output_size = output_memref_type.getNumElements();
   std::string function_name = function_name_;
@@ -366,7 +369,8 @@ void KernelBuilder::RunOnDoubleInputsWithoutBuffer(
     const std::vector<size_t> &output_layout) {
   mlir::MLIRContext &mlir_context = context_->GetMLIRContext();
   mlir::OpBuilder builder(&mlir_context);
-  mlir::ModuleOp module = mlir::ModuleOp::create(builder.getUnknownLoc());
+  mlir::OwningOpRef<mlir::ModuleOp> module =
+      mlir::ModuleOp::create(builder.getUnknownLoc());
   mlir::Type lhs_elem_type = GetMLIRType(lhs_meta.GetType(), builder),
              rhs_elem_type = GetMLIRType(rhs_meta.GetType(), builder),
              output_elem_type = GetMLIRType(output_meta.GetType(), builder);
@@ -406,11 +410,11 @@ void KernelBuilder::RunOnDoubleInputsWithoutBuffer(
   mlir::Value output = block->getArgument(2);
   kernel.Run(builder, lhs, rhs, output);
   builder.create<mlir::func::ReturnOp>(builder.getUnknownLoc());
-  module.push_back(std::move(function));
+  module->push_back(std::move(function));
 #ifdef DEBUG
-  assert(mlir::verify(module).succeeded());
+  assert(mlir::verify(*module).succeeded());
 #endif
-  context_->SetModule(module);
+  context_->SetModule(std::move(module));
   const size_t lhs_size = lhs_memref_type.getNumElements(),
                rhs_size = rhs_memref_type.getNumElements(),
                output_size = output_memref_type.getNumElements();

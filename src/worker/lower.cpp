@@ -29,7 +29,7 @@ Lower::Lower(std::shared_ptr<context::Context> context)
 }
 
 void Lower::Run() {
-  mlir::ModuleOp &module = context_->GetModule();
+  mlir::ModuleOp module = context_->GetModule();
 #ifdef DEBUG
   assert(
 #endif

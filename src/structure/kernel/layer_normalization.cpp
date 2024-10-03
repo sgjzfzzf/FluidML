@@ -97,10 +97,9 @@ void LayerNormalizationConstantScaleBiasKernel::Run(mlir::OpBuilder &builder,
                              bias_shape, input_type.getElementType());
   mlir::DenseElementsAttr scale_attr = mlir::DenseElementsAttr::get(
                               scale_tensor_type,
-                              llvm::ArrayRef<float32_t>(scale_data_f32)),
+                              llvm::ArrayRef(scale_data_f32)),
                           bias_attr = mlir::DenseElementsAttr::get(
-                              bias_tensor_type,
-                              llvm::ArrayRef<float32_t>(bias_data_f32));
+                              bias_tensor_type, llvm::ArrayRef(bias_data_f32));
   mlir::Value scale_constant = builder.create<mlir::arith::ConstantOp>(
                   builder.getUnknownLoc(), scale_attr),
               bias_constant = builder.create<mlir::arith::ConstantOp>(

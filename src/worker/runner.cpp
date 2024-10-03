@@ -38,7 +38,7 @@ size_t Runner::Run(const std::unordered_map<std::string, void *> &args,
   mlir::MLIRContext &mlir_context = context_->GetMLIRContext();
   std::unique_ptr<mlir::ExecutionEngine> engine =
       context_->MakeExecutionEngine();
-  mlir::ModuleOp &module = context_->GetModule();
+  mlir::ModuleOp module = context_->GetModule();
   const context::FuncAttr &func_attr = context_->GetFuncAttr();
   std::string func_name = func_attr.GetName();
   const std::vector<context::ArgumentAttr> &arguments =

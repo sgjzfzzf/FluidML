@@ -54,10 +54,10 @@ SingleInputKernelEval::GetTimeCost(const std::vector<size_t> &input_layout,
     return it->second;
   }
   mlir::MLIRContext mlir_context;
-  mlir::ModuleOp module =
+  mlir::OwningOpRef<mlir::ModuleOp> module =
       mlir::ModuleOp::create(mlir::UnknownLoc::get(&mlir_context));
   std::shared_ptr<context::Context> context = context::Context::Make();
-  context->SetModule(module);
+  context->SetModule(std::move(module));
   worker::KernelBuilder builder(kEvalModuleName, context);
   runKernel(builder, input_layout, output_layout);
   worker::Lower lower(context);
@@ -191,10 +191,10 @@ DoubleInputsKernelEval::GetTimeCost(const std::vector<size_t> &lhs_layout,
     return it->second;
   }
   mlir::MLIRContext mlir_context;
-  mlir::ModuleOp module =
+  mlir::OwningOpRef<mlir::ModuleOp> module =
       mlir::ModuleOp::create(mlir::UnknownLoc::get(&mlir_context));
   std::shared_ptr<context::Context> context = context::Context::Make();
-  context->SetModule(module);
+  context->SetModule(std::move(module));
   worker::KernelBuilder builder(kEvalModuleName, context);
   runKernel(builder, lhs_layout, rhs_layout, output_layout);
   worker::Lower lower(context);

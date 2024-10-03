@@ -56,7 +56,10 @@ std::shared_ptr<Context> Context::Make() { return std::make_shared<Context>(); }
 
 mlir::MLIRContext &Context::GetMLIRContext() { return mlir_context_; }
 
-mlir::ModuleOp &Context::GetModule() { return module_; }
+mlir::ModuleOp Context::GetModule() {
+  mlir::ModuleOp p = module_.get();
+  return p;
+}
 
 FuncAttr &Context::GetFuncAttr() {
 #ifdef DEBUG
@@ -70,11 +73,13 @@ void Context::DumpModule(std::string_view filename) {
   std::error_code ec;
   llvm::raw_fd_ostream file(filename.data(), ec);
   assert(!ec);
-  module_.print(file);
+  module_->print(file);
 }
 #endif
 
-void Context::SetModule(mlir::ModuleOp module) { module_ = module; }
+void Context::SetModule(mlir::OwningOpRef<mlir::ModuleOp> &&module) {
+  module_ = std::move(module);
+}
 
 void Context::SetFuncAttr(FuncAttr &&func_attr) {
   func_attr_opt_ = std::move(func_attr);
@@ -84,7 +89,7 @@ std::unique_ptr<mlir::ExecutionEngine> Context::MakeExecutionEngine() {
   mlir::ExecutionEngineOptions engine_options;
   engine_options.jitCodeGenOptLevel = llvm::CodeGenOptLevel::Aggressive;
   llvm::Expected<std::unique_ptr<mlir::ExecutionEngine>> maybe_engine =
-      mlir::ExecutionEngine::create(module_, engine_options);
+      mlir::ExecutionEngine::create(*module_, engine_options);
 #ifdef DEBUG
   assert(maybe_engine);
 #endif
