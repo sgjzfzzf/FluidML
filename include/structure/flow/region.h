@@ -31,6 +31,7 @@ protected:
 class VariableRegion : public Region {
 public:
   VariableRegion(std::string &&name, Meta &&meta);
+  VariableRegion(std::string &&name, Meta &&meta, std::vector<size_t> &&layout);
   VariableRegion(const VariableRegion &region) = delete;
   VariableRegion(VariableRegion &&region) = default;
   virtual ~VariableRegion() = default;
@@ -44,6 +45,7 @@ protected:
 class InnerRegion : public VariableRegion {
 public:
   InnerRegion(std::string &&name, Meta &&meta);
+  InnerRegion(std::string &&name, Meta &&meta, std::vector<size_t> &&layout);
   InnerRegion(const InnerRegion &region) = delete;
   InnerRegion(InnerRegion &&region) = default;
   virtual ~InnerRegion() = default;
@@ -53,6 +55,8 @@ public:
 class InterfaceRegion : public VariableRegion {
 public:
   InterfaceRegion(std::string &&name, Meta &&meta);
+  InterfaceRegion(std::string &&name, Meta &&meta,
+                  std::vector<size_t> &&layout);
   InterfaceRegion(const InterfaceRegion &region) = delete;
   InterfaceRegion(InterfaceRegion &&region) = default;
   virtual ~InterfaceRegion() = default;
@@ -62,6 +66,7 @@ public:
 class InputRegion : public InterfaceRegion {
 public:
   InputRegion(std::string &&name, Meta &&meta);
+  InputRegion(std::string &&name, Meta &&meta, std::vector<size_t> &&layout);
   InputRegion(const InputRegion &region) = delete;
   InputRegion(InputRegion &&region) = default;
   virtual ~InputRegion() = default;
@@ -70,6 +75,7 @@ public:
 class OutputRegion : public InterfaceRegion {
 public:
   OutputRegion(std::string &&name, Meta &&meta);
+  OutputRegion(std::string &&name, Meta &&meta, std::vector<size_t> &&layout);
   OutputRegion(const OutputRegion &region) = delete;
   OutputRegion(OutputRegion &&region) = default;
   virtual ~OutputRegion() = default;
@@ -78,6 +84,8 @@ public:
 class ConstantRegion : public Region {
 public:
   ConstantRegion(std::string &&name, Tensor &&tensor);
+  ConstantRegion(std::string &&name, Tensor &&tensor,
+                 std::vector<size_t> &&layout);
   ConstantRegion(const ConstantRegion &region) = delete;
   ConstantRegion(ConstantRegion &&region) = default;
   virtual ~ConstantRegion() = default;

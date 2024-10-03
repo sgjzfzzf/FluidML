@@ -41,27 +41,52 @@ VariableRegion::VariableRegion(std::string &&name, Meta &&meta)
     : Region(std::move(name), utils::GenDefaultLayout(meta.GetShape())),
       meta_(std::move(meta)) {}
 
+VariableRegion::VariableRegion(std::string &&name, Meta &&meta,
+                               std::vector<size_t> &&layout)
+    : Region(std::move(name), std::move(layout)), meta_(std::move(meta)) {}
+
 const Meta &VariableRegion::GetMeta() const { return meta_; }
 
 InnerRegion::InnerRegion(std::string &&name, Meta &&meta)
     : VariableRegion(std::move(name), std::move(meta)) {}
+
+InnerRegion::InnerRegion(std::string &&name, Meta &&meta,
+                         std::vector<size_t> &&layout)
+    : VariableRegion(std::move(name), std::move(meta), std::move(layout)) {}
 
 bool InnerRegion::NeedMemoryAllocation() const { return true; }
 
 InterfaceRegion::InterfaceRegion(std::string &&name, Meta &&meta)
     : VariableRegion(std::move(name), std::move(meta)) {}
 
+InterfaceRegion::InterfaceRegion(std::string &&name, Meta &&meta,
+                                 std::vector<size_t> &&layout)
+    : VariableRegion(std::move(name), std::move(meta), std::move(layout)) {}
+
 bool InterfaceRegion::NeedMemoryAllocation() const { return false; }
 
 InputRegion::InputRegion(std::string &&name, Meta &&meta)
     : InterfaceRegion(std::move(name), std::move(meta)) {}
 
+InputRegion::InputRegion(std::string &&name, Meta &&meta,
+                         std::vector<size_t> &&layout)
+    : InterfaceRegion(std::move(name), std::move(meta), std::move(layout)) {}
+
 OutputRegion::OutputRegion(std::string &&name, Meta &&meta)
     : InterfaceRegion(std::move(name), std::move(meta)) {}
+
+OutputRegion::OutputRegion(std::string &&name, Meta &&meta,
+                           std::vector<size_t> &&layout)
+    : InterfaceRegion(std::move(name), std::move(meta), std::move(layout)) {}
 
 ConstantRegion::ConstantRegion(std::string &&name, Tensor &&tensor)
     : Region(std::move(name), utils::GenDefaultLayout(tensor.GetShape())),
       constant_(std::move(tensor)) {}
+
+ConstantRegion::ConstantRegion(std::string &&name, Tensor &&tensor,
+                               std::vector<size_t> &&layout)
+    : Region(std::move(name), std::move(layout)), constant_(std::move(tensor)) {
+}
 
 const Meta &ConstantRegion::GetMeta() const { return constant_.GetMeta(); }
 
