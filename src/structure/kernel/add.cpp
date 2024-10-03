@@ -9,9 +9,6 @@
 #include "mlir/IR/MLIRContext.h"
 #include "utils/float.h"
 #include "utils/type.h"
-#ifdef DEBUG
-#include "exception/unreachable_exception.h"
-#endif
 
 namespace cpu_transformers {
 namespace kernel {
@@ -28,7 +25,7 @@ void AddConstantScalarKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
         builder.getUnknownLoc(), builder.getF32FloatAttr(constant_));
   } else {
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     __builtin_unreachable();
 #endif
@@ -60,7 +57,7 @@ void AddConstantScalarKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
           add_op = b.create<mlir::arith::AddFOp>(loc, input, constant);
         } else {
 #ifdef DEBUG
-          throw UnreachableException();
+          assert(false && "unreachable");
 #else
           __builtin_unreachable();
 #endif
@@ -92,7 +89,7 @@ void AddConstantTensorKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
     tensor_elem_type = builder.getF32Type();
   } else {
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     __builtin_unreachable();
 #endif
@@ -107,7 +104,7 @@ void AddConstantTensorKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
         mlir::DenseElementsAttr::get(tensor_type, llvm::ArrayRef(tensor));
   } else {
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     __builtin_unreachable();
 #endif
@@ -151,7 +148,7 @@ void AddConstantTensorKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
           add_op = b.create<mlir::arith::AddFOp>(loc, input, weight);
         } else {
 #ifdef DEBUG
-          throw UnreachableException();
+          assert(false && "unreachable");
 #else
           __builtin_unreachable();
 #endif
@@ -202,7 +199,7 @@ void AddCommonKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
           add_op = b.create<mlir::arith::AddFOp>(loc, lhs, rhs);
         } else {
 #ifdef DEBUG
-          throw UnreachableException();
+          assert(false && "unreachable");
 #else
           __builtin_unreachable();
 #endif

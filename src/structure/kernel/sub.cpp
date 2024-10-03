@@ -2,9 +2,6 @@
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/IR/BuiltinTypes.h"
-#ifdef DEBUG
-#include "exception/unreachable_exception.h"
-#endif
 
 namespace cpu_transformers {
 namespace kernel {
@@ -22,7 +19,7 @@ void SubConstantScalarLhsKernel::Run(mlir::OpBuilder &builder,
         builder.getUnknownLoc(), builder.getF32FloatAttr(value_));
   } else {
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     __builtin_unreachable();
 #endif
@@ -58,7 +55,7 @@ void SubConstantScalarLhsKernel::Run(mlir::OpBuilder &builder,
           sub_op = b.create<mlir::arith::SubFOp>(loc, value, input);
         } else {
 #ifdef DEBUG
-          throw UnreachableException();
+          assert(false && "unreachable");
 #else
           __builtin_unreachable();
 #endif

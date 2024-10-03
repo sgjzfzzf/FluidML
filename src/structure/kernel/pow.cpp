@@ -3,9 +3,6 @@
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/Math/IR/Math.h"
 #include "mlir/IR/BuiltinTypes.h"
-#ifdef DEBUG
-#include "exception/unreachable_exception.h"
-#endif
 
 namespace cpu_transformers {
 namespace kernel {
@@ -21,7 +18,7 @@ void PowKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
         builder.getUnknownLoc(), builder.getF32FloatAttr(exp_));
   } else {
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     __builtin_unreachable();
 #endif
@@ -57,7 +54,7 @@ void PowKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
           pow_op = b.create<mlir::math::PowFOp>(loc, input, exp);
         } else {
 #ifdef DEBUG
-          throw UnreachableException();
+          assert(false && "unreachable");
 #else
           __builtin_unreachable();
 #endif

@@ -1,8 +1,5 @@
 #include "structure/flow/sequence.h"
 #include "structure/flow/node.h"
-#ifdef DEBUG
-#include "exception/unreachable_exception.h"
-#endif
 
 namespace cpu_transformers {
 namespace flow {
@@ -28,7 +25,7 @@ size_t Sequence::GetIndex(const std::string &name) const {
     }
   }
 #ifdef DEBUG
-  throw UnreachableException();
+  assert(false && "unreachable");
 #else
   __builtin_unreachable();
 #endif

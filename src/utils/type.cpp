@@ -1,9 +1,6 @@
 #include "utils/type.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "utils/float.h"
-#ifdef DEBUG
-#include "exception/unreachable_exception.h"
-#endif
 
 // TODO: add more types
 namespace cpu_transformers {
@@ -46,7 +43,7 @@ size_t GetSizeFromType(Type type) {
     return sizeof(float64_t);
   default:
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     __builtin_unreachable();
 #endif
@@ -65,7 +62,7 @@ const char *GetStringFromType(Type type) {
     return "float64";
   default:
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     __builtin_unreachable();
 #endif
@@ -84,7 +81,7 @@ mlir::Type GetMLIRType(Type type, mlir::OpBuilder &builder) {
     return builder.getF64Type();
   default:
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     __builtin_unreachable();
 #endif

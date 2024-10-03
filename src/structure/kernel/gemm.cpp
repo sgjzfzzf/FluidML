@@ -10,7 +10,6 @@
 #include "mlir/IR/Types.h"
 #include "utils/float.h"
 #ifdef DEBUG
-#include "exception/unreachable_exception.h"
 #include <cassert>
 #endif
 
@@ -78,7 +77,7 @@ void GemmConstantWeightsBiasKernel::Run(mlir::OpBuilder &builder,
         weights_shaped_type, llvm::ArrayRef(weights_data));
   } else {
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     __builtin_unreachable();
 #endif
@@ -89,7 +88,7 @@ void GemmConstantWeightsBiasKernel::Run(mlir::OpBuilder &builder,
                                                  llvm::ArrayRef(bias_data));
   } else {
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     __builtin_unreachable();
 #endif
@@ -138,7 +137,7 @@ void GemmConstantWeightsBiasKernel::Run(mlir::OpBuilder &builder,
                          mlir::getAffineDimExpr(1, context)};
   } else {
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     __builtin_unreachable();
 #endif

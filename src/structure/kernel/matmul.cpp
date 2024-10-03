@@ -12,7 +12,6 @@
 #include "utils/type.h"
 #include <cstdint>
 #ifdef DEBUG
-#include "exception/unreachable_exception.h"
 #include <cassert>
 #endif
 
@@ -73,7 +72,7 @@ void MatMulConstantLhsKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                                                    llvm::ArrayRef(lhs_data));
   } else {
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     __builtin_unreachable();
 #endif
@@ -106,7 +105,7 @@ void MatMulConstantRhsKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                                                    llvm::ArrayRef(rhs_data));
   } else {
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     __builtin_unreachable();
 #endif

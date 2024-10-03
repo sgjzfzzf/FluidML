@@ -5,7 +5,6 @@
 #include "llvm/ADT/ArrayRef.h"
 #include <cstdint>
 #ifdef DEBUG
-#include "exception/unreachable_exception.h"
 #include <cassert>
 #endif
 
@@ -33,7 +32,7 @@ Kernel::getBroadcastAffineMaps(mlir::Builder &builder,
           exprs[j].push_back(builder.getAffineConstantExpr(0));
         } else {
 #ifdef DEBUG
-          throw UnreachableException();
+          assert(false && "unreachable");
 #else
           __builtin_unreachable();
 #endif
@@ -78,7 +77,7 @@ llvm::SmallVector<mlir::AffineMap> Kernel::getBroadcastMatMulAffineMaps(
         lhs_exprs.push_back(mlir::getAffineConstantExpr(0, context));
       } else {
 #ifdef DEBUG
-        throw UnreachableException();
+        assert(false && "unreachable");
 #else
         __builtin_unreachable();
 #endif
@@ -92,7 +91,7 @@ llvm::SmallVector<mlir::AffineMap> Kernel::getBroadcastMatMulAffineMaps(
         rhs_exprs.push_back(mlir::getAffineConstantExpr(0, context));
       } else {
 #ifdef DEBUG
-        throw UnreachableException();
+        assert(false && "unreachable");
 #else
         __builtin_unreachable();
 #endif

@@ -5,9 +5,6 @@
 #include "mlir/Dialect/Utils/StructuredOpsUtils.h"
 #include "mlir/IR/AffineMap.h"
 #include "mlir/IR/MLIRContext.h"
-#ifdef DEBUG
-#include "exception/unreachable_exception.h"
-#endif
 
 namespace cpu_transformers {
 namespace kernel {
@@ -23,7 +20,7 @@ void MulConstantScalarKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
         builder.getUnknownLoc(), builder.getF32FloatAttr(constant_));
   } else {
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     __builtin_unreachable();
 #endif
@@ -80,7 +77,7 @@ void MulConstantTensorKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                                                    llvm::ArrayRef(weight_data));
   } else {
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     __builtin_unreachable();
 #endif

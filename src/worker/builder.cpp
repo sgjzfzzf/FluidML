@@ -16,11 +16,9 @@
 #include "utils/utils.h"
 #include "worker/scheduler.h"
 #include <cstddef>
-#include <llvm-18/llvm/ADT/ArrayRef.h>
 #include <memory>
 #include <string>
 #ifdef DEBUG
-#include "exception/unreachable_exception.h"
 #include <cassert>
 #endif
 
@@ -60,7 +58,7 @@ void GeneralBuilder::Run(const flow::Sequence &sequence,
       inner_regions.push_back(std::move(inner_region));
     } else {
 #ifdef DEBUG
-      throw UnreachableException();
+      assert(false && "unreachable");
 #else
       __builtin_unreachable();
 #endif
@@ -84,7 +82,7 @@ void GeneralBuilder::Run(const flow::Sequence &sequence,
       arg_type = context::ArgumentAttr::Type::Output;
     } else {
 #ifdef DEBUG
-      throw UnreachableException();
+      assert(false && "unreachable");
 #else
       __builtin_unreachable();
 #endif

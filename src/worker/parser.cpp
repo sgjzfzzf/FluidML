@@ -15,8 +15,6 @@
 #include <unordered_map>
 #include <vector>
 #ifdef DEBUG
-#include "exception/unimplemented_exception.h"
-#include "exception/unreachable_exception.h"
 #include <cassert>
 #endif
 
@@ -75,14 +73,14 @@ std::vector<float64_t> getTensorProtoAs(const onnx::TensorProto &tensorProto) {
       }
     } else {
 #ifdef DEBUG
-      throw UnreachableException();
+      assert(false && "unreachable");
 #else
       __builtin_unreachable();
 #endif
     }
   } else {
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     __builtin_unreachable();
 #endif
@@ -139,7 +137,7 @@ void createNode(Graph &graph, const onnx::NodeProto &nodeProto, Node::Op op) {
         break;
       default:
 #ifdef DEBUG
-        throw UnimplementedException();
+        assert(false && "unimplemented");
 #else
         __builtin_unreachable();
 #endif
@@ -149,7 +147,7 @@ void createNode(Graph &graph, const onnx::NodeProto &nodeProto, Node::Op op) {
           {std::move(attribute_name), Attribute(std::move(tensor_data))});
     } else {
 #ifdef DEBUG
-      throw UnimplementedException();
+      assert(false && "unimplemented");
 #else
       __builtin_unreachable();
 #endif
@@ -216,7 +214,7 @@ Graph Parser::Run(onnx::ModelProto &model_proto) {
       data = getTensorProtoAs<float32_t>(initializer);
     } else {
 #ifdef DEBUG
-      throw UnimplementedException();
+      assert(false && "unimplemented");
 #else
       __builtin_unreachable();
 #endif
@@ -286,7 +284,7 @@ Graph Parser::Run(onnx::ModelProto &model_proto) {
       createNode(graph, node, Node::Op::Where);
     } else {
 #ifdef DEBUG
-      throw UnimplementedException();
+      assert(false && "unimplemented");
 #else
       __builtin_unreachable();
 #endif

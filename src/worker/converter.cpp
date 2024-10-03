@@ -11,8 +11,6 @@
 #include <utility>
 #include <vector>
 #ifdef DEBUG
-#include "exception/unimplemented_exception.h"
-#include "exception/unreachable_exception.h"
 #include <cassert>
 #endif
 
@@ -120,7 +118,7 @@ flow::Flow Converter::Run(const graph::Graph &graph) {
       break;
     default:
 #ifdef DEBUG
-      throw UnimplementedException();
+      assert(false && "unimplemented");
 #else
       __builtin_unreachable();
 #endif
@@ -256,7 +254,7 @@ void Converter::convertAddNode(flow::Flow &flow, const graph::Graph &graph,
 #ifdef DEBUG
   else if (input_lhs_as_constant != nullptr &&
            input_rhs_as_constant != nullptr) {
-    throw UnreachableException();
+    assert(false && "unreachable");
   }
 #endif
   else {
@@ -273,7 +271,7 @@ void Converter::convertAddNode(flow::Flow &flow, const graph::Graph &graph,
           std::dynamic_pointer_cast<graph::NonConstantEdge>(input_lhs);
     } else {
 #ifdef DEBUG
-      throw UnreachableException();
+      assert(false && "unreachable");
 #else
       __builtin_unreachable();
 #endif
@@ -315,7 +313,7 @@ void Converter::convertAddNode(flow::Flow &flow, const graph::Graph &graph,
           std::move(output_region));
     } else {
 #ifdef DEBUG
-      throw UnreachableException();
+      assert(false && "unreachable");
 #else
       __builtin_unreachable();
 #endif
@@ -528,7 +526,7 @@ void Converter::convertGatherNode(flow::Flow &flow, const graph::Graph &graph,
           std::lround(input_rhs_as_constant_scalar->GetValue()), axis);
     } else {
 #ifdef DEBUG
-      throw UnreachableException();
+      assert(false && "unreachable");
 #else
       __builtin_unreachable();
 #endif
@@ -553,14 +551,14 @@ void Converter::convertGatherNode(flow::Flow &flow, const graph::Graph &graph,
           std::move(tensor), axis);
     } else {
 #ifdef DEBUG
-      throw UnreachableException();
+      assert(false && "unreachable");
 #else
       __builtin_unreachable();
 #endif
     }
   } else {
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     __builtin_unreachable();
 #endif
@@ -794,7 +792,7 @@ void Converter::convertMatMulNode(flow::Flow &flow, const graph::Graph &graph,
 // TODO: Currently, this code isn't expected to be reached, because such a case
 // is expected to be optimized by the ONNX simplifier.
 #ifdef DEBUG
-      throw UnimplementedException();
+      assert(false && "unreachable");
 #else
       __builtin_unreachable();
 #endif
@@ -815,7 +813,7 @@ void Converter::convertMatMulNode(flow::Flow &flow, const graph::Graph &graph,
           std::move(output_region));
     } else {
 #ifdef DEBUG
-      throw UnreachableException();
+      assert(false && "unreachable");
 #else
       __builtin_unreachable();
 #endif
@@ -854,14 +852,14 @@ void Converter::convertMatMulNode(flow::Flow &flow, const graph::Graph &graph,
           std::move(output_region));
     } else {
 #ifdef DEBUG
-      throw UnreachableException();
+      assert(false && "unreachable");
 #else
       __builtin_unreachable();
 #endif
     }
   } else {
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     __builtin_unreachable();
 #endif
@@ -944,7 +942,7 @@ void Converter::convertMulNode(flow::Flow &flow, const graph::Graph &graph,
           std::move(output_region));
     } else {
 #ifdef DEBUG
-      throw UnreachableException();
+      assert(false && "unreachable");
 #else
       __builtin_unreachable();
 #endif
@@ -968,7 +966,7 @@ void Converter::convertMulNode(flow::Flow &flow, const graph::Graph &graph,
           std::move(output_region));
     } else {
 #ifdef DEBUG
-      throw UnreachableException();
+      assert(false && "unreachable");
 #else
       __builtin_unreachable();
 #endif
@@ -988,14 +986,14 @@ void Converter::convertMulNode(flow::Flow &flow, const graph::Graph &graph,
           std::move(output_region));
     } else {
 #ifdef DEBUG
-      throw UnreachableException();
+      assert(false && "unreachable");
 #else
       __builtin_unreachable();
 #endif
     }
   } else {
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     __builtin_unreachable();
 #endif
@@ -1267,14 +1265,14 @@ void Converter::convertSubNode(flow::Flow &flow, const graph::Graph &graph,
           std::move(output_region));
     } else {
 #ifdef DEBUG
-      throw UnreachableException();
+      assert(false && "unreachable");
 #else
       __builtin_unreachable();
 #endif
     }
   } else {
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     __builtin_unreachable();
 #endif
@@ -1560,7 +1558,7 @@ void Converter::convertWhereNode(flow::Flow &flow, const graph::Graph &graph,
         std::move(input_region), std::move(output_region));
   } else {
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     __builtin_unreachable();
 #endif

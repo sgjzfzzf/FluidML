@@ -1,5 +1,4 @@
 #include "structure/graph/attribute.h"
-#include "exception/unreachable_exception.h"
 #ifdef DEBUG
 #include <cassert>
 #endif
@@ -75,7 +74,7 @@ const char *Attribute::TypeToString(Type type) {
     return "Tensor";
   default:
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     return nullptr;
 #endif

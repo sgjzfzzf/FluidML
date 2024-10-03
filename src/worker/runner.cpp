@@ -9,7 +9,6 @@
 #include "llvm/Support/Error.h"
 #include <cstdint>
 #include <cstdlib>
-#include <llvm-18/llvm/ADT/ArrayRef.h>
 #include <type_traits>
 #include <unordered_map>
 #ifdef DEBUG

@@ -4,9 +4,6 @@
 #include "mlir/Dialect/Utils/StructuredOpsUtils.h"
 #include "mlir/IR/MLIRContext.h"
 #include "utils/type.h"
-#ifdef DEBUG
-#include "exception/unreachable_exception.h"
-#endif
 
 namespace cpu_transformers {
 namespace kernel {
@@ -23,7 +20,7 @@ void DivConstScalarKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
         builder.getUnknownLoc(), builder.getF32FloatAttr(constant_));
   } else {
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     __builtin_unreachable();
 #endif
@@ -59,7 +56,7 @@ void DivConstScalarKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
           div_op = b.create<mlir::arith::DivFOp>(loc, input, constant);
         } else {
 #ifdef DEBUG
-          throw UnreachableException();
+          assert(false && "unreachable");
 #else
           __builtin_unreachable();
 #endif

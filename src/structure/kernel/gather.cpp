@@ -13,7 +13,6 @@
 #include <cstddef>
 #include <cstdint>
 #ifdef DEBUG
-#include "exception/unreachable_exception.h"
 #include <cassert>
 #endif
 
@@ -106,7 +105,7 @@ void GatherConstantDataTensorKernel::Run(mlir::OpBuilder &builder,
         mlir::DenseElementsAttr::get(data_shaped_type, llvm::ArrayRef(data));
   } else {
 #ifdef DEBUG
-    throw UnreachableException();
+    assert(false && "unreachable");
 #else
     __builtin_unreachable();
 #endif
