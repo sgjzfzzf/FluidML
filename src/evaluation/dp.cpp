@@ -1,11 +1,11 @@
 #include "evaluation/dp.h"
 #include "evaluation/eval.h"
-#include "evaluation/utils.h"
 #include "structure/flow/edge.h"
 #include "structure/flow/flow.h"
 #include "structure/flow/node.h"
 #include "structure/flow/region.h"
 #include "utils/isa.hpp"
+#include "utils/utils.h"
 #include "worker/evaluator.h"
 #include "worker/utils.h"
 #include <limits>
@@ -705,7 +705,8 @@ size_t DPOnNoOverlapFlowWoker::runOn(std::shared_ptr<flow::Edge> edge,
       const Meta &meta = input_edge->GetMeta();
       const std::vector<int64_t> &shape = meta.GetShape();
       const size_t shape_len = shape.size();
-      std::vector<std::vector<size_t>> input_layouts = GenAllOrders(shape_len);
+      std::vector<std::vector<size_t>> input_layouts =
+          utils::GenAllOrders(shape_len);
       size_t min_time_cost = std::numeric_limits<size_t>::max();
       std::vector<EdgeLayout> deps;
       for (const std::vector<size_t> &prev_layout : input_layouts) {
@@ -733,9 +734,9 @@ size_t DPOnNoOverlapFlowWoker::runOn(std::shared_ptr<flow::Edge> edge,
       const size_t lhs_shape_len = lhs_shape.size(),
                    rhs_shape_len = rhs_shape.size();
       std::vector<std::vector<size_t>> lhs_layouts =
-                                           GenAllOrders(lhs_shape_len),
+                                           utils::GenAllOrders(lhs_shape_len),
                                        rhs_layouts =
-                                           GenAllOrders(rhs_shape_len);
+                                           utils::GenAllOrders(rhs_shape_len);
       size_t min_time_cost = std::numeric_limits<size_t>::max();
       std::vector<EdgeLayout> deps;
       for (const std::vector<size_t> &lhs_layout : lhs_layouts) {

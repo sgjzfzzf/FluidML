@@ -1,5 +1,5 @@
 #include "structure/flow/region.h"
-#include "evaluation/utils.h"
+#include "utils/utils.h"
 
 namespace cpu_transformers {
 namespace flow {
@@ -26,12 +26,12 @@ const std::vector<size_t> &Region::GetLayout() const { return layout_; }
 
 std::vector<int64_t> Region::GetPhysicalShape() const {
   const std::vector<int64_t> &shape = meta_.GetShape();
-  return evaluation::GenPhysicalShape(shape, layout_);
+  return utils::GenPhysicalShape(shape, layout_);
 }
 
 std::vector<int64_t> Region::GetStrides() const {
   const std::vector<int64_t> &shape = meta_.GetShape();
-  return evaluation::GenStrides(shape, layout_);
+  return utils::GenStrides(shape, layout_);
 }
 
 void Region::SetLayout(std::vector<size_t> &&layout) { layout_ = layout; }

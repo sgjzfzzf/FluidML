@@ -1,5 +1,5 @@
-#ifndef CPU_TRANSFORMERS_EVALUATION_UTILS_H_
-#define CPU_TRANSFORMERS_EVALUATION_UTILS_H_
+#ifndef CPU_TRANSFORMERS_UTILS_H_
+#define CPU_TRANSFORMERS_UTILS_H_
 
 #include "structure/tensor/meta.h"
 #include <cstddef>
@@ -7,7 +7,7 @@
 #include <vector>
 
 namespace cpu_transformers {
-namespace evaluation {
+namespace utils {
 
 std::vector<uint8_t> FillBuffer(const Meta &meta);
 std::vector<uint8_t> RandomFillBuffer(const Meta &meta);
@@ -18,7 +18,7 @@ std::vector<int64_t> GenStrides(const std::vector<int64_t> &shape);
 std::vector<int64_t> GenStrides(const std::vector<int64_t> &shape,
                                 const std::vector<size_t> &layout);
 
-} // namespace evaluation
+} // namespace utils
 } // namespace cpu_transformers
 
 #endif

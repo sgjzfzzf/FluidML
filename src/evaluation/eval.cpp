@@ -1,8 +1,8 @@
 #include "evaluation/eval.h"
-#include "evaluation/utils.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/MLIRContext.h"
 #include "structure/kernel/kernel.h"
+#include "utils/utils.h"
 #include "worker/builder.h"
 #include "worker/lower.h"
 #include "worker/runner.h"
@@ -63,8 +63,8 @@ SingleInputKernelEval::GetTimeCost(const std::vector<size_t> &input_layout,
   worker::Lower lower(context);
   lower.Run();
   worker::Runner runner(context);
-  std::vector<uint8_t> input_buffer = FillBuffer(input_meta_),
-                       output_buffer = FillBuffer(output_meta_);
+  std::vector<uint8_t> input_buffer = utils::FillBuffer(input_meta_),
+                       output_buffer = utils::FillBuffer(output_meta_);
   const size_t time_cost =
       runner.Run({{worker::KernelBuilder::kInputKey, input_buffer.data()},
                   {worker::KernelBuilder::kOutputKey, output_buffer.data()}});
@@ -79,9 +79,9 @@ size_t SingleInputKernelEval::GetShortestTimeCost() {
   const size_t input_shape_len = input_shape.size(),
                output_shape_len = output_shape.size();
   std::vector<std::vector<size_t>> input_layouts =
-                                       GenAllOrders(input_shape_len),
+                                       utils::GenAllOrders(input_shape_len),
                                    output_layouts =
-                                       GenAllOrders(output_shape_len);
+                                       utils::GenAllOrders(output_shape_len);
   for (const std::vector<size_t> &input_layout : input_layouts) {
     for (const std::vector<size_t> &output_layout : output_layouts) {
       const size_t time_cost = GetTimeCost(input_layout, output_layout);
@@ -200,9 +200,9 @@ DoubleInputsKernelEval::GetTimeCost(const std::vector<size_t> &lhs_layout,
   worker::Lower lower(context);
   lower.Run();
   worker::Runner runner(context);
-  std::vector<uint8_t> lhs_buffer = FillBuffer(lhs_meta_),
-                       rhs_buffer = FillBuffer(rhs_meta_),
-                       output_buffer = FillBuffer(output_meta_);
+  std::vector<uint8_t> lhs_buffer = utils::FillBuffer(lhs_meta_),
+                       rhs_buffer = utils::FillBuffer(rhs_meta_),
+                       output_buffer = utils::FillBuffer(output_meta_);
   const size_t time_cost =
       runner.Run({{worker::KernelBuilder::kLhsKey, lhs_buffer.data()},
                   {worker::KernelBuilder::kRhsKey, rhs_buffer.data()},
@@ -220,10 +220,12 @@ size_t DoubleInputsKernelEval::GetShortestTimeCost() {
   const size_t lhs_shape_len = lhs_shape.size(),
                rhs_shape_len = rhs_shape.size(),
                output_shape_len = output_shape.size();
-  std::vector<std::vector<size_t>> lhs_layouts = GenAllOrders(lhs_shape_len),
-                                   rhs_layouts = GenAllOrders(rhs_shape_len),
+  std::vector<std::vector<size_t>> lhs_layouts =
+                                       utils::GenAllOrders(lhs_shape_len),
+                                   rhs_layouts =
+                                       utils::GenAllOrders(rhs_shape_len),
                                    output_layouts =
-                                       GenAllOrders(output_shape_len);
+                                       utils::GenAllOrders(output_shape_len);
   for (const std::vector<size_t> &lhs_layout : lhs_layouts) {
     for (const std::vector<size_t> &rhs_layout : rhs_layouts) {
       for (const std::vector<size_t> &output_layout : output_layouts) {

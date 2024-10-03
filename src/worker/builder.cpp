@@ -1,5 +1,4 @@
 #include "worker/builder.h"
-#include "evaluation/utils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
@@ -14,6 +13,7 @@
 #include "structure/kernel/kernel.h"
 #include "utils/isa.hpp"
 #include "utils/type.h"
+#include "utils/utils.h"
 #include "worker/scheduler.h"
 #include <cstddef>
 #include <llvm-18/llvm/ADT/ArrayRef.h>
@@ -216,9 +216,9 @@ void KernelBuilder::RunOnSingleInputWithoutBuffer(
   const std::vector<int64_t> &input_shape = input_meta.GetShape(),
                              &output_shape = output_meta.GetShape();
   std::vector<int64_t> input_strides =
-                           evaluation::GenStrides(input_shape, input_layout),
+                           utils::GenStrides(input_shape, input_layout),
                        output_strides =
-                           evaluation::GenStrides(output_shape, output_layout);
+                           utils::GenStrides(output_shape, output_layout);
   mlir::StridedLayoutAttr input_strided_layout = mlir::StridedLayoutAttr::get(
                               &mlir_context, 0, input_strides),
                           output_strided_layout = mlir::StridedLayoutAttr::get(
@@ -290,9 +290,9 @@ void KernelBuilder::RunOnSingleInputWithBuffer(
   const std::vector<int64_t> &input_shape = input_meta.GetShape(),
                              &output_shape = output_meta.GetShape();
   std::vector<int64_t> input_strides =
-                           evaluation::GenStrides(input_shape, input_layout),
+                           utils::GenStrides(input_shape, input_layout),
                        output_strides =
-                           evaluation::GenStrides(output_shape, output_layout);
+                           utils::GenStrides(output_shape, output_layout);
   mlir::StridedLayoutAttr input_strided_layout = mlir::StridedLayoutAttr::get(
                               &mlir_context, 0, input_strides),
                           output_strided_layout = mlir::StridedLayoutAttr::get(
@@ -377,12 +377,10 @@ void KernelBuilder::RunOnDoubleInputsWithoutBuffer(
   const std::vector<int64_t> &lhs_shape = lhs_meta.GetShape(),
                              &rhs_shape = rhs_meta.GetShape(),
                              &output_shape = output_meta.GetShape();
-  std::vector<int64_t> lhs_strides =
-                           evaluation::GenStrides(lhs_shape, lhs_layout),
-                       rhs_strides =
-                           evaluation::GenStrides(rhs_shape, rhs_layout),
+  std::vector<int64_t> lhs_strides = utils::GenStrides(lhs_shape, lhs_layout),
+                       rhs_strides = utils::GenStrides(rhs_shape, rhs_layout),
                        output_strides =
-                           evaluation::GenStrides(output_shape, output_layout);
+                           utils::GenStrides(output_shape, output_layout);
   mlir::StridedLayoutAttr lhs_strided_layout = mlir::StridedLayoutAttr::get(
                               &mlir_context, 0, lhs_strides),
                           rhs_strided_layout = mlir::StridedLayoutAttr::get(

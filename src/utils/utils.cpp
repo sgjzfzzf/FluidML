@@ -1,11 +1,11 @@
-#include "evaluation/utils.h"
+#include "utils/utils.h"
 #include <random>
 #ifdef DEBUG
 #include <cassert>
 #endif
 
 namespace cpu_transformers {
-namespace evaluation {
+namespace utils {
 
 std::vector<uint8_t> FillBuffer(const Meta &meta) {
   return std::vector<uint8_t>(meta.GetSize(), 0);
@@ -79,5 +79,5 @@ std::vector<int64_t> GenStrides(const std::vector<int64_t> &shape,
   return strides;
 }
 
-} // namespace evaluation
+} // namespace utils
 } // namespace cpu_transformers
