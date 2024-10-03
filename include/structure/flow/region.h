@@ -3,32 +3,45 @@
 
 #include "structure/flow/object.h"
 #include "structure/tensor/meta.h"
+#include "structure/tensor/tensor.h"
 #include <string>
 
 namespace cpu_transformers {
 namespace flow {
 class Region {
 public:
-  Region(std::string &&name, Meta &&meta);
-  Region(std::string &&name, Meta &&meta, std::vector<size_t> &&layout);
+  Region(std::string &&name, std::vector<size_t> &&layout);
   Region(const Region &region) = delete;
   Region(Region &&region) = default;
   virtual ~Region() = default;
   const std::string &GetName() const;
-  const Meta &GetMeta() const;
+  virtual const Meta &GetMeta() const = 0;
   const std::vector<size_t> &GetLayout() const;
   std::vector<int64_t> GetPhysicalShape() const;
   std::vector<int64_t> GetStrides() const;
   void SetLayout(std::vector<size_t> &&layout);
   virtual bool NeedMemoryAllocation() const = 0;
 
-private:
+protected:
+  std::vector<int64_t> getDefaultLayout() const;
   std::string name_;
-  Meta meta_;
   std::vector<size_t> layout_;
 };
 
-class InnerRegion : public Region {
+class VariableRegion : public Region {
+public:
+  VariableRegion(std::string &&name, Meta &&meta);
+  VariableRegion(const VariableRegion &region) = delete;
+  VariableRegion(VariableRegion &&region) = default;
+  virtual ~VariableRegion() = default;
+  const Meta &GetMeta() const override;
+  bool NeedMemoryAllocation() const override = 0;
+
+protected:
+  Meta meta_;
+};
+
+class InnerRegion : public VariableRegion {
 public:
   InnerRegion(std::string &&name, Meta &&meta);
   InnerRegion(const InnerRegion &region) = delete;
@@ -37,7 +50,7 @@ public:
   bool NeedMemoryAllocation() const override;
 };
 
-class InterfaceRegion : public Region {
+class InterfaceRegion : public VariableRegion {
 public:
   InterfaceRegion(std::string &&name, Meta &&meta);
   InterfaceRegion(const InterfaceRegion &region) = delete;
@@ -60,6 +73,19 @@ public:
   OutputRegion(const OutputRegion &region) = delete;
   OutputRegion(OutputRegion &&region) = default;
   virtual ~OutputRegion() = default;
+};
+
+class ConstantRegion : public Region {
+public:
+  ConstantRegion(std::string &&name, Tensor &&tensor);
+  ConstantRegion(const ConstantRegion &region) = delete;
+  ConstantRegion(ConstantRegion &&region) = default;
+  virtual ~ConstantRegion() = default;
+  const Meta &GetMeta() const override;
+  bool NeedMemoryAllocation() const override;
+
+private:
+  Tensor constant_;
 };
 
 } // namespace flow

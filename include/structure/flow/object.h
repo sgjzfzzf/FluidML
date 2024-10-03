@@ -66,6 +66,7 @@ class InnerRegion;
 class InterfaceRegion;
 class InputRegion;
 class OutputRegion;
+class ConstantRegion;
 
 class Sequence;
 

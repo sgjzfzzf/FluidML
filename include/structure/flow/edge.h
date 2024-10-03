@@ -81,6 +81,14 @@ public:
   virtual ~OutputEdge() = default;
 };
 
+class ConstantEdge : public OwnToEdge {
+public:
+  ConstantEdge(std::shared_ptr<Region> &&region, std::shared_ptr<Node> &&to);
+  ConstantEdge(const ConstantEdge &edge) = delete;
+  ConstantEdge(ConstantEdge &&edge) = default;
+  virtual ~ConstantEdge() = default;
+};
+
 } // namespace flow
 } // namespace cpu_transformers
 

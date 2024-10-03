@@ -1,5 +1,6 @@
 #include "structure/flow/edge.h"
 #include "structure/flow/region.h"
+#include <memory>
 
 namespace cpu_transformers {
 namespace flow {
@@ -49,6 +50,10 @@ OutputEdge::OutputEdge(std::shared_ptr<Region> &&region,
                        std::shared_ptr<Node> &&from)
     : Edge(std::move(region)), InterfaceEdge(std::move(region)),
       OwnFromEdge(std::move(region), std::move(from)) {}
+
+ConstantEdge::ConstantEdge(std::shared_ptr<Region> &&region,
+                           std::shared_ptr<Node> &&to)
+    : Edge(std::move(region)), OwnToEdge(std::move(region), std::move(to)) {}
 
 } // namespace flow
 } // namespace cpu_transformers
