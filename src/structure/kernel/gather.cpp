@@ -100,7 +100,7 @@ void GatherConstantDataTensorKernel::Run(mlir::OpBuilder &builder,
   mlir::ShapedType data_shaped_type =
       mlir::RankedTensorType::get(data_shape, mlir::FloatType::getF32(context));
   mlir::DenseElementsAttr elements;
-  if (data_.GetType() == Type::FLOAT32) {
+  if (data_.GetType() == Type::kFloat32) {
     llvm::SmallVector<float32_t> data(data_ref.begin(), data_ref.end());
     elements =
         mlir::DenseElementsAttr::get(data_shaped_type, llvm::ArrayRef(data));

@@ -28,13 +28,13 @@ TEST(NodeTest, AddTest0) {
   ASSERT_EQ(froms.size(), 2);
   std::vector<std::shared_ptr<Edge>> to = graph.GetNodeTo(*add);
   ASSERT_EQ(to.size(), 1);
-  ASSERT_EQ(input0->GetType(), Type::FLOAT32);
+  ASSERT_EQ(input0->GetType(), Type::kFloat32);
   const std::vector<int64_t> &input0_shape = input0->GetShape();
   ASSERT_EQ(input0_shape.size(), 3);
   ASSERT_EQ(input0_shape[0], 1);
   ASSERT_EQ(input0_shape[1], 128);
   ASSERT_EQ(input0_shape[2], 768);
-  ASSERT_EQ(input1->GetType(), Type::FLOAT32);
+  ASSERT_EQ(input1->GetType(), Type::kFloat32);
   const std::vector<int64_t> &input1_shape = input1->GetShape();
   ASSERT_EQ(input1_shape.size(), 3);
   ASSERT_EQ(input1_shape[0], 1);
@@ -95,8 +95,8 @@ TEST(NodeTest, CastTest) {
   ASSERT_EQ(output_shape[3], 128);
   Attribute to = cast->GetAttribute("to");
   ASSERT_EQ(to.GetType(), Attribute::Type::DataType);
-  ASSERT_EQ(to.GetDataType(), Type::FLOAT32);
-  ASSERT_NE(to.GetDataType(), Type::INT64);
+  ASSERT_EQ(to.GetDataType(), Type::kFloat32);
+  ASSERT_NE(to.GetDataType(), Type::kInt64);
 }
 
 TEST(NodeTest, ConstantOfShapeTest) {
@@ -120,7 +120,7 @@ TEST(NodeTest, ConstantOfShapeTest) {
   Attribute value = constant_of_shape->GetAttribute("value");
   ASSERT_EQ(value.GetType(), Attribute::Type::Tensor);
   const Tensor &tensor = value.GetTensor();
-  ASSERT_EQ(tensor.GetType(), Type::INT64);
+  ASSERT_EQ(tensor.GetType(), Type::kInt64);
   ASSERT_EQ(tensor.Get({0}), 1);
 }
 
@@ -142,7 +142,7 @@ TEST(NodeTest, DivTest) {
   std::shared_ptr<ConstantScalarEdge> constant_weights =
       std::dynamic_pointer_cast<ConstantScalarEdge>(weights);
   ASSERT_NE(constant_weights, nullptr);
-  ASSERT_EQ(constant_weights->GetType(), Type::FLOAT32);
+  ASSERT_EQ(constant_weights->GetType(), Type::kFloat32);
   ASSERT_EQ(constant_weights->GetValue(), 2);
 }
 
@@ -173,7 +173,7 @@ TEST(NodeTest, EqualTest) {
       std::dynamic_pointer_cast<ConstantTensorEdge>(input0);
   ASSERT_NE(input0_as_constant_tensor, nullptr);
   const Tensor &input0_tensor = input0_as_constant_tensor->GetValue();
-  ASSERT_EQ(input0_tensor.GetType(), Type::INT64);
+  ASSERT_EQ(input0_tensor.GetType(), Type::kInt64);
   ASSERT_EQ(input0_tensor.Get({0}), 1);
   ASSERT_EQ(input0_tensor.Get({1}), 128);
 }
@@ -307,21 +307,21 @@ TEST(NodeTest, MatmulTest0) {
   std::vector<std::shared_ptr<Edge>> to = graph.GetNodeTo(*matmul);
   ASSERT_EQ(to.size(), 1);
   ASSERT_EQ(output->GetName(), "output");
-  ASSERT_EQ(input0->GetType(), Type::FLOAT32);
+  ASSERT_EQ(input0->GetType(), Type::kFloat32);
   const std::vector<int64_t> &input0_shape = input0->GetShape();
   ASSERT_EQ(input0_shape.size(), 4);
   ASSERT_EQ(input0_shape[0], 1);
   ASSERT_EQ(input0_shape[1], 12);
   ASSERT_EQ(input0_shape[2], 128);
   ASSERT_EQ(input0_shape[3], 64);
-  ASSERT_EQ(input1->GetType(), Type::FLOAT32);
+  ASSERT_EQ(input1->GetType(), Type::kFloat32);
   const std::vector<int64_t> &input1_shape = input1->GetShape();
   ASSERT_EQ(input1_shape.size(), 4);
   ASSERT_EQ(input1_shape[0], 1);
   ASSERT_EQ(input1_shape[1], 12);
   ASSERT_EQ(input1_shape[2], 64);
   ASSERT_EQ(input1_shape[3], 128);
-  ASSERT_EQ(output->GetType(), Type::FLOAT32);
+  ASSERT_EQ(output->GetType(), Type::kFloat32);
   const std::vector<int64_t> &output_shape = output->GetShape();
   ASSERT_EQ(output_shape.size(), 4);
   ASSERT_EQ(output_shape[0], 1);
@@ -385,7 +385,7 @@ TEST(NodeTest, Mul1Test) {
   std::shared_ptr<ConstantScalarEdge> constant_weights =
       std::dynamic_pointer_cast<ConstantScalarEdge>(weights);
   ASSERT_NE(constant_weights, nullptr);
-  ASSERT_EQ(constant_weights->GetType(), Type::FLOAT32);
+  ASSERT_EQ(constant_weights->GetType(), Type::kFloat32);
   ASSERT_EQ(constant_weights->GetValue(), 1);
 }
 
@@ -418,7 +418,7 @@ TEST(NodeTest, SplitTest) {
       std::dynamic_pointer_cast<ConstantTensorEdge>(sizes);
   ASSERT_NE(constantSizes, nullptr);
   const Tensor &sizes_tensor = constantSizes->GetValue();
-  ASSERT_EQ(sizes_tensor.GetType(), Type::INT64);
+  ASSERT_EQ(sizes_tensor.GetType(), Type::kInt64);
   ASSERT_EQ(sizes_tensor.Get({0}), 768);
   ASSERT_EQ(sizes_tensor.Get({1}), 768);
   ASSERT_EQ(sizes_tensor.Get({2}), 768);
@@ -457,7 +457,7 @@ TEST(NodeTest, PowTest) {
   std::shared_ptr<ConstantScalarEdge> constant_exponent =
       std::dynamic_pointer_cast<ConstantScalarEdge>(exponent);
   ASSERT_NE(constant_exponent, nullptr);
-  ASSERT_EQ(constant_exponent->GetType(), Type::FLOAT32);
+  ASSERT_EQ(constant_exponent->GetType(), Type::kFloat32);
   ASSERT_EQ(constant_exponent->GetValue(), 3);
 }
 
@@ -476,7 +476,7 @@ TEST(NodeTest, ReshapeTest) {
   ASSERT_TRUE(isa<InputEdge>(data));
   ASSERT_TRUE(isa<ConstantTensorEdge>(shape));
   ASSERT_TRUE(isa<OutputEdge>(output));
-  ASSERT_EQ(shape->GetType(), Type::INT64);
+  ASSERT_EQ(shape->GetType(), Type::kInt64);
   const std::vector<int64_t> &shape_array = shape->GetShape();
   ASSERT_EQ(shape_array.size(), 1);
   ASSERT_EQ(shape_array[0], 4);
@@ -484,7 +484,7 @@ TEST(NodeTest, ReshapeTest) {
       std::dynamic_pointer_cast<ConstantTensorEdge>(shape);
   ASSERT_NE(constant_shape, nullptr);
   const Tensor &shape_tensor = constant_shape->GetValue();
-  ASSERT_EQ(shape_tensor.GetType(), Type::INT64);
+  ASSERT_EQ(shape_tensor.GetType(), Type::kInt64);
   ASSERT_EQ(shape_tensor.Get({0}), 1);
   ASSERT_EQ(shape_tensor.Get({1}), 128);
   ASSERT_EQ(shape_tensor.Get({2}), 12);

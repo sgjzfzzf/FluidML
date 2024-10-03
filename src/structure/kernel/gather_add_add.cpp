@@ -59,7 +59,7 @@ void GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel::Run(
                        add1_weight_shape, mlir::FloatType::getF32(context));
   mlir::DenseElementsAttr data_elements, add0_weight_elements,
       add1_weight_elements;
-  if (data_.GetType() == Type::FLOAT32) {
+  if (data_.GetType() == Type::kFloat32) {
     llvm::SmallVector<float32_t> data(data_ref.begin(), data_ref.end());
     data_elements =
         mlir::DenseElementsAttr::get(data_shaped_type, llvm::ArrayRef(data));
@@ -70,7 +70,7 @@ void GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel::Run(
     __builtin_unreachable();
 #endif
   }
-  if (add0_weight_.GetType() == Type::FLOAT32) {
+  if (add0_weight_.GetType() == Type::kFloat32) {
     llvm::SmallVector<float32_t> add0_weight(add0_weight_ref.begin(),
                                              add0_weight_ref.end());
     add0_weight_elements = mlir::DenseElementsAttr::get(
@@ -82,7 +82,7 @@ void GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel::Run(
     __builtin_unreachable();
 #endif
   }
-  if (add1_weight_.GetType() == Type::FLOAT32) {
+  if (add1_weight_.GetType() == Type::kFloat32) {
     llvm::SmallVector<float32_t> add1_weight(add1_weight_ref.begin(),
                                              add1_weight_ref.end());
     add1_weight_elements = mlir::DenseElementsAttr::get(

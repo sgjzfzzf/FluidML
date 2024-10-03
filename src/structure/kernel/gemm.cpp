@@ -71,7 +71,7 @@ void GemmConstantWeightsBiasKernel::Run(mlir::OpBuilder &builder,
   mlir::RankedTensorType bias_shaped_type =
       mlir::RankedTensorType::get(bias_shape, bias_type);
   mlir::DenseElementsAttr weights_elements, bias_elements;
-  if (weights_raw_type == Type::FLOAT32) {
+  if (weights_raw_type == Type::kFloat32) {
     llvm::SmallVector<float32_t> weights_data(weights_ref.begin(),
                                               weights_ref.end());
     weights_elements = mlir::DenseElementsAttr::get(
@@ -83,7 +83,7 @@ void GemmConstantWeightsBiasKernel::Run(mlir::OpBuilder &builder,
     __builtin_unreachable();
 #endif
   }
-  if (bias_raw_type == Type::FLOAT32) {
+  if (bias_raw_type == Type::kFloat32) {
     llvm::SmallVector<float32_t> bias_data(bias_ref.begin(), bias_ref.end());
     bias_elements = mlir::DenseElementsAttr::get(bias_shaped_type,
                                                  llvm::ArrayRef(bias_data));

@@ -17,8 +17,8 @@ void UnsqueezeSubLhsScalarMulRhsScalarKernel::Run(mlir::OpBuilder &builder,
                                                   mlir::Value &output) const {
 // TODO: Only support for fp32 currently
 #ifdef DEBUG
-  assert(sub_type_ == Type::FLOAT32);
-  assert(mul_type_ == Type::FLOAT32);
+  assert(sub_type_ == Type::kFloat32);
+  assert(mul_type_ == Type::kFloat32);
 #endif
   mlir::MLIRContext *context = builder.getContext();
   mlir::MemRefType output_type = mlir::cast<mlir::MemRefType>(output.getType());

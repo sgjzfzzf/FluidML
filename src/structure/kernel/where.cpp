@@ -32,9 +32,9 @@ void WhereConstantCondConstantScalarYKernel::Run(mlir::OpBuilder &builder,
   mlir::MemRefType output_type = mlir::cast<mlir::MemRefType>(output.getType());
   const size_t rank = output_type.getRank();
 #ifdef DEBUG
-  assert(cond_.GetType() == Type::BOOL);
+  assert(cond_.GetType() == Type::kBool);
   // TODO: add support for other types in the future
-  assert(type_ == Type::FLOAT32);
+  assert(type_ == Type::kFloat32);
 #endif
   mlir::RankedTensorType cond_tensor_type =
       mlir::RankedTensorType::get(cond_shape, builder.getI1Type());
@@ -89,9 +89,9 @@ void WhereConstantCondConstantTensorYKernel::Run(mlir::OpBuilder &builder,
   mlir::MemRefType output_type = mlir::cast<mlir::MemRefType>(output.getType());
   const size_t rank = output_type.getRank();
 #ifdef DEBUG
-  assert(cond_.GetType() == Type::BOOL);
+  assert(cond_.GetType() == Type::kBool);
   // TODO: add support for other types in the future
-  assert(y_.GetType() == Type::FLOAT32);
+  assert(y_.GetType() == Type::kFloat32);
 #endif
   llvm::SmallVector<mlir::APInt> cond_data;
   for (bool i : cond_ref) {

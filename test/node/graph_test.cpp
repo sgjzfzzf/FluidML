@@ -11,11 +11,11 @@ TEST(GraphTest, BasicTest) {
 
   std::unique_ptr<Graph> graph = std::make_unique<Graph>();
   ASSERT_TRUE(graph->PutEdge(std::make_shared<PureEdge>(
-      "edge0", Type::FLOAT32, std::vector<int64_t>{1, 2, 3})));
+      "edge0", Type::kFloat32, std::vector<int64_t>{1, 2, 3})));
   ASSERT_TRUE(graph->PutEdge(std::make_shared<PureEdge>(
-      "edge1", Type::FLOAT32, std::vector<int64_t>{1, 2})));
+      "edge1", Type::kFloat32, std::vector<int64_t>{1, 2})));
   ASSERT_TRUE(graph->PutEdge(std::make_shared<PureEdge>(
-      "edge2", Type::FLOAT32, std::vector<int64_t>{1})));
+      "edge2", Type::kFloat32, std::vector<int64_t>{1})));
   ASSERT_TRUE(graph->ExistEdge("edge0"));
   ASSERT_TRUE(graph->ExistEdge("edge1"));
   ASSERT_TRUE(graph->ExistEdge("edge2"));

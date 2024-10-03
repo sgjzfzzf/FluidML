@@ -7,7 +7,8 @@
 #include <cstdint>
 
 namespace cpu_transformers {
-enum class Type { UNKNOWN, BOOL, INT64, FLOAT16, FLOAT32, FLOAT64 };
+
+enum class Type { kUnknown, kBool, kInt64, kFloat16, kFloat32, kFloat64 };
 
 Type GetType(std::int32_t type);
 

@@ -1251,7 +1251,7 @@ WhereConstantCondConstantScalarYNode::WhereConstantCondConstantScalarYNode(
                                    std::move(output)),
       cond_(std::move(cond)), type_(type), y_(y) {
 #ifdef DEBUG
-  assert(cond_.GetType() == Type::BOOL);
+  assert(cond_.GetType() == Type::kBool);
   const Meta &input_meta = input_->GetMeta();
   const Meta &output_meta = output_->GetMeta();
   std::optional<Meta> broadcasted_meta_opt =
@@ -1296,7 +1296,7 @@ WhereConstantCondConstantTensorYNode::WhereConstantCondConstantTensorYNode(
                                    std::move(output)),
       cond_(std::move(cond)), y_(std::move(y)) {
 #ifdef DEBUG
-  assert(cond_.GetType() == Type::BOOL);
+  assert(cond_.GetType() == Type::kBool);
   const Meta &input_meta = input_->GetMeta();
   const Meta &output_meta = output_->GetMeta();
   assert(input_meta == cond_.GetMeta());

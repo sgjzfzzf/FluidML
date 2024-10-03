@@ -124,17 +124,17 @@ void createNode(Graph &graph, const onnx::NodeProto &nodeProto, Node::Op op) {
       }
       std::vector<float64_t> data;
       switch (type) {
-      case Type::BOOL:
+      case Type::kBool:
         data = getTensorProtoAs<bool>(tensor);
         break;
-      case Type::INT64:
+      case Type::kInt64:
         data = getTensorProtoAs<int64_t>(tensor);
         break;
-      case Type::FLOAT16:
-      case Type::FLOAT32:
+      case Type::kFloat16:
+      case Type::kFloat32:
         data = getTensorProtoAs<float32_t>(tensor);
         break;
-      case Type::FLOAT64:
+      case Type::kFloat64:
         data = getTensorProtoAs<float64_t>(tensor);
         break;
       default:
@@ -208,11 +208,11 @@ Graph Parser::Run(onnx::ModelProto &model_proto) {
 
     // If the data is short, it's stored in the initializer directly. If its
     // size is too large, it's stored in raw_data.
-    if (type == Type::BOOL) {
+    if (type == Type::kBool) {
       data = getTensorProtoAs<bool>(initializer);
-    } else if (type == Type::INT64) {
+    } else if (type == Type::kInt64) {
       data = getTensorProtoAs<int64_t>(initializer);
-    } else if (type == Type::FLOAT32) {
+    } else if (type == Type::kFloat32) {
       data = getTensorProtoAs<float32_t>(initializer);
     } else {
 #ifdef DEBUG

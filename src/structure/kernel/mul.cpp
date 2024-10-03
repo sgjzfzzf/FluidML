@@ -18,7 +18,7 @@ MulConstantScalarKernel::MulConstantScalarKernel(Type type, float64_t constant)
 void MulConstantScalarKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
                                   mlir::Value &output) const {
   mlir::Value constant;
-  if (type_ == Type::FLOAT32) {
+  if (type_ == Type::kFloat32) {
     constant = builder.create<mlir::arith::ConstantOp>(
         builder.getUnknownLoc(), builder.getF32FloatAttr(constant_));
   } else {
@@ -73,7 +73,7 @@ void MulConstantTensorKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
   mlir::RankedTensorType weight_tensor_type =
       mlir::RankedTensorType::get(weight_shape, weight_type);
   mlir::DenseElementsAttr weight_elements;
-  if (constant_.GetType() == Type::FLOAT32) {
+  if (constant_.GetType() == Type::kFloat32) {
     llvm::SmallVector<float32_t> weight_data(weight_ref.begin(),
                                              weight_ref.end());
     weight_elements = mlir::DenseElementsAttr::get(weight_tensor_type,

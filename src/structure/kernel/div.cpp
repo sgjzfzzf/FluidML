@@ -18,7 +18,7 @@ void DivConstScalarKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                                mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::Value constant;
-  if (type_ == Type::FLOAT32) {
+  if (type_ == Type::kFloat32) {
     constant = builder.create<mlir::arith::ConstantOp>(
         builder.getUnknownLoc(), builder.getF32FloatAttr(constant_));
   } else {
@@ -54,8 +54,8 @@ void DivConstScalarKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
         mlir::Value input = inputs[0];
         mlir::Value output = inputs[1];
         mlir::Value div_op;
-        if (input_raw_type == Type::FLOAT32 && type_ == Type::FLOAT32 &&
-            output_raw_type == Type::FLOAT32) {
+        if (input_raw_type == Type::kFloat32 && type_ == Type::kFloat32 &&
+            output_raw_type == Type::kFloat32) {
           div_op = b.create<mlir::arith::DivFOp>(loc, input, constant);
         } else {
 #ifdef DEBUG

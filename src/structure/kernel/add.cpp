@@ -23,7 +23,7 @@ void AddConstantScalarKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                                   mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::Value constant;
-  if (type_ == Type::FLOAT32) {
+  if (type_ == Type::kFloat32) {
     constant = builder.create<mlir::arith::ConstantOp>(
         builder.getUnknownLoc(), builder.getF32FloatAttr(constant_));
   } else {
@@ -55,8 +55,8 @@ void AddConstantScalarKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 #endif
         mlir::Value input = inputs[0];
         mlir::Value add_op;
-        if (input_raw_type == Type::FLOAT32 &&
-            output_raw_type == Type::FLOAT32 && type_ == Type::FLOAT32) {
+        if (input_raw_type == Type::kFloat32 &&
+            output_raw_type == Type::kFloat32 && type_ == Type::kFloat32) {
           add_op = b.create<mlir::arith::AddFOp>(loc, input, constant);
         } else {
 #ifdef DEBUG
@@ -88,7 +88,7 @@ void AddConstantTensorKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
   const Meta &tensor_meta = tensor_.GetMeta();
   const std::vector<int64_t> &tensor_shape = tensor_meta.GetShape();
   mlir::Type tensor_elem_type;
-  if (tensor_meta.GetType() == Type::FLOAT32) {
+  if (tensor_meta.GetType() == Type::kFloat32) {
     tensor_elem_type = builder.getF32Type();
   } else {
 #ifdef DEBUG
@@ -101,7 +101,7 @@ void AddConstantTensorKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
       mlir::RankedTensorType::get(tensor_shape, tensor_elem_type);
   const std::vector<float64_t> &tensor_ref = tensor_.Get();
   mlir::DenseElementsAttr elements;
-  if (tensor_meta.GetType() == Type::FLOAT32) {
+  if (tensor_meta.GetType() == Type::kFloat32) {
     llvm::SmallVector<float32_t> tensor(tensor_ref.begin(), tensor_ref.end());
     elements =
         mlir::DenseElementsAttr::get(tensor_type, llvm::ArrayRef(tensor));
@@ -145,9 +145,9 @@ void AddConstantTensorKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
         mlir::Value input = inputs[0];
         mlir::Value weight = inputs[1];
         mlir::Value add_op;
-        if (input_raw_type == Type::FLOAT32 &&
-            tensor_meta.GetType() == Type::FLOAT32 &&
-            output_raw_type == Type::FLOAT32) {
+        if (input_raw_type == Type::kFloat32 &&
+            tensor_meta.GetType() == Type::kFloat32 &&
+            output_raw_type == Type::kFloat32) {
           add_op = b.create<mlir::arith::AddFOp>(loc, input, weight);
         } else {
 #ifdef DEBUG
@@ -197,8 +197,8 @@ void AddCommonKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
         mlir::Value lhs = inputs[0];
         mlir::Value rhs = inputs[1];
         mlir::Value add_op;
-        if (lhs_raw_type == Type::FLOAT32 && rhs_raw_type == Type::FLOAT32 &&
-            output_raw_type == Type::FLOAT32) {
+        if (lhs_raw_type == Type::kFloat32 && rhs_raw_type == Type::kFloat32 &&
+            output_raw_type == Type::kFloat32) {
           add_op = b.create<mlir::arith::AddFOp>(loc, lhs, rhs);
         } else {
 #ifdef DEBUG

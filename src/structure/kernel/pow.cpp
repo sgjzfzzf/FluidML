@@ -16,7 +16,7 @@ void PowKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                     mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::Value exp;
-  if (type_ == Type::FLOAT32) {
+  if (type_ == Type::kFloat32) {
     exp = builder.create<mlir::arith::ConstantOp>(
         builder.getUnknownLoc(), builder.getF32FloatAttr(exp_));
   } else {
@@ -52,8 +52,8 @@ void PowKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
         mlir::Value input = inputs[0];
         mlir::Value output = inputs[1];
         mlir::Value pow_op;
-        if (input_raw_type == Type::FLOAT32 && type_ == Type::FLOAT32 &&
-            output_raw_type == Type::FLOAT32) {
+        if (input_raw_type == Type::kFloat32 && type_ == Type::kFloat32 &&
+            output_raw_type == Type::kFloat32) {
           pow_op = b.create<mlir::math::PowFOp>(loc, input, exp);
         } else {
 #ifdef DEBUG

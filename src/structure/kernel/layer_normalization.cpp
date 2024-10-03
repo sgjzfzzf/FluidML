@@ -49,8 +49,8 @@ void LayerNormalizationConstantScaleBiasKernel::Run(mlir::OpBuilder &builder,
   assert(rank == output_shape.size());
   assert(shape == output_shape);
   // Only support float32 for now.
-  assert(scale_meta.GetType() == Type::FLOAT32);
-  assert(bias_meta.GetType() == Type::FLOAT32);
+  assert(scale_meta.GetType() == Type::kFloat32);
+  assert(bias_meta.GetType() == Type::kFloat32);
 #endif
   llvm::SmallVector<int64_t> buffer_shape;
   llvm::SmallVector<mlir::AffineExpr> buffer_exprs, scale_exprs, bias_exprs;

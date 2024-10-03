@@ -17,7 +17,7 @@ void SubConstantScalarLhsKernel::Run(mlir::OpBuilder &builder,
                                      mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::Value value;
-  if (type_ == Type::FLOAT32) {
+  if (type_ == Type::kFloat32) {
     value = builder.create<mlir::arith::ConstantOp>(
         builder.getUnknownLoc(), builder.getF32FloatAttr(value_));
   } else {
@@ -53,8 +53,8 @@ void SubConstantScalarLhsKernel::Run(mlir::OpBuilder &builder,
         mlir::Value input = inputs[0];
         mlir::Value output = inputs[1];
         mlir::Value sub_op;
-        if (input_raw_type == Type::FLOAT32 && type_ == Type::FLOAT32 &&
-            output_raw_type == Type::FLOAT32) {
+        if (input_raw_type == Type::kFloat32 && type_ == Type::kFloat32 &&
+            output_raw_type == Type::kFloat32) {
           sub_op = b.create<mlir::arith::SubFOp>(loc, value, input);
         } else {
 #ifdef DEBUG

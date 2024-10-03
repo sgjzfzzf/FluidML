@@ -25,7 +25,7 @@ void AddDivErfAddMulMulKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                                    mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::Type add0_weight_type;
-  if (add0_weight_.GetType() == Type::FLOAT32) {
+  if (add0_weight_.GetType() == Type::kFloat32) {
     add0_weight_type = mlir::FloatType::getF32(context);
   } else {
 #ifdef DEBUG
@@ -44,7 +44,7 @@ void AddDivErfAddMulMulKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
       mlir::RankedTensorType::get(add0_weight_.GetShape(), add0_weight_type);
   const std::vector<float64_t> &add0_weight_data = add0_weight_.Get();
   mlir::DenseElementsAttr add0_weight_elements;
-  if (add0_weight_.GetType() == Type::FLOAT32) {
+  if (add0_weight_.GetType() == Type::kFloat32) {
     llvm::SmallVector<float32_t> add0_weight(add0_weight_data.begin(),
                                              add0_weight_data.end());
     add0_weight_elements = mlir::DenseElementsAttr::get(
@@ -63,7 +63,7 @@ void AddDivErfAddMulMulKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
   mlir::Value add0_weight_ref = builder.create<mlir::bufferization::ToMemrefOp>(
       builder.getUnknownLoc(), add0_weight_memref_type, add0_weight);
   mlir::Type div_type;
-  if (div_type_ == Type::FLOAT32) {
+  if (div_type_ == Type::kFloat32) {
     div_type = builder.getF32Type();
   } else {
 #ifdef DEBUG
@@ -75,7 +75,7 @@ void AddDivErfAddMulMulKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
   mlir::Value div_weight = builder.create<mlir::arith::ConstantOp>(
       builder.getUnknownLoc(), builder.getFloatAttr(div_type, div_weight_));
   mlir::Type add1_type;
-  if (add1_type_ == Type::FLOAT32) {
+  if (add1_type_ == Type::kFloat32) {
     add1_type = builder.getF32Type();
   } else {
 #ifdef DEBUG
@@ -87,7 +87,7 @@ void AddDivErfAddMulMulKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
   mlir::Value add1_weight = builder.create<mlir::arith::ConstantOp>(
       builder.getUnknownLoc(), builder.getFloatAttr(add1_type, add1_weight_));
   mlir::Type mul1_type;
-  if (mul1_type_ == Type::FLOAT32) {
+  if (mul1_type_ == Type::kFloat32) {
     mul1_type = builder.getF32Type();
   } else {
 #ifdef DEBUG
