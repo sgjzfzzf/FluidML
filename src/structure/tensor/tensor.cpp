@@ -32,11 +32,11 @@ Tensor::Tensor(Type type, std::vector<int64_t> &&shape,
 const std::vector<float64_t> &Tensor::Get() const { return data_; }
 
 float64_t &Tensor::Get(const std::vector<size_t> &indices) {
-  return const_cast<float64_t &>(GetImpl(indices));
+  return const_cast<float64_t &>(getImpl(indices));
 }
 
 const float64_t &Tensor::Get(const std::vector<size_t> &indices) const {
-  return GetImpl(indices);
+  return getImpl(indices);
 }
 
 const Meta &Tensor::GetMeta() const { return meta_; }
@@ -53,7 +53,7 @@ bool operator==(const Tensor &lhs, const Tensor &rhs) {
 
 bool operator!=(const Tensor &lhs, const Tensor &rhs) { return !(lhs == rhs); }
 
-const float64_t &Tensor::GetImpl(const std::vector<size_t> &indices) const {
+const float64_t &Tensor::getImpl(const std::vector<size_t> &indices) const {
   int64_t index = 0;
   const std::vector<int64_t> &shape = meta_.GetShape();
   for (int64_t i = 0; i < indices.size(); ++i) {

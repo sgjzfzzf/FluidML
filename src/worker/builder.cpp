@@ -2,15 +2,18 @@
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
+#include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinAttributeInterfaces.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/MLIRContext.h"
+#include "mlir/IR/SymbolTable.h"
 #include "mlir/IR/Verifier.h"
 #include "structure/context/attr.h"
 #include "structure/flow/node.h"
 #include "structure/flow/region.h"
 #include "structure/kernel/kernel.h"
+#include "utils/float.h"
 #include "utils/isa.hpp"
 #include "utils/type.h"
 #include "utils/utils.h"
@@ -47,15 +50,17 @@ void GeneralBuilder::Run(const flow::Sequence &sequence,
       sequence.GetRegions();
   std::vector<std::shared_ptr<flow::InterfaceRegion>> interface_regions;
   std::vector<std::shared_ptr<flow::InnerRegion>> inner_regions;
-  size_t interface_regions_num = 0;
+  std::vector<std::shared_ptr<flow::ConstantRegion>> constant_regions;
   for (std::shared_ptr<flow::Region> region : regions) {
     if (std::shared_ptr<flow::InterfaceRegion> interface_region =
             std::dynamic_pointer_cast<flow::InterfaceRegion>(region)) {
-      ++interface_regions_num;
       interface_regions.push_back(std::move(interface_region));
     } else if (std::shared_ptr<flow::InnerRegion> inner_region =
                    std::dynamic_pointer_cast<flow::InnerRegion>(region)) {
       inner_regions.push_back(std::move(inner_region));
+    } else if (std::shared_ptr<flow::ConstantRegion> constant_region =
+                   std::dynamic_pointer_cast<flow::ConstantRegion>(region)) {
+      constant_regions.push_back(std::move(constant_region));
     } else {
 #ifdef DEBUG
       assert(false && "unreachable");
@@ -64,6 +69,8 @@ void GeneralBuilder::Run(const flow::Sequence &sequence,
 #endif
     }
   }
+  const size_t interface_regions_num = interface_regions.size();
+  mlir::SymbolTable sym_table(*module);
   // For the inputs, the first element is the buffer, and the followings are
   // the input and output buffers.
   llvm::SmallVector<mlir::Type> input_types;
@@ -150,6 +157,52 @@ void GeneralBuilder::Run(const flow::Sequence &sequence,
                         builder.getUnknownLoc(), strided_memref_type, view_op,
                         0, shape, strides);
     symbol_table.insert({std::move(name), std::move(reinterpret_cast_op)});
+  }
+  // Create `memref.global` for the constant regions and put the corresponding
+  // `memref.get_global` into the symbol table.
+  for (std::shared_ptr<flow::ConstantRegion> constant_region :
+       constant_regions) {
+    std::string name = constant_region->GetName();
+    const Tensor &tensor = constant_region->GetTensor();
+    const std::vector<int64_t> &shape = tensor.GetShape();
+    const std::vector<float64_t> &buffer = tensor.Get();
+    Type type = tensor.GetType();
+    mlir::OpBuilder::InsertPoint ip = builder.saveInsertionPoint();
+    builder.setInsertionPoint(*module);
+    mlir::MemRefType memref_type;
+    if (type == Type::kFloat32) {
+      memref_type = mlir::MemRefType::get(shape, builder.getF32Type());
+      mlir::RankedTensorType tensor_type =
+          mlir::RankedTensorType::get(shape, builder.getF32Type());
+      llvm::SmallVector<float32_t> data(buffer.begin(), buffer.end());
+      mlir::DenseElementsAttr elements =
+          mlir::DenseElementsAttr::get(tensor_type, llvm::ArrayRef(data));
+      mlir::memref::GlobalOp global_op = builder.create<mlir::memref::GlobalOp>(
+          builder.getUnknownLoc(), name, builder.getStringAttr("private"),
+          memref_type, elements, true, mlir::IntegerAttr());
+      sym_table.insert(global_op);
+    } else if (type == Type::kInt64) {
+      memref_type = mlir::MemRefType::get(shape, builder.getI64Type());
+      mlir::RankedTensorType tensor_type =
+          mlir::RankedTensorType::get(shape, builder.getI64Type());
+      llvm::SmallVector<int64_t> data(buffer.begin(), buffer.end());
+      mlir::DenseElementsAttr elements =
+          mlir::DenseElementsAttr::get(tensor_type, llvm::ArrayRef(data));
+      mlir::memref::GlobalOp global_op = builder.create<mlir::memref::GlobalOp>(
+          builder.getUnknownLoc(), name, builder.getStringAttr("private"),
+          memref_type, elements, true, mlir::IntegerAttr());
+      sym_table.insert(global_op);
+    } else {
+#ifdef DEBUG
+      assert(false && "unimplemented");
+#else
+      __builtin_unreachable();
+#endif
+    }
+    builder.restoreInsertionPoint(ip);
+    mlir::Value get_op = builder.create<mlir::memref::GetGlobalOp>(
+        builder.getUnknownLoc(), memref_type, name);
+    symbol_table.insert({std::move(name), std::move(get_op)});
   }
   // Allocate memory for the nodes and put them into the symbol table.
   for (std::shared_ptr<flow::Node> node : sequence.GetNodes()) {

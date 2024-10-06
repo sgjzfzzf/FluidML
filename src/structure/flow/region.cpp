@@ -81,14 +81,15 @@ OutputRegion::OutputRegion(std::string &&name, Meta &&meta,
 
 ConstantRegion::ConstantRegion(std::string &&name, Tensor &&tensor)
     : Region(std::move(name), utils::GenDefaultLayout(tensor.GetShape())),
-      constant_(std::move(tensor)) {}
+      tensor_(std::move(tensor)) {}
 
 ConstantRegion::ConstantRegion(std::string &&name, Tensor &&tensor,
                                std::vector<size_t> &&layout)
-    : Region(std::move(name), std::move(layout)), constant_(std::move(tensor)) {
-}
+    : Region(std::move(name), std::move(layout)), tensor_(std::move(tensor)) {}
 
-const Meta &ConstantRegion::GetMeta() const { return constant_.GetMeta(); }
+const Meta &ConstantRegion::GetMeta() const { return tensor_.GetMeta(); }
+
+const Tensor &ConstantRegion::GetTensor() const { return tensor_; }
 
 bool ConstantRegion::NeedMemoryAllocation() const { return false; }
 

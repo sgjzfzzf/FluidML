@@ -27,7 +27,7 @@ public:
   friend bool operator!=(const Tensor &lhs, const Tensor &rhs);
 
 private:
-  const float64_t &GetImpl(const std::vector<size_t> &indices) const;
+  const float64_t &getImpl(const std::vector<size_t> &indices) const;
 
   Meta meta_;
   std::vector<float64_t> data_;

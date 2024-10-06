@@ -90,10 +90,11 @@ public:
   ConstantRegion(ConstantRegion &&region) = default;
   virtual ~ConstantRegion() = default;
   const Meta &GetMeta() const override;
+  const Tensor &GetTensor() const;
   bool NeedMemoryAllocation() const override;
 
 private:
-  Tensor constant_;
+  Tensor tensor_;
 };
 
 } // namespace flow

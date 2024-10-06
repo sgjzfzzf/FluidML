@@ -38,8 +38,6 @@ flow::Flow Converter::Run(const graph::Graph &graph) {
       std::shared_ptr<flow::OutputRegion> region_clone = region;
       region_clone = region;
       flow.PutRegion(std::move(region_clone));
-      std::vector<std::shared_ptr<graph::Node>> tos =
-          graph.GetEdgeTo(*output_edge);
     } else if (std::shared_ptr<graph::PureEdge> pure_edge =
                    std::dynamic_pointer_cast<graph::PureEdge>(edge)) {
       std::string name = pure_edge->GetName();
@@ -48,9 +46,14 @@ flow::Flow Converter::Run(const graph::Graph &graph) {
           std::make_shared<flow::InnerRegion>(std::move(name), std::move(meta));
       std::shared_ptr<flow::InnerRegion> region_clone = region;
       flow.PutRegion(std::move(region_clone));
-      std::shared_ptr<graph::Node> from = graph.GetEdgeFrom(*pure_edge);
-      std::vector<std::shared_ptr<graph::Node>> tos =
-          graph.GetEdgeTo(*pure_edge);
+    } else if (std::shared_ptr<graph::ConstantTensorEdge> constant_edge =
+                   std::dynamic_pointer_cast<graph::ConstantTensorEdge>(edge)) {
+      std::string name = constant_edge->GetName();
+      Tensor tensor = constant_edge->GetValue();
+      std::shared_ptr<flow::ConstantRegion> region =
+          std::make_shared<flow::ConstantRegion>(std::move(name),
+                                                 std::move(tensor));
+      flow.PutRegion(std::move(region));
     }
   }
   for (std::shared_ptr<graph::Node> node : graph.GetAllNodes()) {
@@ -180,6 +183,20 @@ flow::Flow Converter::Run(const graph::Graph &graph) {
         std::shared_ptr<flow::MemoryEdge> edge_ptr =
             std::make_shared<flow::MemoryEdge>(
                 std::move(region), std::move(from_ptr), std::move(to_ptr));
+        flow.PutEdge(std::move(edge_ptr));
+      }
+    } else if (std::shared_ptr<graph::ConstantTensorEdge> constant_edge =
+                   std::dynamic_pointer_cast<graph::ConstantTensorEdge>(edge)) {
+      std::string name = constant_edge->GetName();
+      std::vector<std::shared_ptr<graph::Node>> tos =
+          graph.GetEdgeTo(*constant_edge);
+      for (const std::shared_ptr<graph::Node> &to : tos) {
+        std::string to_name = to->GetName();
+        std::shared_ptr<flow::Node> to_ptr = flow.GetNode(to_name);
+        std::shared_ptr<flow::Region> region = flow.GetRegion(name);
+        std::shared_ptr<flow::ConstantEdge> edge_ptr =
+            std::make_shared<flow::ConstantEdge>(std::move(region),
+                                                 std::move(to_ptr));
         flow.PutEdge(std::move(edge_ptr));
       }
     }
@@ -475,11 +492,11 @@ void Converter::convertErfNode(flow::Flow &flow, const graph::Graph &graph,
 }
 
 // TODO: It only supports two formats of Gather operator:
-// 1. GatherConstantIndexScalarNode: the first input is a tensor, and the second
-// input is a scalar edge.
-// 2. GatherConstantDataTensorNode: the first input is a scalar, and the second
-// input is a tensor edge.
-// If new formats occur, the code should be updated.
+// 1. GatherConstantIndexScalarNode: the first input is a tensor, and the
+// second input is a scalar edge.
+// 2. GatherConstantDataTensorNode: the first input is a scalar, and the
+// second input is a tensor edge. If new formats occur, the code should be
+// updated.
 void Converter::convertGatherNode(flow::Flow &flow, const graph::Graph &graph,
                                   const graph::Node &node) {
 #ifdef DEBUG
