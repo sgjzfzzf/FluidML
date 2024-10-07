@@ -795,92 +795,22 @@ void Converter::convertMatMulNode(flow::Flow &flow, const graph::Graph &graph,
   assert(lhs != nullptr);
   assert(rhs != nullptr);
   assert(output != nullptr);
+  assert(isa<graph::NonConstantEdge>(output));
+  assert(isa<graph::NonConstantEdge>(lhs) || isa<graph::NonConstantEdge>(rhs));
 #endif
-  std::shared_ptr<graph::NonConstantEdge> output_as_non_constant =
-      std::dynamic_pointer_cast<graph::NonConstantEdge>(output);
+  const std::string &lhs_name = lhs->GetName(), &rhs_name = rhs->GetName(),
+                    &output_name = output->GetName();
+  std::shared_ptr<flow::Region> lhs_region = flow.GetRegion(lhs_name),
+                                rhs_region = flow.GetRegion(rhs_name),
+                                output_region = flow.GetRegion(output_name);
 #ifdef DEBUG
-  assert(output_as_non_constant != nullptr);
+  assert(lhs_region != nullptr);
+  assert(rhs_region != nullptr);
+  assert(output_region != nullptr);
 #endif
-  std::shared_ptr<flow::MatMulNode> ptr = nullptr;
-  if (std::shared_ptr<graph::ConstantTensorEdge> weight_as_constant_edge =
-          std::dynamic_pointer_cast<graph::ConstantTensorEdge>(lhs)) {
-    if (std::shared_ptr<graph::ConstantTensorEdge> rhs_as_constant_edge =
-            std::dynamic_pointer_cast<graph::ConstantTensorEdge>(rhs)) {
-// TODO: Currently, this code isn't expected to be reached, because such a case
-// is expected to be optimized by the ONNX simplifier.
-#ifdef DEBUG
-      assert(false && "unreachable");
-#else
-      __builtin_unreachable();
-#endif
-    } else if (std::shared_ptr<graph::NonConstantEdge>
-                   input_as_non_constantEdge =
-                       std::dynamic_pointer_cast<graph::NonConstantEdge>(rhs)) {
-      Tensor weight_tensor = weight_as_constant_edge->GetValue();
-      const std::string &input_name = input_as_non_constantEdge->GetName();
-      const std::string &output_name = output->GetName();
-      std::shared_ptr<flow::Region> input_region = flow.GetRegion(input_name);
-      std::shared_ptr<flow::Region> output_region = flow.GetRegion(output_name);
-#ifdef DEBUG
-      assert(input_region != nullptr);
-      assert(output_region != nullptr);
-#endif
-      ptr = std::make_shared<flow::MatMulConstantLhsNode>(
-          std::move(name), std::move(weight_tensor), std::move(input_region),
-          std::move(output_region));
-    } else {
-#ifdef DEBUG
-      assert(false && "unreachable");
-#else
-      __builtin_unreachable();
-#endif
-    }
-  } else if (std::shared_ptr<graph::NonConstantEdge> input_as_non_constantEdge =
-                 std::dynamic_pointer_cast<graph::NonConstantEdge>(lhs)) {
-    if (std::shared_ptr<graph::ConstantTensorEdge> weight_as_constant_edge =
-            std::dynamic_pointer_cast<graph::ConstantTensorEdge>(rhs)) {
-      Tensor weight_tensor = weight_as_constant_edge->GetValue();
-      const std::string &input_name = input_as_non_constantEdge->GetName();
-      const std::string &output_name = output->GetName();
-      std::shared_ptr<flow::Region> input_region = flow.GetRegion(input_name);
-      std::shared_ptr<flow::Region> output_region = flow.GetRegion(output_name);
-#ifdef DEBUG
-      assert(input_region != nullptr);
-      assert(output_region != nullptr);
-#endif
-      ptr = std::make_shared<flow::MatMulConstantRhsNode>(
-          std::move(name), std::move(weight_tensor), std::move(input_region),
-          std::move(output_region));
-    } else if (std::shared_ptr<graph::NonConstantEdge> rhs_as_non_constantEdge =
-                   std::dynamic_pointer_cast<graph::NonConstantEdge>(rhs)) {
-      const std::string &lhs_name = input_as_non_constantEdge->GetName();
-      const std::string &rhs_name = rhs_as_non_constantEdge->GetName();
-      const std::string &output_name = output->GetName();
-      std::shared_ptr<flow::Region> lhs_region = flow.GetRegion(lhs_name);
-      std::shared_ptr<flow::Region> rhs_region = flow.GetRegion(rhs_name);
-      std::shared_ptr<flow::Region> output_region = flow.GetRegion(output_name);
-#ifdef DEBUG
-      assert(lhs_region != nullptr);
-      assert(rhs_region != nullptr);
-      assert(output_region != nullptr);
-#endif
-      ptr = std::make_shared<flow::MatMulCommonNode>(
-          std::move(name), std::move(lhs_region), std::move(rhs_region),
-          std::move(output_region));
-    } else {
-#ifdef DEBUG
-      assert(false && "unreachable");
-#else
-      __builtin_unreachable();
-#endif
-    }
-  } else {
-#ifdef DEBUG
-    assert(false && "unreachable");
-#else
-    __builtin_unreachable();
-#endif
-  }
+  std::shared_ptr<flow::MatMulNode> ptr = std::make_shared<flow::MatMulNode>(
+      std::move(name), std::move(lhs_region), std::move(rhs_region),
+      std::move(output_region));
   flow.PutNode(std::move(ptr));
 }
 

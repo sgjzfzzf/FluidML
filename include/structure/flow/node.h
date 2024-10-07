@@ -453,62 +453,16 @@ private:
   const Tensor bias_;
 };
 
-class MatMulNode : virtual public Node {
+class MatMulNode : public DoubleInputsWithoutBufferNode {
 public:
-  MatMulNode(std::string &&name);
+  MatMulNode(std::string &&name, std::shared_ptr<Region> &&lhs,
+             std::shared_ptr<Region> &&rhs, std::shared_ptr<Region> &&output);
   MatMulNode(const MatMulNode &node) = delete;
   MatMulNode(MatMulNode &&node) = default;
   virtual ~MatMulNode() = default;
-};
-
-class MatMulConstantLhsNode : public MatMulNode,
-                              public SingleInputWithoutBufferNode {
-public:
-  MatMulConstantLhsNode(std::string &&name, Tensor &&weight,
-                        std::shared_ptr<Region> &&input,
-                        std::shared_ptr<Region> &&output);
-  MatMulConstantLhsNode(const MatMulConstantLhsNode &node) = delete;
-  MatMulConstantLhsNode(MatMulConstantLhsNode &&node) = default;
-  virtual ~MatMulConstantLhsNode() = default;
-  virtual std::shared_ptr<SingleInputWithoutBufferNode>
-  CloneAsSingleInputWithoutBufferNode() const override;
-  std::shared_ptr<MatMulConstantLhsNode> Clone() const;
-  const Tensor &GetWeight() const noexcept;
-
-private:
-  const Tensor weight_;
-};
-
-class MatMulConstantRhsNode : public MatMulNode,
-                              public SingleInputWithoutBufferNode {
-public:
-  MatMulConstantRhsNode(std::string &&name, Tensor &&weight,
-                        std::shared_ptr<Region> &&input,
-                        std::shared_ptr<Region> &&output);
-  MatMulConstantRhsNode(const MatMulConstantRhsNode &node) = delete;
-  MatMulConstantRhsNode(MatMulConstantRhsNode &&node) = default;
-  virtual ~MatMulConstantRhsNode() = default;
-  virtual std::shared_ptr<SingleInputWithoutBufferNode>
-  CloneAsSingleInputWithoutBufferNode() const override;
-  std::shared_ptr<MatMulConstantRhsNode> Clone() const;
-  const Tensor &GetWeight() const noexcept;
-
-private:
-  const Tensor weight_;
-};
-
-class MatMulCommonNode : public MatMulNode,
-                         public DoubleInputsWithoutBufferNode {
-public:
-  MatMulCommonNode(std::string &&name, std::shared_ptr<Region> &&lhs,
-                   std::shared_ptr<Region> &&rhs,
-                   std::shared_ptr<Region> &&output);
-  MatMulCommonNode(const MatMulCommonNode &node) = delete;
-  MatMulCommonNode(MatMulCommonNode &&node) = default;
-  virtual ~MatMulCommonNode() = default;
   virtual std::shared_ptr<DoubleInputsWithoutBufferNode>
   CloneAsDoubleInputsWithoutBufferNode() const override;
-  std::shared_ptr<MatMulCommonNode> Clone() const;
+  std::shared_ptr<MatMulNode> Clone() const;
 };
 
 class MulNode : virtual public Node {

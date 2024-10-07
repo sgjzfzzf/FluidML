@@ -664,111 +664,10 @@ LayerNormalizationConstantScaleBiasNode::GetBias() const noexcept {
   return bias_;
 }
 
-MatMulNode::MatMulNode(std::string &&name) : Node(std::move(name)) {}
-
-MatMulConstantLhsNode::MatMulConstantLhsNode(std::string &&name,
-                                             Tensor &&weight,
-                                             std::shared_ptr<Region> &&input,
-                                             std::shared_ptr<Region> &&output)
-    : Node(std::move(name)), MatMulNode(std::move(name)),
-      SingleInputWithoutBufferNode(std::move(name), std::move(input),
-                                   std::move(output)),
-      weight_(std::move(weight)) {
-#ifdef DEBUG
-  const Meta &input_meta = input_->GetMeta();
-  const Meta &output_meta = output_->GetMeta();
-  const std::vector<int64_t> &weight_shape = weight_.GetShape();
-  const std::vector<int64_t> &input_shape = input_meta.GetShape();
-  const std::vector<int64_t> &output_shape = output_meta.GetShape();
-  size_t weight_shape_len = weight_shape.size();
-  size_t input_shape_len = input_shape.size();
-  size_t output_shape_len = output_shape.size();
-  assert(weight_shape_len >= 2);
-  assert(input_shape_len >= 2);
-  assert(output_shape_len >= 2);
-  size_t m = weight_shape[weight_shape_len - 2];
-  size_t k = weight_shape[weight_shape_len - 1];
-  size_t n = input_shape[input_shape_len - 1];
-  assert(input_shape[input_shape_len - 2] == k);
-  assert(output_shape[output_shape_len - 2] == m);
-  assert(output_shape[output_shape_len - 1] == n);
-  std::optional<Meta> expected_output_meta_opt = BroadcastMatMulShape(
-      weight_.GetMeta(), input_meta, output_meta.GetType());
-  assert(expected_output_meta_opt.has_value());
-  assert(*expected_output_meta_opt == output_meta);
-#endif
-}
-
-std::shared_ptr<SingleInputWithoutBufferNode>
-MatMulConstantLhsNode::CloneAsSingleInputWithoutBufferNode() const {
-  return Clone();
-}
-
-std::shared_ptr<MatMulConstantLhsNode> MatMulConstantLhsNode::Clone() const {
-  std::string name = GetName();
-  Tensor weight = GetWeight();
-  return std::make_shared<MatMulConstantLhsNode>(
-      std::move(name), std::move(weight), GetInput(), GetOutput());
-}
-
-const Tensor &MatMulConstantLhsNode::GetWeight() const noexcept {
-  return weight_;
-}
-
-MatMulConstantRhsNode::MatMulConstantRhsNode(std::string &&name,
-                                             Tensor &&weight,
-                                             std::shared_ptr<Region> &&input,
-                                             std::shared_ptr<Region> &&output)
-    : Node(std::move(name)), MatMulNode(std::move(name)),
-      SingleInputWithoutBufferNode(std::move(name), std::move(input),
-                                   std::move(output)),
-      weight_(std::move(weight)) {
-#ifdef DEBUG
-  const Meta &lhs_meta = input_->GetMeta();
-  const Meta &output_meta = output_->GetMeta();
-  const std::vector<int64_t> &lhs_shape = lhs_meta.GetShape();
-  const std::vector<int64_t> &rhs_shape = weight_.GetShape();
-  const std::vector<int64_t> &output_shape = output_meta.GetShape();
-  size_t lhs_shapeLen = lhs_shape.size();
-  size_t rhs_shape_len = rhs_shape.size();
-  size_t output_shape_len = output_shape.size();
-  assert(lhs_shapeLen >= 2);
-  assert(rhs_shape_len >= 2);
-  assert(output_shape_len >= 2);
-  size_t m = lhs_shape[lhs_shapeLen - 2];
-  size_t k = lhs_shape[lhs_shapeLen - 1];
-  size_t n = rhs_shape[rhs_shape_len - 1];
-  assert(rhs_shape[rhs_shape_len - 2] == k);
-  assert(output_shape[output_shape_len - 2] == m);
-  assert(output_shape[output_shape_len - 1] == n);
-  std::optional<Meta> expected_output_meta_opt =
-      BroadcastMatMulShape(lhs_meta, weight_.GetMeta(), output_meta.GetType());
-  assert(expected_output_meta_opt.has_value());
-  assert(*expected_output_meta_opt == output_meta);
-#endif
-}
-
-std::shared_ptr<SingleInputWithoutBufferNode>
-MatMulConstantRhsNode::CloneAsSingleInputWithoutBufferNode() const {
-  return Clone();
-}
-
-std::shared_ptr<MatMulConstantRhsNode> MatMulConstantRhsNode::Clone() const {
-  std::string name = GetName();
-  Tensor weight = GetWeight();
-  return std::make_shared<MatMulConstantRhsNode>(
-      std::move(name), std::move(weight), GetInput(), GetOutput());
-}
-
-const Tensor &MatMulConstantRhsNode::GetWeight() const noexcept {
-  return weight_;
-}
-
-MatMulCommonNode::MatMulCommonNode(std::string &&name,
-                                   std::shared_ptr<Region> &&lhs,
-                                   std::shared_ptr<Region> &&rhs,
-                                   std::shared_ptr<Region> &&output)
-    : Node(std::move(name)), MatMulNode(std::move(name)),
+MatMulNode::MatMulNode(std::string &&name, std::shared_ptr<Region> &&lhs,
+                       std::shared_ptr<Region> &&rhs,
+                       std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
       DoubleInputsWithoutBufferNode(std::move(name), std::move(lhs),
                                     std::move(rhs), std::move(output)) {
 #ifdef DEBUG
@@ -798,14 +697,14 @@ MatMulCommonNode::MatMulCommonNode(std::string &&name,
 }
 
 std::shared_ptr<DoubleInputsWithoutBufferNode>
-MatMulCommonNode::CloneAsDoubleInputsWithoutBufferNode() const {
+MatMulNode::CloneAsDoubleInputsWithoutBufferNode() const {
   return Clone();
 }
 
-std::shared_ptr<MatMulCommonNode> MatMulCommonNode::Clone() const {
+std::shared_ptr<MatMulNode> MatMulNode::Clone() const {
   std::string name = GetName();
-  return std::make_shared<MatMulCommonNode>(std::move(name), GetLhs(), GetRhs(),
-                                            GetOutput());
+  return std::make_shared<MatMulNode>(std::move(name), GetLhs(), GetRhs(),
+                                      GetOutput());
 }
 
 MulNode::MulNode(std::string &&name) : Node(std::move(name)) {}

@@ -107,19 +107,9 @@ std::shared_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
     kernel =
         std::make_shared<kernel::LayerNormalizationConstantScaleBiasKernel>(
             axis, epsilon, std::move(scale), std::move(bias));
-  } else if (const flow::MatMulConstantLhsNode *ptr =
-                 dynamic_cast<const flow::MatMulConstantLhsNode *>(node)) {
-    Tensor weight = ptr->GetWeight();
-    kernel =
-        std::make_shared<kernel::MatMulConstantLhsKernel>(std::move(weight));
-  } else if (const flow::MatMulConstantRhsNode *ptr =
-                 dynamic_cast<const flow::MatMulConstantRhsNode *>(node)) {
-    Tensor weight = ptr->GetWeight();
-    kernel =
-        std::make_shared<kernel::MatMulConstantRhsKernel>(std::move(weight));
-  } else if (const flow::MatMulCommonNode *ptr =
-                 dynamic_cast<const flow::MatMulCommonNode *>(node)) {
-    kernel = std::make_shared<kernel::MatMulCommonKernel>();
+  } else if (const flow::MatMulNode *ptr =
+                 dynamic_cast<const flow::MatMulNode *>(node)) {
+    kernel = std::make_shared<kernel::MatMulKernel>();
   } else if (const flow::MulConstantScalarNode *ptr =
                  dynamic_cast<const flow::MulConstantScalarNode *>(node)) {
     Type type = ptr->GetType();
