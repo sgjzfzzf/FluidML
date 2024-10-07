@@ -21,14 +21,14 @@ void SoftmaxKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                         mlir::Value &output, mlir::Value &buffer) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::MemRefType input_memref_type =
-      mlir::cast<mlir::MemRefType>(input.getType());
-  mlir::MemRefType output_memref_type =
-      mlir::cast<mlir::MemRefType>(output.getType());
-  mlir::MemRefType buffer_memref_type =
-      mlir::cast<mlir::MemRefType>(buffer.getType());
-  llvm::ArrayRef<int64_t> input_shape = input_memref_type.getShape();
-  llvm::ArrayRef<int64_t> output_shape = output_memref_type.getShape();
-  llvm::ArrayRef<int64_t> buffer_shape = buffer_memref_type.getShape();
+                       mlir::cast<mlir::MemRefType>(input.getType()),
+                   output_memref_type =
+                       mlir::cast<mlir::MemRefType>(output.getType()),
+                   buffer_memref_type =
+                       mlir::cast<mlir::MemRefType>(buffer.getType());
+  llvm::ArrayRef<int64_t> input_shape = input_memref_type.getShape(),
+                          output_shape = output_memref_type.getShape(),
+                          buffer_shape = buffer_memref_type.getShape();
   int64_t rank = input_memref_type.getRank();
 #ifdef DEBUG
   assert(rank == output_memref_type.getRank());
@@ -58,14 +58,15 @@ void SoftmaxKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
   mlir::arith::ConstantOp c0 = builder.create<mlir::arith::ConstantOp>(
       builder.getUnknownLoc(), builder.getIndexType(), builder.getIndexAttr(0));
   mlir::Value buf = builder.create<mlir::memref::ViewOp>(
-      builder.getUnknownLoc(), sum_memref_type, buffer, c0, mlir::ValueRange{});
-  mlir::Value c0f = builder.create<mlir::arith::ConstantOp>(
-      builder.getUnknownLoc(),
-      builder.getFloatAttr(input_memref_type.getElementType(), 0));
-  mlir::Value minf32 = builder.create<mlir::arith::ConstantOp>(
-      builder.getUnknownLoc(),
-      builder.getFloatAttr(input_memref_type.getElementType(),
-                           std::numeric_limits<float>::lowest()));
+                  builder.getUnknownLoc(), sum_memref_type, buffer, c0,
+                  mlir::ValueRange{}),
+              c0f = builder.create<mlir::arith::ConstantOp>(
+                  builder.getUnknownLoc(),
+                  builder.getFloatAttr(input_memref_type.getElementType(), 0)),
+              minf32 = builder.create<mlir::arith::ConstantOp>(
+                  builder.getUnknownLoc(),
+                  builder.getFloatAttr(input_memref_type.getElementType(),
+                                       std::numeric_limits<float>::lowest()));
   builder.create<mlir::linalg::FillOp>(builder.getUnknownLoc(), minf32, buf);
   builder.create<mlir::linalg::GenericOp>(
       builder.getUnknownLoc(), mlir::TypeRange{}, mlir::ValueRange{input, buf},
@@ -76,9 +77,9 @@ void SoftmaxKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 #ifdef DEBUG
         assert(inputs.size() == 3);
 #endif
-        mlir::Value input = inputs[0], value = inputs[1];
-        mlir::Value max_op =
-            b.create<mlir::arith::MaxNumFOp>(loc, input, value);
+        mlir::Value input = inputs[0], value = inputs[1],
+                    max_op =
+                        b.create<mlir::arith::MaxNumFOp>(loc, input, value);
         b.create<mlir::linalg::YieldOp>(loc, max_op);
       });
   builder.create<mlir::linalg::GenericOp>(
@@ -89,10 +90,9 @@ void SoftmaxKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 #ifdef DEBUG
         assert(inputs.size() == 3);
 #endif
-        mlir::Value input = inputs[0];
-        mlir::Value max = inputs[1];
-        mlir::Value sub_op =
-            builder.create<mlir::arith::SubFOp>(loc, input, max);
+        mlir::Value input = inputs[0], max = inputs[1],
+                    sub_op =
+                        builder.create<mlir::arith::SubFOp>(loc, input, max);
         b.create<mlir::linalg::YieldOp>(loc, sub_op);
       });
   builder.create<mlir::linalg::GenericOp>(
@@ -103,8 +103,8 @@ void SoftmaxKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 #ifdef DEBUG
         assert(inputs.size() == 2);
 #endif
-        mlir::Value input = inputs[0];
-        mlir::Value exp_op = b.create<mlir::math::ExpOp>(loc, input);
+        mlir::Value input = inputs[0],
+                    exp_op = b.create<mlir::math::ExpOp>(loc, input);
         b.create<mlir::linalg::YieldOp>(loc, exp_op);
       });
   builder.create<mlir::linalg::FillOp>(builder.getUnknownLoc(), c0f, buf);
@@ -116,10 +116,9 @@ void SoftmaxKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 #ifdef DEBUG
         assert(inputs.size() == 2);
 #endif
-        mlir::Value input = inputs[0];
-        mlir::Value output = inputs[1];
-        mlir::Value add_op =
-            builder.create<mlir::arith::AddFOp>(loc, input, output);
+        mlir::Value input = inputs[0], output = inputs[1],
+                    add_op =
+                        builder.create<mlir::arith::AddFOp>(loc, input, output);
         b.create<mlir::linalg::YieldOp>(loc, add_op);
       });
   builder.create<mlir::linalg::GenericOp>(
@@ -130,10 +129,9 @@ void SoftmaxKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 #ifdef DEBUG
         assert(inputs.size() == 3);
 #endif
-        mlir::Value input = inputs[0];
-        mlir::Value sum = inputs[1];
-        mlir::Value div_op =
-            builder.create<mlir::arith::DivFOp>(loc, input, sum);
+        mlir::Value input = inputs[0], sum = inputs[1],
+                    div_op =
+                        builder.create<mlir::arith::DivFOp>(loc, input, sum);
         b.create<mlir::linalg::YieldOp>(loc, div_op);
       });
 }

@@ -54,13 +54,13 @@ void UnsqueezeSubLhsScalarMulRhsScalarKernel::Run(mlir::OpBuilder &builder,
 #ifdef DEBUG
         assert(inputs.size() == 2);
 #endif
-        mlir::Value input = inputs[0];
-        mlir::Value sub = b.create<mlir::arith::ConstantOp>(
-            loc, builder.getF32FloatAttr(sub_val_));
-        mlir::Value mul = b.create<mlir::arith::ConstantOp>(
-            loc, builder.getF32FloatAttr(mul_val_));
-        mlir::Value sub_op = b.create<mlir::arith::SubFOp>(loc, sub, input);
-        mlir::Value mul_op = b.create<mlir::arith::MulFOp>(loc, sub_op, mul);
+        mlir::Value input = inputs[0],
+                    sub = b.create<mlir::arith::ConstantOp>(
+                        loc, builder.getF32FloatAttr(sub_val_)),
+                    mul = b.create<mlir::arith::ConstantOp>(
+                        loc, builder.getF32FloatAttr(mul_val_)),
+                    sub_op = b.create<mlir::arith::SubFOp>(loc, sub, input),
+                    mul_op = b.create<mlir::arith::MulFOp>(loc, sub_op, mul);
         b.create<mlir::linalg::YieldOp>(loc, mul_op);
       });
 }

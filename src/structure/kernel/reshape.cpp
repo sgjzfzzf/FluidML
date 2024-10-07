@@ -15,10 +15,10 @@ namespace kernel {
 void ReshapeKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                         mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
-  mlir::MemRefType input_type = mlir::cast<mlir::MemRefType>(input.getType());
-  mlir::MemRefType output_type = mlir::cast<mlir::MemRefType>(output.getType());
-  llvm::ArrayRef<int64_t> input_shape = input_type.getShape();
-  llvm::ArrayRef<int64_t> output_shape = output_type.getShape();
+  mlir::MemRefType input_type = mlir::cast<mlir::MemRefType>(input.getType()),
+                   output_type = mlir::cast<mlir::MemRefType>(output.getType());
+  llvm::ArrayRef<int64_t> input_shape = input_type.getShape(),
+                          output_shape = output_type.getShape();
   const int64_t elem_num = input_type.getNumElements(),
                 input_rank = input_shape.size(),
                 output_rank = output_shape.size();

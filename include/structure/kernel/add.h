@@ -9,12 +9,12 @@
 namespace cpu_transformers {
 namespace kernel {
 
-class AddConstantScalarKernel : public SingleInputWithoutBufferKernel {
+class AddConstantKernel : public SingleInputWithoutBufferKernel {
 public:
-  AddConstantScalarKernel(Type type, float64_t constant);
-  AddConstantScalarKernel(const AddConstantScalarKernel &add_kernel) = delete;
-  AddConstantScalarKernel(AddConstantScalarKernel &&add_kernel) = default;
-  ~AddConstantScalarKernel() = default;
+  AddConstantKernel(Type type, float64_t constant);
+  AddConstantKernel(const AddConstantKernel &add_kernel) = delete;
+  AddConstantKernel(AddConstantKernel &&add_kernel) = default;
+  ~AddConstantKernel() = default;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,
            mlir::Value &output) const override;
 

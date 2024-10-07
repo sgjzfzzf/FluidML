@@ -41,11 +41,9 @@ void MatMulKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
 #ifdef DEBUG
         assert(inputs.size() == 3);
 #endif
-        mlir::Value lhs = inputs[0], rhs = inputs[1], output = inputs[2];
-        // TODO: potential bugs, the types of lhs, rhs, and output are not
-        // float.
-        mlir::Value mul_op = b.create<mlir::arith::MulFOp>(loc, lhs, rhs);
-        mlir::Value add_op = b.create<mlir::arith::AddFOp>(loc, mul_op, output);
+        mlir::Value lhs = inputs[0], rhs = inputs[1], output = inputs[2],
+                    mul_op = b.create<mlir::arith::MulFOp>(loc, lhs, rhs),
+                    add_op = b.create<mlir::arith::AddFOp>(loc, mul_op, output);
         b.create<mlir::linalg::YieldOp>(loc, add_op);
       });
 }

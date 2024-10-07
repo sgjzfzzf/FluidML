@@ -17,13 +17,13 @@ void ErfKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                     mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::MemRefType input_type = mlir::cast<mlir::MemRefType>(input.getType());
-  size_t rank = input_type.getRank();
+  const size_t rank = input_type.getRank();
 #ifdef DEBUG
   mlir::MemRefType output_type = mlir::cast<mlir::MemRefType>(output.getType());
   assert(rank == output_type.getRank());
 #endif
-  mlir::AffineMap input_map = builder.getMultiDimIdentityMap(rank);
-  mlir::AffineMap output_map = builder.getMultiDimIdentityMap(rank);
+  mlir::AffineMap input_map = builder.getMultiDimIdentityMap(rank),
+                  output_map = builder.getMultiDimIdentityMap(rank);
   llvm::SmallVector<mlir::AffineMap> maps = {input_map, output_map};
   llvm::SmallVector<mlir::utils::IteratorType> iterator_types;
   for (size_t i = 0; i < rank; ++i) {
@@ -36,8 +36,8 @@ void ErfKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 #ifdef DEBUG
         assert(inputs.size() == 2);
 #endif
-        mlir::Value input = inputs[0];
-        mlir::Value erf_op = b.create<mlir::math::ErfOp>(loc, input);
+        mlir::Value input = inputs[0],
+                    erf_op = b.create<mlir::math::ErfOp>(loc, input);
         b.create<mlir::linalg::YieldOp>(loc, erf_op);
       });
 }

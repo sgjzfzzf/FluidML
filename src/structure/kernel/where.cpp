@@ -26,10 +26,10 @@ void WhereConstantCondConstantScalarYKernel::Run(mlir::OpBuilder &builder,
                                                  mlir::Value &input,
                                                  mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
-  const std::vector<int64_t> cond_shape = cond_.GetShape();
-  const std::vector<float64_t> cond_ref = cond_.Get();
-  mlir::MemRefType x_type = mlir::cast<mlir::MemRefType>(input.getType());
-  mlir::MemRefType output_type = mlir::cast<mlir::MemRefType>(output.getType());
+  const std::vector<int64_t> &cond_shape = cond_.GetShape();
+  const std::vector<float64_t> &cond_ref = cond_.Get();
+  mlir::MemRefType x_type = mlir::cast<mlir::MemRefType>(input.getType()),
+                   output_type = mlir::cast<mlir::MemRefType>(output.getType());
   const size_t rank = output_type.getRank();
 #ifdef DEBUG
   assert(cond_.GetType() == Type::kBool);
@@ -47,9 +47,10 @@ void WhereConstantCondConstantScalarYKernel::Run(mlir::OpBuilder &builder,
   mlir::DenseElementsAttr cond_elements =
       mlir::DenseElementsAttr::get(cond_tensor_type, cond_data);
   mlir::arith::ConstantOp cond_value = builder.create<mlir::arith::ConstantOp>(
-      builder.getUnknownLoc(), cond_elements);
-  mlir::arith::ConstantOp y_value = builder.create<mlir::arith::ConstantOp>(
-      builder.getUnknownLoc(), builder.getF32FloatAttr(y_));
+                              builder.getUnknownLoc(), cond_elements),
+                          y_value = builder.create<mlir::arith::ConstantOp>(
+                              builder.getUnknownLoc(),
+                              builder.getF32FloatAttr(y_));
   mlir::bufferization::ToMemrefOp cond_memref =
       builder.create<mlir::bufferization::ToMemrefOp>(
           builder.getUnknownLoc(), cond_memref_type, cond_value);
@@ -66,9 +67,9 @@ void WhereConstantCondConstantScalarYKernel::Run(mlir::OpBuilder &builder,
 #ifdef DEBUG
         assert(inputs.size() == 3);
 #endif
-        mlir::Value select = inputs[0], x = inputs[1];
-        mlir::Value select_op =
-            b.create<mlir::arith::SelectOp>(loc, select, x, y_value);
+        mlir::Value select = inputs[0], x = inputs[1],
+                    select_op = b.create<mlir::arith::SelectOp>(loc, select, x,
+                                                                y_value);
         b.create<mlir::linalg::YieldOp>(loc, select_op);
       });
 }
@@ -81,12 +82,11 @@ void WhereConstantCondConstantTensorYKernel::Run(mlir::OpBuilder &builder,
                                                  mlir::Value &input,
                                                  mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
-  const std::vector<int64_t> cond_shape = cond_.GetShape();
-  const std::vector<int64_t> y_shape = y_.GetShape();
-  const std::vector<float64_t> cond_ref = cond_.Get();
-  const std::vector<float64_t> y_ref = y_.Get();
-  mlir::MemRefType x_type = mlir::cast<mlir::MemRefType>(input.getType());
-  mlir::MemRefType output_type = mlir::cast<mlir::MemRefType>(output.getType());
+  const std::vector<int64_t> &cond_shape = cond_.GetShape(),
+                             &y_shape = y_.GetShape();
+  const std::vector<float64_t> &cond_ref = cond_.Get(), &y_ref = y_.Get();
+  mlir::MemRefType x_type = mlir::cast<mlir::MemRefType>(input.getType()),
+                   output_type = mlir::cast<mlir::MemRefType>(output.getType());
   const size_t rank = output_type.getRank();
 #ifdef DEBUG
   assert(cond_.GetType() == Type::kBool);
@@ -133,9 +133,9 @@ void WhereConstantCondConstantTensorYKernel::Run(mlir::OpBuilder &builder,
 #ifdef DEBUG
         assert(inputs.size() == 4);
 #endif
-        mlir::Value select = inputs[0], x = inputs[1], y = inputs[2];
-        mlir::Value select_op =
-            b.create<mlir::arith::SelectOp>(loc, select, x, y);
+        mlir::Value select = inputs[0], x = inputs[1], y = inputs[2],
+                    select_op =
+                        b.create<mlir::arith::SelectOp>(loc, select, x, y);
         b.create<mlir::linalg::YieldOp>(loc, select_op);
       });
 }

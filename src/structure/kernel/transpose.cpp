@@ -10,14 +10,15 @@
 
 namespace cpu_transformers {
 namespace kernel {
+
 TransposeKernel::TransposeKernel(std::vector<int64_t> perms) : perms_(perms) {}
 
 void TransposeKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                           mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   int64_t rank = perms_.size();
-  mlir::MemRefType input_type = mlir::cast<mlir::MemRefType>(input.getType());
-  mlir::MemRefType output_type = mlir::cast<mlir::MemRefType>(output.getType());
+  mlir::MemRefType input_type = mlir::cast<mlir::MemRefType>(input.getType()),
+                   output_type = mlir::cast<mlir::MemRefType>(output.getType());
 #ifdef DEBUG
   assert(rank == input_type.getRank());
   assert(rank == output_type.getRank());
@@ -42,5 +43,6 @@ void TransposeKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
         b.create<mlir::linalg::YieldOp>(loc, input);
       });
 }
+
 } // namespace kernel
 } // namespace cpu_transformers

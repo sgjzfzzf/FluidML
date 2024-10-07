@@ -5,6 +5,7 @@
 
 namespace cpu_transformers {
 namespace kernel {
+
 SubConstantScalarLhsKernel::SubConstantScalarLhsKernel(Type type,
                                                        float64_t value)
     : type_(type), value_(value) {}
@@ -24,17 +25,17 @@ void SubConstantScalarLhsKernel::Run(mlir::OpBuilder &builder,
     __builtin_unreachable();
 #endif
   }
-  mlir::MemRefType input_type = mlir::cast<mlir::MemRefType>(input.getType());
-  mlir::MemRefType output_type = mlir::cast<mlir::MemRefType>(output.getType());
+  mlir::MemRefType input_type = mlir::cast<mlir::MemRefType>(input.getType()),
+                   output_type = mlir::cast<mlir::MemRefType>(output.getType());
   size_t rank = input_type.getRank();
 #ifdef DEBUG
   assert(rank == output_type.getRank());
   assert(input_type.getShape() == output_type.getShape());
 #endif
-  Type input_raw_type = GetType(input_type.getElementType());
-  Type output_raw_type = GetType(output_type.getElementType());
-  mlir::AffineMap input_map = builder.getMultiDimIdentityMap(rank);
-  mlir::AffineMap output_map = builder.getMultiDimIdentityMap(rank);
+  Type input_raw_type = GetType(input_type.getElementType()),
+       output_raw_type = GetType(output_type.getElementType());
+  mlir::AffineMap input_map = builder.getMultiDimIdentityMap(rank),
+                  output_map = builder.getMultiDimIdentityMap(rank);
   llvm::SmallVector<mlir::AffineMap> maps = {input_map, output_map};
   llvm::SmallVector<mlir::utils::IteratorType> iterator_types;
   for (size_t i = 0; i < rank; ++i) {
@@ -47,9 +48,7 @@ void SubConstantScalarLhsKernel::Run(mlir::OpBuilder &builder,
 #ifdef DEBUG
         assert(inputs.size() == 2);
 #endif
-        mlir::Value input = inputs[0];
-        mlir::Value output = inputs[1];
-        mlir::Value sub_op;
+        mlir::Value input = inputs[0], output = inputs[1], sub_op;
         if (input_raw_type == Type::kFloat32 && type_ == Type::kFloat32 &&
             output_raw_type == Type::kFloat32) {
           sub_op = b.create<mlir::arith::SubFOp>(loc, value, input);
@@ -63,5 +62,6 @@ void SubConstantScalarLhsKernel::Run(mlir::OpBuilder &builder,
         b.create<mlir::linalg::YieldOp>(loc, sub_op);
       });
 }
+
 } // namespace kernel
 } // namespace cpu_transformers

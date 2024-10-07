@@ -27,15 +27,15 @@ void GatherConstantIndexScalarKernel::Run(mlir::OpBuilder &builder,
                                           mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::MemRefType data_memref_type =
-      mlir::cast<mlir::MemRefType>(input.getType());
-  mlir::MemRefType output_memref_type =
-      mlir::cast<mlir::MemRefType>(output.getType());
-  int64_t data_rank = data_memref_type.getRank();
-  int64_t output_rank = output_memref_type.getRank();
+                       mlir::cast<mlir::MemRefType>(input.getType()),
+                   output_memref_type =
+                       mlir::cast<mlir::MemRefType>(output.getType());
+  const int64_t data_rank = data_memref_type.getRank(),
+                output_rank = output_memref_type.getRank();
 #ifdef DEBUG
   assert(data_rank - 1 == output_rank);
 #endif
-  size_t axis = axis_ >= 0 ? axis_ : data_rank + axis_;
+  const size_t axis = axis_ >= 0 ? axis_ : data_rank + axis_;
   llvm::SmallVector<mlir::AffineExpr> data_exprs;
   for (size_t i = 0; i < data_rank; ++i) {
     if (i == axis_) {
@@ -44,13 +44,13 @@ void GatherConstantIndexScalarKernel::Run(mlir::OpBuilder &builder,
 #endif
       data_exprs.push_back(mlir::getAffineConstantExpr(index_, context));
     } else {
-      size_t index = i < axis_ ? i : i - 1;
+      const size_t index = i < axis_ ? i : i - 1;
       data_exprs.push_back(mlir::getAffineDimExpr(index, context));
     }
   }
   mlir::AffineMap data_map =
-      mlir::AffineMap::get(output_rank, 0, data_exprs, context);
-  mlir::AffineMap output_map = builder.getMultiDimIdentityMap(output_rank);
+                      mlir::AffineMap::get(output_rank, 0, data_exprs, context),
+                  output_map = builder.getMultiDimIdentityMap(output_rank);
   llvm::SmallVector<mlir::AffineMap> maps = {data_map, output_map};
   llvm::SmallVector<mlir::utils::IteratorType> iterator_types;
   for (size_t i = 0; i < output_rank; ++i) {
@@ -81,11 +81,11 @@ void GatherConstantDataTensorKernel::Run(mlir::OpBuilder &builder,
       mlir::cast<mlir::MemRefType>(output.getType());
   const std::vector<int64_t> &data_shape = data_.GetShape();
   const std::vector<float64_t> &data_ref = data_.Get();
-  int64_t data_rank = data_shape.size();
-  llvm::ArrayRef<int64_t> indices_shape = indices_memref_type.getShape();
-  int64_t indices_rank = indices_memref_type.getRank();
-  llvm::ArrayRef<int64_t> output_shape = output_memref_type.getShape();
-  int64_t output_rank = output_memref_type.getRank();
+  const int64_t data_rank = data_shape.size(),
+                indices_rank = indices_memref_type.getRank(),
+                output_rank = output_memref_type.getRank();
+  llvm::ArrayRef<int64_t> indices_shape = indices_memref_type.getShape(),
+                          output_shape = output_memref_type.getShape();
 #ifdef DEBUG
   assert(data_rank + indices_rank - 1 == output_rank);
   for (size_t i = 0; i < output_rank; ++i) {

@@ -15,8 +15,7 @@ Kernel::getBroadcastAffineMaps(mlir::Builder &builder,
                                llvm::ArrayRef<mlir::MemRefType> input_types,
                                const mlir::MemRefType &output_type) {
   llvm::ArrayRef<int64_t> output_shape = output_type.getShape();
-  const size_t rank = output_shape.size();
-  const size_t size = input_types.size();
+  const size_t rank = output_shape.size(), size = input_types.size();
   llvm::SmallVector<llvm::SmallVector<mlir::AffineExpr>> exprs(size);
   for (size_t i = 0; i < rank; ++i) {
     for (size_t j = 0; j < size; ++j) {
@@ -67,8 +66,8 @@ llvm::SmallVector<mlir::AffineMap> Kernel::getBroadcastMatMulAffineMaps(
   llvm::SmallVector<mlir::AffineExpr> lhs_exprs, rhs_exprs, output_exprs;
   for (size_t i = 0; i < output_rank - 2; ++i) {
     const int64_t lhs_index = lhs_rank - output_rank + i,
-                  rhs_index = rhs_rank - output_rank + i, output_index = i;
-    const int64_t output_dim = output_shape[output_index];
+                  rhs_index = rhs_rank - output_rank + i, output_index = i,
+                  output_dim = output_shape[output_index];
     if (lhs_index >= 0) {
       const int64_t lhs_dim = lhs_shape[lhs_index];
       if (lhs_dim == output_dim) {

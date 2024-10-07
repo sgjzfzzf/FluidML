@@ -31,7 +31,7 @@ std::shared_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
           dynamic_cast<const flow::AddConstantNode *>(node)) {
     Type type = ptr->GetType();
     float64_t constant = ptr->GetValue();
-    kernel = std::make_shared<kernel::AddConstantScalarKernel>(type, constant);
+    kernel = std::make_shared<kernel::AddConstantKernel>(type, constant);
   } else if (const flow::AddCommonNode *ptr =
                  dynamic_cast<const flow::AddCommonNode *>(node)) {
     kernel = std::make_shared<kernel::AddCommonKernel>();

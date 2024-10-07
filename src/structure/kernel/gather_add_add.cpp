@@ -24,21 +24,21 @@ void GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel::Run(
                        mlir::cast<mlir::MemRefType>(input.getType()),
                    output_memref_type =
                        mlir::cast<mlir::MemRefType>(output.getType());
-  const std::vector<int64_t> &data_shape = data_.GetShape();
-  const std::vector<float64_t> &data_ref = data_.Get();
-  const std::vector<int64_t> &add0_weight_shape = add0_weight_.GetShape();
-  const std::vector<float64_t> &add0_weight_ref = add0_weight_.Get();
-  const std::vector<int64_t> &add1_weight_shape = add1_weight_.GetShape();
-  const std::vector<float64_t> &add1_weight_ref = add1_weight_.Get();
+  const std::vector<int64_t> &data_shape = data_.GetShape(),
+                             &add0_weight_shape = add0_weight_.GetShape(),
+                             &add1_weight_shape = add1_weight_.GetShape();
+  const std::vector<float64_t> &data_ref = data_.Get(),
+                               &add0_weight_ref = add0_weight_.Get(),
+                               &add1_weight_ref = add1_weight_.Get();
 #ifdef DEBUG
   int64_t data_rank = data_shape.size(),
           add0_weight_rank = add0_weight_shape.size(),
           add1_weight_rank = add1_weight_shape.size();
 #endif
-  llvm::ArrayRef<int64_t> indices_shape = input_memref_type.getShape();
-  int64_t input_rank = input_memref_type.getRank();
-  llvm::ArrayRef<int64_t> output_shape = output_memref_type.getShape();
-  int64_t output_rank = output_memref_type.getRank();
+  llvm::ArrayRef<int64_t> indices_shape = input_memref_type.getShape(),
+                          output_shape = output_memref_type.getShape();
+  const int64_t input_rank = input_memref_type.getRank(),
+                output_rank = output_memref_type.getRank();
 #ifdef DEBUG
   assert(data_rank + input_rank - 1 == output_rank);
   for (size_t i = 0; i < output_rank; ++i) {
@@ -122,9 +122,9 @@ void GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel::Run(
   for (size_t i = 0; i < input_rank; ++i) {
     input_exprs.push_back(mlir::getAffineDimExpr(i, context));
   }
-  mlir::AffineMap indices_map =
-      mlir::AffineMap::get(output_rank, 0, input_exprs, context);
-  mlir::AffineMap map = builder.getMultiDimIdentityMap(output_rank);
+  mlir::AffineMap indices_map = mlir::AffineMap::get(output_rank, 0,
+                                                     input_exprs, context),
+                  map = builder.getMultiDimIdentityMap(output_rank);
   llvm::SmallVector<mlir::AffineMap> maps = {indices_map, map, map, map};
   llvm::SmallVector<mlir::utils::IteratorType> iterator_types;
   for (size_t i = 0; i < output_rank; ++i) {
@@ -147,12 +147,12 @@ void GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel::Run(
               b.create<mlir::linalg::IndexOp>(loc, b.getIndexType(), i);
           indices_values.push_back(std::move(value_index));
         }
-        mlir::Value gather_op =
-            b.create<mlir::memref::LoadOp>(loc, data_memref, indices_values);
-        mlir::Value add0_op =
-            b.create<mlir::arith::AddFOp>(loc, gather_op, inputs[1]);
-        mlir::Value add1_op =
-            b.create<mlir::arith::AddFOp>(loc, add0_op, inputs[2]);
+        mlir::Value gather_op = b.create<mlir::memref::LoadOp>(loc, data_memref,
+                                                               indices_values),
+                    add0_op = b.create<mlir::arith::AddFOp>(loc, gather_op,
+                                                            inputs[1]),
+                    add1_op =
+                        b.create<mlir::arith::AddFOp>(loc, add0_op, inputs[2]);
         b.create<mlir::linalg::YieldOp>(loc, add1_op);
       });
 }

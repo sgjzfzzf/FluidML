@@ -34,8 +34,8 @@ void AddDivErfAddMulMulKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
     __builtin_unreachable();
 #endif
   }
-  mlir::MemRefType input_type = mlir::cast<mlir::MemRefType>(input.getType());
-  mlir::MemRefType output_type = mlir::cast<mlir::MemRefType>(output.getType());
+  mlir::MemRefType input_type = mlir::cast<mlir::MemRefType>(input.getType()),
+                   output_type = mlir::cast<mlir::MemRefType>(output.getType());
   const size_t rank = input_type.getRank();
 #ifdef DEBUG
   assert(rank == output_type.getRank());
@@ -110,20 +110,18 @@ void AddDivErfAddMulMulKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 #ifdef DEBUG
         assert(args.size() == 3);
 #endif
-        mlir::Value input = args[0];
-        mlir::Value add0_weight = args[1];
-        mlir::Value output = args[2];
-        mlir::Value add0_op =
-            b.create<mlir::arith::AddFOp>(loc, input, add0_weight);
-        mlir::Value div_op =
-            b.create<mlir::arith::DivFOp>(loc, add0_op, div_weight);
-        mlir::Value erf_op = b.create<mlir::math::ErfOp>(loc, div_op);
-        mlir::Value add1_op =
-            b.create<mlir::arith::AddFOp>(loc, erf_op, add1_weight);
-        mlir::Value mul0_op =
-            b.create<mlir::arith::MulFOp>(loc, add0_op, add1_op);
-        mlir::Value mul1_op =
-            b.create<mlir::arith::MulFOp>(loc, mul0_op, mul1_weight);
+        mlir::Value input = args[0], add0_weight = args[1], output = args[2],
+                    add0_op =
+                        b.create<mlir::arith::AddFOp>(loc, input, add0_weight),
+                    div_op =
+                        b.create<mlir::arith::DivFOp>(loc, add0_op, div_weight),
+                    erf_op = b.create<mlir::math::ErfOp>(loc, div_op),
+                    add1_op =
+                        b.create<mlir::arith::AddFOp>(loc, erf_op, add1_weight),
+                    mul0_op =
+                        b.create<mlir::arith::MulFOp>(loc, add0_op, add1_op),
+                    mul1_op = b.create<mlir::arith::MulFOp>(loc, mul0_op,
+                                                            mul1_weight);
         b.create<mlir::linalg::YieldOp>(loc, mul1_op);
       });
 }

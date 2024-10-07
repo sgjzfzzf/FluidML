@@ -32,10 +32,9 @@ void LayerNormalizationConstantScaleBiasKernel::Run(mlir::OpBuilder &builder,
                                                     mlir::Value &buffer) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::MemRefType input_type = mlir::cast<mlir::MemRefType>(input.getType());
-  const Meta &scale_meta = scale_.GetMeta();
-  const Meta &bias_meta = bias_.GetMeta();
-  const std::vector<float64_t> &scale_data = scale_.Get();
-  const std::vector<float64_t> &bias_data = bias_.Get();
+  const Meta &scale_meta = scale_.GetMeta(), &bias_meta = bias_.GetMeta();
+  const std::vector<float64_t> &scale_data = scale_.Get(),
+                               &bias_data = bias_.Get();
   mlir::MemRefType output_type = mlir::cast<mlir::MemRefType>(output.getType());
   const int64_t rank = input_type.getRank();
   llvm::ArrayRef<int64_t> shape = input_type.getShape(),
@@ -103,16 +102,17 @@ void LayerNormalizationConstantScaleBiasKernel::Run(mlir::OpBuilder &builder,
   mlir::Value scale_constant = builder.create<mlir::arith::ConstantOp>(
                   builder.getUnknownLoc(), scale_attr),
               bias_constant = builder.create<mlir::arith::ConstantOp>(
-                  builder.getUnknownLoc(), bias_attr);
-  mlir::Value c0index = builder.create<mlir::arith::ConstantOp>(
-      builder.getUnknownLoc(), builder.getIndexType(), builder.getIndexAttr(0));
-  mlir::Value c0f = builder.create<mlir::arith::ConstantOp>(
-      builder.getUnknownLoc(),
-      builder.getFloatAttr(input_type.getElementType(), 0));
-  mlir::Value c1f = builder.create<mlir::arith::ConstantOp>(
-      builder.getUnknownLoc(),
-      builder.getFloatAttr(input_type.getElementType(), 1));
-  mlir::Value buffer_view = builder.create<mlir::memref::ViewOp>(
+                  builder.getUnknownLoc(), bias_attr),
+              c0index = builder.create<mlir::arith::ConstantOp>(
+                  builder.getUnknownLoc(), builder.getIndexType(),
+                  builder.getIndexAttr(0)),
+              c0f = builder.create<mlir::arith::ConstantOp>(
+                  builder.getUnknownLoc(),
+                  builder.getFloatAttr(input_type.getElementType(), 0)),
+              c1f = builder.create<mlir::arith::ConstantOp>(
+                  builder.getUnknownLoc(),
+                  builder.getFloatAttr(input_type.getElementType(), 1)),
+              buffer_view = builder.create<mlir::memref::ViewOp>(
                   builder.getUnknownLoc(), buffer_type, buffer, c0index,
                   mlir::ValueRange{}),
               scale_view = builder.create<mlir::bufferization::ToMemrefOp>(
@@ -127,8 +127,8 @@ void LayerNormalizationConstantScaleBiasKernel::Run(mlir::OpBuilder &builder,
 #ifdef DEBUG
         assert(inputs.size() == 2);
 #endif
-        mlir::Value input = inputs[0], output = inputs[1];
-        mlir::Value add_op = b.create<mlir::arith::AddFOp>(loc, input, output);
+        mlir::Value input = inputs[0], output = inputs[1],
+                    add_op = b.create<mlir::arith::AddFOp>(loc, input, output);
         b.create<mlir::linalg::YieldOp>(loc, add_op);
       });
   builder.create<mlir::linalg::GenericOp>(
@@ -139,11 +139,11 @@ void LayerNormalizationConstantScaleBiasKernel::Run(mlir::OpBuilder &builder,
 #ifdef DEBUG
         assert(inputs.size() == 2);
 #endif
-        mlir::Value input = inputs[0];
-        mlir::Value num = b.create<mlir::arith::ConstantOp>(
-            loc, input.getType(),
-            builder.getFloatAttr(input.getType(), target_dim));
-        mlir::Value div_op = b.create<mlir::arith::DivFOp>(loc, input, num);
+        mlir::Value input = inputs[0],
+                    num = b.create<mlir::arith::ConstantOp>(
+                        loc, input.getType(),
+                        builder.getFloatAttr(input.getType(), target_dim)),
+                    div_op = b.create<mlir::arith::DivFOp>(loc, input, num);
         b.create<mlir::linalg::YieldOp>(loc, div_op);
       });
   builder.create<mlir::linalg::GenericOp>(
@@ -154,8 +154,8 @@ void LayerNormalizationConstantScaleBiasKernel::Run(mlir::OpBuilder &builder,
 #ifdef DEBUG
         assert(inputs.size() == 3);
 #endif
-        mlir::Value input = inputs[0], mean = inputs[1];
-        mlir::Value sub_op = b.create<mlir::arith::SubFOp>(loc, input, mean);
+        mlir::Value input = inputs[0], mean = inputs[1],
+                    sub_op = b.create<mlir::arith::SubFOp>(loc, input, mean);
         b.create<mlir::linalg::YieldOp>(loc, sub_op);
       });
   builder.create<mlir::linalg::FillOp>(builder.getUnknownLoc(), c0f,
@@ -168,9 +168,9 @@ void LayerNormalizationConstantScaleBiasKernel::Run(mlir::OpBuilder &builder,
 #ifdef DEBUG
         assert(inputs.size() == 2);
 #endif
-        mlir::Value input = inputs[0], output = inputs[1];
-        mlir::Value mul_op = b.create<mlir::arith::MulFOp>(loc, input, input);
-        mlir::Value add_op = b.create<mlir::arith::AddFOp>(loc, output, mul_op);
+        mlir::Value input = inputs[0], output = inputs[1],
+                    mul_op = b.create<mlir::arith::MulFOp>(loc, input, input),
+                    add_op = b.create<mlir::arith::AddFOp>(loc, output, mul_op);
         b.create<mlir::linalg::YieldOp>(loc, add_op);
       });
   builder.create<mlir::linalg::GenericOp>(
@@ -181,11 +181,11 @@ void LayerNormalizationConstantScaleBiasKernel::Run(mlir::OpBuilder &builder,
 #ifdef DEBUG
         assert(inputs.size() == 2);
 #endif
-        mlir::Value input = inputs[0];
-        mlir::Value num = b.create<mlir::arith::ConstantOp>(
-            loc, input.getType(),
-            builder.getFloatAttr(input.getType(), target_dim));
-        mlir::Value div_op = b.create<mlir::arith::DivFOp>(loc, input, num);
+        mlir::Value input = inputs[0],
+                    num = b.create<mlir::arith::ConstantOp>(
+                        loc, input.getType(),
+                        builder.getFloatAttr(input.getType(), target_dim)),
+                    div_op = b.create<mlir::arith::DivFOp>(loc, input, num);
         b.create<mlir::linalg::YieldOp>(loc, div_op);
       });
   builder.create<mlir::linalg::GenericOp>(
@@ -200,17 +200,17 @@ void LayerNormalizationConstantScaleBiasKernel::Run(mlir::OpBuilder &builder,
         assert(inputs.size() == 5);
 #endif
         mlir::Value input = inputs[0], var = inputs[1], scale = inputs[2],
-                    bias = inputs[3];
-        mlir::Value epsilon = b.create<mlir::arith::ConstantOp>(
-            loc, input.getType(),
-            builder.getFloatAttr(input.getType(), epsilon_));
-        mlir::Value add0_op = b.create<mlir::arith::AddFOp>(loc, var, epsilon);
-        mlir::Value sqrt_op = b.create<mlir::math::SqrtOp>(loc, add0_op);
-        mlir::Value div_op = b.create<mlir::arith::DivFOp>(loc, c1f, sqrt_op);
-        mlir::Value mul0_op = b.create<mlir::arith::MulFOp>(loc, input, div_op);
-        mlir::Value mul1_op =
-            b.create<mlir::arith::MulFOp>(loc, mul0_op, scale);
-        mlir::Value add1_op = b.create<mlir::arith::AddFOp>(loc, mul1_op, bias);
+                    bias = inputs[3],
+                    epsilon = b.create<mlir::arith::ConstantOp>(
+                        loc, input.getType(),
+                        builder.getFloatAttr(input.getType(), epsilon_)),
+                    add0_op = b.create<mlir::arith::AddFOp>(loc, var, epsilon),
+                    sqrt_op = b.create<mlir::math::SqrtOp>(loc, add0_op),
+                    div_op = b.create<mlir::arith::DivFOp>(loc, c1f, sqrt_op),
+                    mul0_op = b.create<mlir::arith::MulFOp>(loc, input, div_op),
+                    mul1_op =
+                        b.create<mlir::arith::MulFOp>(loc, mul0_op, scale),
+                    add1_op = b.create<mlir::arith::AddFOp>(loc, mul1_op, bias);
         b.create<mlir::linalg::YieldOp>(loc, add1_op);
       });
 }

@@ -31,23 +31,23 @@ void GemmConstantWeightsBiasKernel::Run(mlir::OpBuilder &builder,
   const int64_t input_rank = input_memref_type.getRank();
   llvm::ArrayRef<int64_t> input_shape = input_memref_type.getShape();
   Type weights_raw_type = weights_.GetType();
-  const std::vector<int64_t> &weights_shape = weights_.GetShape();
-  const std::vector<float64_t> &weights_ref = weights_.Get();
-  const int64_t weights_rank = weights_shape.size();
+  const std::vector<int64_t> &weights_shape = weights_.GetShape(),
+                             bias_shape = bias_.GetShape();
+  const std::vector<float64_t> &weights_ref = weights_.Get(),
+                               bias_ref = bias_.Get();
+  const int64_t weights_rank = weights_shape.size(),
+                bias_rank = bias_shape.size();
   Type bias_raw_type = bias_.GetType();
-  const std::vector<int64_t> &bias_shape = bias_.GetShape();
-  const std::vector<float64_t> &bias_ref = bias_.Get();
-  const int64_t bias_rank = bias_shape.size();
   mlir::MemRefType output_memref_type =
       mlir::cast<mlir::MemRefType>(output.getType());
   const int64_t output_rank = output_memref_type.getRank();
   llvm::ArrayRef<int64_t> output_shape = output_memref_type.getShape();
-  const size_t m =
-      transA_ ? input_shape[input_rank - 1] : input_shape[input_rank - 2];
-  const size_t n = transB_ ? weights_shape[weights_rank - 2]
-                           : weights_shape[weights_rank - 1];
-  const size_t k =
-      transA_ ? input_shape[input_rank - 2] : input_shape[input_rank - 1];
+  const size_t m = transA_ ? input_shape[input_rank - 1]
+                           : input_shape[input_rank - 2],
+               n = transB_ ? weights_shape[weights_rank - 2]
+                           : weights_shape[weights_rank - 1],
+               k = transA_ ? input_shape[input_rank - 2]
+                           : input_shape[input_rank - 1];
 #ifdef DEBUG
   assert(input_rank == 2);
   assert(weights_rank == 2);
@@ -55,16 +55,19 @@ void GemmConstantWeightsBiasKernel::Run(mlir::OpBuilder &builder,
   assert(output_rank == 2);
 #endif
   mlir::Value c0f = builder.create<mlir::arith::ConstantOp>(
-      builder.getUnknownLoc(),
-      builder.getFloatAttr(output_memref_type.getElementType(), 0.0));
-  mlir::Value alpha = builder.create<mlir::arith::ConstantOp>(
-      builder.getUnknownLoc(),
-      builder.getFloatAttr(output_memref_type.getElementType(), alpha_));
-  mlir::Value beta = builder.create<mlir::arith::ConstantOp>(
-      builder.getUnknownLoc(),
-      builder.getFloatAttr(output_memref_type.getElementType(), beta_));
-  mlir::Type weights_type = GetMLIRType(weights_raw_type, builder);
-  mlir::Type bias_type = GetMLIRType(bias_raw_type, builder);
+                  builder.getUnknownLoc(),
+                  builder.getFloatAttr(output_memref_type.getElementType(),
+                                       0.0)),
+              alpha = builder.create<mlir::arith::ConstantOp>(
+                  builder.getUnknownLoc(),
+                  builder.getFloatAttr(output_memref_type.getElementType(),
+                                       alpha_)),
+              beta = builder.create<mlir::arith::ConstantOp>(
+                  builder.getUnknownLoc(),
+                  builder.getFloatAttr(output_memref_type.getElementType(),
+                                       beta_));
+  mlir::Type weights_type = GetMLIRType(weights_raw_type, builder),
+             bias_type = GetMLIRType(bias_raw_type, builder);
   mlir::RankedTensorType weights_shaped_type =
       mlir::RankedTensorType::get(weights_shape, weights_type);
   mlir::RankedTensorType bias_shaped_type =
@@ -94,17 +97,17 @@ void GemmConstantWeightsBiasKernel::Run(mlir::OpBuilder &builder,
 #endif
   }
   mlir::Value weights_value = builder.create<mlir::arith::ConstantOp>(
-      builder.getUnknownLoc(), weights_elements);
-  mlir::Value bias_value = builder.create<mlir::arith::ConstantOp>(
-      builder.getUnknownLoc(), bias_elements);
-  mlir::MemRefType weights_memref_type =
-      mlir::MemRefType::get(weights_shape, weights_type, {}, 0);
-  mlir::MemRefType bias_memref_type =
-      mlir::MemRefType::get(bias_shape, bias_type, {}, 0);
+                  builder.getUnknownLoc(), weights_elements),
+              bias_value = builder.create<mlir::arith::ConstantOp>(
+                  builder.getUnknownLoc(), bias_elements);
+  mlir::MemRefType weights_memref_type = mlir::MemRefType::get(
+                       weights_shape, weights_type, {}, 0),
+                   bias_memref_type =
+                       mlir::MemRefType::get(bias_shape, bias_type, {}, 0);
   mlir::Value weights_memref = builder.create<mlir::bufferization::ToMemrefOp>(
-      builder.getUnknownLoc(), weights_memref_type, weights_value);
-  mlir::Value bias_memref = builder.create<mlir::bufferization::ToMemrefOp>(
-      builder.getUnknownLoc(), bias_memref_type, bias_value);
+                  builder.getUnknownLoc(), weights_memref_type, weights_value),
+              bias_memref = builder.create<mlir::bufferization::ToMemrefOp>(
+                  builder.getUnknownLoc(), bias_memref_type, bias_value);
   // the order of axes is m, k, n
   llvm::SmallVector<mlir::AffineExpr>
       input_affine_exprs =
@@ -174,9 +177,9 @@ void GemmConstantWeightsBiasKernel::Run(mlir::OpBuilder &builder,
 #ifdef DEBUG
         assert(inputs.size() == 3);
 #endif
-        mlir::Value input = inputs[0], weights = inputs[1], output = inputs[2];
-        mlir::Value mul_op = b.create<mlir::arith::MulFOp>(loc, input, weights);
-        mlir::Value add_op = b.create<mlir::arith::AddFOp>(loc, mul_op, output);
+        mlir::Value input = inputs[0], weights = inputs[1], output = inputs[2],
+                    mul_op = b.create<mlir::arith::MulFOp>(loc, input, weights),
+                    add_op = b.create<mlir::arith::AddFOp>(loc, mul_op, output);
         b.create<mlir::linalg::YieldOp>(loc, add_op);
       });
   builder.create<mlir::linalg::GenericOp>(
@@ -187,12 +190,12 @@ void GemmConstantWeightsBiasKernel::Run(mlir::OpBuilder &builder,
 #ifdef DEBUG
         assert(inputs.size() == 3);
 #endif
-        mlir::Value output = inputs[0], weights = inputs[1];
-        mlir::Value mul0_op =
-            b.create<mlir::arith::MulFOp>(loc, alpha, weights);
-        mlir::Value mul1_op = b.create<mlir::arith::MulFOp>(loc, beta, output);
-        mlir::Value add_op =
-            b.create<mlir::arith::AddFOp>(loc, mul0_op, mul1_op);
+        mlir::Value output = inputs[0], weights = inputs[1],
+                    mul0_op =
+                        b.create<mlir::arith::MulFOp>(loc, alpha, weights),
+                    mul1_op = b.create<mlir::arith::MulFOp>(loc, beta, output),
+                    add_op =
+                        b.create<mlir::arith::AddFOp>(loc, mul0_op, mul1_op);
         b.create<mlir::linalg::YieldOp>(loc, add_op);
       });
 }
