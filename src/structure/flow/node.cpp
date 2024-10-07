@@ -651,23 +651,12 @@ std::shared_ptr<MatMulNode> MatMulNode::Clone() const {
 MulNode::MulNode(std::string &&name) : Node(std::move(name)) {}
 
 MulConstantNode::MulConstantNode(std::string &&name,
-                                 std::shared_ptr<Region> &&input,
+                                 std::shared_ptr<Region> &&input, Type type,
+                                 float64_t value,
                                  std::shared_ptr<Region> &&output)
     : Node(std::move(name)), MulNode(std::move(name)),
       SingleInputWithoutBufferNode(std::move(name), std::move(input),
-                                   std::move(output)) {}
-
-std::shared_ptr<SingleInputWithoutBufferNode>
-MulConstantNode::CloneAsSingleInputWithoutBufferNode() const {
-  return CloneAsMulConstantNode();
-}
-
-MulConstantScalarNode::MulConstantScalarNode(std::string &&name,
-                                             std::shared_ptr<Region> &&input,
-                                             Type type, float64_t value,
-                                             std::shared_ptr<Region> &&output)
-    : Node(std::move(name)),
-      MulConstantNode(std::move(name), std::move(input), std::move(output)),
+                                   std::move(output)),
       type_(type), value_(value) {
 #ifdef DEBUG
   const Meta &input_meta = input_->GetMeta();
@@ -676,51 +665,20 @@ MulConstantScalarNode::MulConstantScalarNode(std::string &&name,
 #endif
 }
 
-std::shared_ptr<MulConstantNode>
-MulConstantScalarNode::CloneAsMulConstantNode() const {
+std::shared_ptr<SingleInputWithoutBufferNode>
+MulConstantNode::CloneAsSingleInputWithoutBufferNode() const {
   return Clone();
 }
 
-std::shared_ptr<MulConstantScalarNode> MulConstantScalarNode::Clone() const {
+std::shared_ptr<MulConstantNode> MulConstantNode::Clone() const {
   std::string name = GetName();
-  return std::make_shared<MulConstantScalarNode>(
-      std::move(name), GetInput(), GetType(), GetValue(), GetOutput());
+  return std::make_shared<MulConstantNode>(std::move(name), GetInput(),
+                                           GetType(), GetValue(), GetOutput());
 }
 
-Type MulConstantScalarNode::GetType() const noexcept { return type_; }
+Type MulConstantNode::GetType() const noexcept { return type_; }
 
-float64_t MulConstantScalarNode::GetValue() const noexcept { return value_; }
-
-MulConstantTensorNode::MulConstantTensorNode(std::string &&name,
-                                             std::shared_ptr<Region> &&input,
-                                             Tensor &&tensor,
-                                             std::shared_ptr<Region> &&output)
-    : Node(std::move(name)),
-      MulConstantNode(std::move(name), std::move(input), std::move(output)),
-      tensor_(std::move(tensor)) {
-#ifdef DEBUG
-  const Meta &input_meta = input_->GetMeta();
-  const Meta &output_meta = output_->GetMeta();
-  assert(input_meta == tensor_.GetMeta());
-  assert(input_meta == output_meta);
-#endif
-}
-
-std::shared_ptr<MulConstantNode>
-MulConstantTensorNode::CloneAsMulConstantNode() const {
-  return Clone();
-}
-
-std::shared_ptr<MulConstantTensorNode> MulConstantTensorNode::Clone() const {
-  std::string name = GetName();
-  Tensor tensor = GetTensor();
-  return std::make_shared<MulConstantTensorNode>(
-      std::move(name), GetInput(), std::move(tensor), GetOutput());
-}
-
-const Tensor &MulConstantTensorNode::GetTensor() const noexcept {
-  return tensor_;
-}
+float64_t MulConstantNode::GetValue() const noexcept { return value_; }
 
 MulCommonNode::MulCommonNode(std::string &&name, std::shared_ptr<Region> &&lhs,
                              std::shared_ptr<Region> &&rhs,

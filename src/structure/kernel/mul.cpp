@@ -1,6 +1,5 @@
 #include "structure/kernel/mul.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
-#include "mlir/Dialect/Bufferization/IR/Bufferization.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/Utils/StructuredOpsUtils.h"
 #include "mlir/IR/AffineMap.h"
@@ -9,11 +8,11 @@
 namespace cpu_transformers {
 namespace kernel {
 
-MulConstantScalarKernel::MulConstantScalarKernel(Type type, float64_t constant)
+MulConstantKernel::MulConstantKernel(Type type, float64_t constant)
     : type_(type), constant_(constant) {}
 
-void MulConstantScalarKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
-                                  mlir::Value &output) const {
+void MulConstantKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
+                            mlir::Value &output) const {
   mlir::Value constant;
   if (type_ == Type::kFloat32) {
     constant = builder.create<mlir::arith::ConstantOp>(
@@ -45,68 +44,6 @@ void MulConstantScalarKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
 #endif
         mlir::Value lhs = inputs[0];
         mlir::Value mul_op = b.create<mlir::arith::MulFOp>(loc, lhs, constant);
-        b.create<mlir::linalg::YieldOp>(loc, mul_op);
-      });
-}
-
-MulConstantTensorKernel::MulConstantTensorKernel(const Tensor &constant)
-    : constant_(constant) {}
-
-void MulConstantTensorKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
-                                  mlir::Value &output) const {
-  mlir::MemRefType input_type = mlir::cast<mlir::MemRefType>(input.getType());
-  mlir::MemRefType output_type = mlir::cast<mlir::MemRefType>(output.getType());
-  size_t rank = output_type.getRank();
-  const std::vector<int64_t> &input_shape = input_type.getShape(),
-                             &output_shape = output_type.getShape(),
-                             &weight_shape = constant_.GetShape();
-  const std::vector<float64_t> &weight_ref = constant_.Get();
-#ifdef DEBUG
-  assert(rank >= input_shape.size());
-  assert(rank >= weight_shape.size());
-  assert(rank == output_shape.size());
-#endif
-  mlir::Type weight_type = GetMLIRType(constant_.GetType(), builder);
-  mlir::RankedTensorType weight_tensor_type =
-      mlir::RankedTensorType::get(weight_shape, weight_type);
-  mlir::DenseElementsAttr weight_elements;
-  if (constant_.GetType() == Type::kFloat32) {
-    llvm::SmallVector<float32_t> weight_data(weight_ref.begin(),
-                                             weight_ref.end());
-    weight_elements = mlir::DenseElementsAttr::get(weight_tensor_type,
-                                                   llvm::ArrayRef(weight_data));
-  } else {
-#ifdef DEBUG
-    assert(false && "unreachable");
-#else
-    __builtin_unreachable();
-#endif
-  }
-  mlir::Value constant_value = builder.create<mlir::arith::ConstantOp>(
-      builder.getUnknownLoc(), weight_elements);
-  mlir::MemRefType constant_memref_type =
-      mlir::MemRefType::get(weight_shape, weight_type);
-  mlir::Value constant_buffer = builder.create<mlir::bufferization::ToMemrefOp>(
-      builder.getUnknownLoc(), constant_memref_type, constant_value);
-  llvm::SmallVector<mlir::AffineMap> maps =
-      getBroadcastAffineMaps(builder,
-                             {
-                                 input_type,
-                                 constant_memref_type,
-                             },
-                             output_type);
-  llvm::SmallVector<mlir::utils::IteratorType> iterator_types(
-      rank, mlir::utils::IteratorType::parallel);
-  builder.create<mlir::linalg::GenericOp>(
-      builder.getUnknownLoc(), mlir::TypeRange{},
-      mlir::ValueRange{input, constant_buffer}, mlir::ValueRange{output}, maps,
-      iterator_types,
-      [&](mlir::OpBuilder &b, mlir::Location loc, mlir::ValueRange inputs) {
-#ifdef DEBUG
-        assert(inputs.size() == 3);
-#endif
-        mlir::Value lhs = inputs[0], weight = inputs[1];
-        mlir::Value mul_op = b.create<mlir::arith::MulFOp>(loc, lhs, weight);
         b.create<mlir::linalg::YieldOp>(loc, mul_op);
       });
 }

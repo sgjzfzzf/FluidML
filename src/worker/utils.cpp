@@ -104,16 +104,11 @@ std::shared_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
   } else if (const flow::MatMulNode *ptr =
                  dynamic_cast<const flow::MatMulNode *>(node)) {
     kernel = std::make_shared<kernel::MatMulKernel>();
-  } else if (const flow::MulConstantScalarNode *ptr =
-                 dynamic_cast<const flow::MulConstantScalarNode *>(node)) {
+  } else if (const flow::MulConstantNode *ptr =
+                 dynamic_cast<const flow::MulConstantNode *>(node)) {
     Type type = ptr->GetType();
     float64_t constant = ptr->GetValue();
-    kernel = std::make_shared<kernel::MulConstantScalarKernel>(type, constant);
-  } else if (const flow::MulConstantTensorNode *ptr =
-                 dynamic_cast<const flow::MulConstantTensorNode *>(node)) {
-    Tensor tensor = ptr->GetTensor();
-    kernel =
-        std::make_shared<kernel::MulConstantTensorKernel>(std::move(tensor));
+    kernel = std::make_shared<kernel::MulConstantKernel>(type, constant);
   } else if (const flow::MulCommonNode *ptr =
                  dynamic_cast<const flow::MulCommonNode *>(node)) {
     kernel = std::make_shared<kernel::MulCommonKernel>();

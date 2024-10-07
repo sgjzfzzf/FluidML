@@ -445,48 +445,19 @@ public:
 class MulConstantNode : public MulNode, public SingleInputWithoutBufferNode {
 public:
   MulConstantNode(std::string &&name, std::shared_ptr<Region> &&input,
-                  std::shared_ptr<Region> &&output);
+                  Type type, float64_t value, std::shared_ptr<Region> &&output);
   MulConstantNode(const MulConstantNode &node) = delete;
   MulConstantNode(MulConstantNode &&node) = default;
   virtual ~MulConstantNode() = default;
   virtual std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
-  virtual std::shared_ptr<MulConstantNode> CloneAsMulConstantNode() const = 0;
-};
-
-class MulConstantScalarNode : public MulConstantNode {
-public:
-  MulConstantScalarNode(std::string &&name, std::shared_ptr<Region> &&input,
-                        Type type, float64_t value,
-                        std::shared_ptr<Region> &&output);
-  MulConstantScalarNode(const MulConstantScalarNode &node) = delete;
-  MulConstantScalarNode(MulConstantScalarNode &&node) = default;
-  virtual ~MulConstantScalarNode() = default;
-  virtual std::shared_ptr<MulConstantNode>
-  CloneAsMulConstantNode() const override;
-  std::shared_ptr<MulConstantScalarNode> Clone() const;
+  std::shared_ptr<MulConstantNode> Clone() const;
   Type GetType() const noexcept;
   float64_t GetValue() const noexcept;
 
 private:
   const Type type_;
   const float64_t value_;
-};
-
-class MulConstantTensorNode : public MulConstantNode {
-public:
-  MulConstantTensorNode(std::string &&name, std::shared_ptr<Region> &&input,
-                        Tensor &&tensor, std::shared_ptr<Region> &&output);
-  MulConstantTensorNode(const MulConstantTensorNode &node) = delete;
-  MulConstantTensorNode(MulConstantTensorNode &&node) = default;
-  virtual ~MulConstantTensorNode() = default;
-  virtual std::shared_ptr<MulConstantNode>
-  CloneAsMulConstantNode() const override;
-  std::shared_ptr<MulConstantTensorNode> Clone() const;
-  const Tensor &GetTensor() const noexcept;
-
-private:
-  const Tensor tensor_;
 };
 
 class MulCommonNode : public MulNode, public DoubleInputsWithoutBufferNode {

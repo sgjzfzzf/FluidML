@@ -794,67 +794,49 @@ void Converter::convertMulNode(flow::Flow &flow, const graph::Graph &graph,
   assert(inputs.size() == 2);
   assert(outputs.size() == 1);
 #endif
-  std::shared_ptr<graph::Edge> input_lhs = inputs[0];
-  std::shared_ptr<graph::Edge> input_rhs = inputs[1];
+  std::shared_ptr<graph::Edge> lhs = inputs[0];
+  std::shared_ptr<graph::Edge> rhs = inputs[1];
   std::shared_ptr<graph::Edge> output = outputs[0];
 #ifdef DEBUG
-  assert(input_lhs != nullptr);
-  assert(input_rhs != nullptr);
+  assert(lhs != nullptr);
+  assert(rhs != nullptr);
   assert(output != nullptr);
 #endif
   std::shared_ptr<flow::MulNode> ptr = nullptr;
   std::shared_ptr<graph::NonConstantEdge> output_as_non_constant =
       std::dynamic_pointer_cast<graph::NonConstantEdge>(output);
-  if (std::shared_ptr<graph::NonConstantEdge> input_lhs_as_non_constant =
-          std::dynamic_pointer_cast<graph::NonConstantEdge>(input_lhs)) {
-    if (std::shared_ptr<graph::NonConstantEdge> input_rhs_as_non_constant =
-            std::dynamic_pointer_cast<graph::NonConstantEdge>(input_rhs)) {
-      const std::string &lhs_name = input_lhs_as_non_constant->GetName();
-      const std::string &rhs_name = input_rhs_as_non_constant->GetName();
-      const std::string &output_name = output->GetName();
-      std::shared_ptr<flow::Region> lhs_region = flow.GetRegion(lhs_name);
-      std::shared_ptr<flow::Region> rhs_region = flow.GetRegion(rhs_name);
-      std::shared_ptr<flow::Region> output_region = flow.GetRegion(output_name);
+  if (isa<graph::NonConstantEdge>(lhs) && isa<graph::NonConstantEdge>(rhs) ||
+      isa<graph::NonConstantEdge>(lhs) && isa<graph::ConstantTensorEdge>(rhs) ||
+      isa<graph::ConstantTensorEdge>(lhs) && isa<graph::NonConstantEdge>(rhs)) {
+    const std::string &lhs_name = lhs->GetName(), &rhs_name = rhs->GetName(),
+                      &output_name = output->GetName();
+    std::shared_ptr<flow::Region> lhs_region = flow.GetRegion(lhs_name),
+                                  rhs_region = flow.GetRegion(rhs_name),
+                                  output_region = flow.GetRegion(output_name);
 #ifdef DEBUG
-      assert(lhs_region != nullptr);
-      assert(rhs_region != nullptr);
-      assert(output_region != nullptr);
+    assert(lhs_region != nullptr);
+    assert(rhs_region != nullptr);
+    assert(output_region != nullptr);
 #endif
-      ptr = std::make_shared<flow::MulCommonNode>(
-          std::move(name), std::move(lhs_region), std::move(rhs_region),
-          std::move(output_region));
-    } else if (std::shared_ptr<graph::ConstantScalarEdge>
-                   input_rhs_as_constant_scalar =
-                       std::dynamic_pointer_cast<graph::ConstantScalarEdge>(
-                           input_rhs)) {
-      const std::string &input_name = input_lhs_as_non_constant->GetName();
-      const std::string &output_name = output->GetName();
-      std::shared_ptr<flow::Region> input_region = flow.GetRegion(input_name);
-      std::shared_ptr<flow::Region> output_region = flow.GetRegion(output_name);
-#ifdef DEBUG
-      assert(input_region != nullptr);
-      assert(output_region != nullptr);
-#endif
-      ptr = std::make_shared<flow::MulConstantScalarNode>(
-          std::move(name), std::move(input_region),
-          input_rhs_as_constant_scalar->GetType(),
-          input_rhs_as_constant_scalar->GetValue(), std::move(output_region));
-    } else if (std::shared_ptr<graph::ConstantTensorEdge>
-                   inputRhs_as_constant_tensor =
-                       std::dynamic_pointer_cast<graph::ConstantTensorEdge>(
-                           input_rhs)) {
-      Tensor tensor = inputRhs_as_constant_tensor->GetValue();
-      const std::string &input_name = input_lhs_as_non_constant->GetName();
-      const std::string &output_name = output->GetName();
-      std::shared_ptr<flow::Region> input_region = flow.GetRegion(input_name);
-      std::shared_ptr<flow::Region> output_region = flow.GetRegion(output_name);
-#ifdef DEBUG
-      assert(input_region != nullptr);
-      assert(output_region != nullptr);
-#endif
-      ptr = std::make_shared<flow::MulConstantTensorNode>(
-          std::move(name), std::move(input_region), std::move(tensor),
-          std::move(output_region));
+    ptr = std::make_shared<flow::MulCommonNode>(
+        std::move(name), std::move(lhs_region), std::move(rhs_region),
+        std::move(output_region));
+  } else if (isa<graph::NonConstantEdge>(lhs) &&
+                 isa<graph::ConstantScalarEdge>(rhs) ||
+             isa<graph::ConstantScalarEdge>(lhs) &&
+                 isa<graph::NonConstantEdge>(rhs)) {
+    std::shared_ptr<graph::NonConstantEdge> input_edge = nullptr;
+    std::shared_ptr<graph::ConstantScalarEdge> weight_edge = nullptr;
+    if (std::dynamic_pointer_cast<graph::ConstantScalarEdge>(lhs) != nullptr &&
+        std::dynamic_pointer_cast<graph::NonConstantEdge>(rhs) != nullptr) {
+      input_edge = std::dynamic_pointer_cast<graph::NonConstantEdge>(rhs);
+      weight_edge = std::dynamic_pointer_cast<graph::ConstantScalarEdge>(lhs);
+    } else if (std::dynamic_pointer_cast<graph::NonConstantEdge>(lhs) !=
+                   nullptr &&
+               std::dynamic_pointer_cast<graph::ConstantScalarEdge>(rhs) !=
+                   nullptr) {
+      input_edge = std::dynamic_pointer_cast<graph::NonConstantEdge>(lhs);
+      weight_edge = std::dynamic_pointer_cast<graph::ConstantScalarEdge>(rhs);
     } else {
 #ifdef DEBUG
       assert(false && "unreachable");
@@ -862,50 +844,21 @@ void Converter::convertMulNode(flow::Flow &flow, const graph::Graph &graph,
       __builtin_unreachable();
 #endif
     }
-  } else if (std::shared_ptr<graph::ConstantTensorEdge> input_lhs_as_constant =
-                 std::dynamic_pointer_cast<graph::ConstantTensorEdge>(
-                     input_lhs)) {
-    if (std::shared_ptr<graph::NonConstantEdge> input_rhs_as_non_constant =
-            std::dynamic_pointer_cast<graph::NonConstantEdge>(input_rhs)) {
-      Tensor tensor = input_lhs_as_constant->GetValue();
-      const std::string &input_name = input_rhs_as_non_constant->GetName();
-      const std::string &output_name = output->GetName();
-      std::shared_ptr<flow::Region> input_region = flow.GetRegion(input_name);
-      std::shared_ptr<flow::Region> output_region = flow.GetRegion(output_name);
 #ifdef DEBUG
-      assert(input_region != nullptr);
-      assert(output_region != nullptr);
+    assert(input_edge != nullptr);
+    assert(weight_edge != nullptr);
 #endif
-      ptr = std::make_shared<flow::MulConstantTensorNode>(
-          std::move(name), std::move(input_region), std::move(tensor),
-          std::move(output_region));
-    } else {
+    const std::string &input_name = input_edge->GetName(),
+                      &output_name = output->GetName();
+    std::shared_ptr<flow::Region> input_region = flow.GetRegion(input_name),
+                                  output_region = flow.GetRegion(output_name);
 #ifdef DEBUG
-      assert(false && "unreachable");
-#else
-      __builtin_unreachable();
+    assert(input_region != nullptr);
+    assert(output_region != nullptr);
 #endif
-    }
-  } else if (std::shared_ptr<graph::ConstantScalarEdge> input_lhs_as_constant =
-                 std::dynamic_pointer_cast<graph::ConstantScalarEdge>(
-                     input_lhs)) {
-    if (std::shared_ptr<graph::NonConstantEdge> input_rhs_as_non_constant =
-            std::dynamic_pointer_cast<graph::NonConstantEdge>(input_rhs)) {
-      const std::string &input_name = input_rhs_as_non_constant->GetName();
-      const std::string &output_name = output->GetName();
-      std::shared_ptr<flow::Region> input_region = flow.GetRegion(input_name);
-      std::shared_ptr<flow::Region> output_region = flow.GetRegion(output_name);
-      ptr = std::make_shared<flow::MulConstantScalarNode>(
-          std::move(name), std::move(input_region),
-          input_lhs_as_constant->GetType(), input_lhs_as_constant->GetValue(),
-          std::move(output_region));
-    } else {
-#ifdef DEBUG
-      assert(false && "unreachable");
-#else
-      __builtin_unreachable();
-#endif
-    }
+    ptr = std::make_shared<flow::MulConstantNode>(
+        std::move(name), std::move(input_region), weight_edge->GetType(),
+        weight_edge->GetValue(), std::move(output_region));
   } else {
 #ifdef DEBUG
     assert(false && "unreachable");

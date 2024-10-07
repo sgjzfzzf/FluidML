@@ -9,7 +9,16 @@
 namespace cpu_transformers {
 namespace kernel {
 
-class AddConstantKernel : public SingleInputWithoutBufferKernel {
+class AddKernel : virtual public Kernel {
+public:
+  AddKernel() = default;
+  AddKernel(const AddKernel &add_node) = delete;
+  AddKernel(AddKernel &&add_node) = default;
+  ~AddKernel() = default;
+};
+
+class AddConstantKernel : public AddKernel,
+                          public SingleInputWithoutBufferKernel {
 public:
   AddConstantKernel(Type type, float64_t constant);
   AddConstantKernel(const AddConstantKernel &add_kernel) = delete;

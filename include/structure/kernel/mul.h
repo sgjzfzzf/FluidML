@@ -2,24 +2,25 @@
 #define CPU_TRANSFORMERS_STRUCTURE_KERNEL_MUL_H_
 
 #include "structure/kernel/kernel.h"
-#include "structure/tensor/tensor.h"
 #include "utils/float.h"
+#include "utils/type.h"
 
 namespace cpu_transformers {
 namespace kernel {
-class MulKernelInterface : virtual public Kernel {
+
+class MulKernel : virtual public Kernel {
 public:
-  MulKernelInterface() = default;
-  MulKernelInterface(const MulKernelInterface &other) = delete;
-  MulKernelInterface(MulKernelInterface &&other) = default;
+  MulKernel() = default;
+  MulKernel(const MulKernel &other) = delete;
+  MulKernel(MulKernel &&other) = default;
 };
 
-class MulConstantScalarKernel : public SingleInputWithoutBufferKernel,
-                                public MulKernelInterface {
+class MulConstantKernel : public SingleInputWithoutBufferKernel,
+                          public MulKernel {
 public:
-  MulConstantScalarKernel(Type type, float64_t constant);
-  MulConstantScalarKernel(const MulConstantScalarKernel &other) = delete;
-  MulConstantScalarKernel(MulConstantScalarKernel &&other) = default;
+  MulConstantKernel(Type type, float64_t constant);
+  MulConstantKernel(const MulConstantKernel &other) = delete;
+  MulConstantKernel(MulConstantKernel &&other) = default;
   void Run(mlir::OpBuilder &builder, mlir::Value &lhs,
            mlir::Value &output) const;
 
@@ -28,21 +29,8 @@ private:
   const float64_t constant_;
 };
 
-class MulConstantTensorKernel : public SingleInputWithoutBufferKernel,
-                                public MulKernelInterface {
-public:
-  MulConstantTensorKernel(const Tensor &constant);
-  MulConstantTensorKernel(const MulConstantTensorKernel &other) = delete;
-  MulConstantTensorKernel(MulConstantTensorKernel &&other) = default;
-  void Run(mlir::OpBuilder &builder, mlir::Value &lhs,
-           mlir::Value &output) const;
-
-private:
-  const Tensor constant_;
-};
-
 class MulCommonKernel : public DoubleInputsWithoutBufferKernel,
-                        public MulKernelInterface {
+                        public MulKernel {
 public:
   MulCommonKernel() = default;
   MulCommonKernel(const MulCommonKernel &other) = delete;

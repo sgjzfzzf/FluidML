@@ -39,8 +39,6 @@ class LayerNormalizationConstantScaleBiasNode;
 class MatMulNode;
 class MulNode;
 class MulConstantNode;
-class MulConstantScalarNode;
-class MulConstantTensorNode;
 class MulCommonNode;
 class PowNode;
 class ReshapeNode;
