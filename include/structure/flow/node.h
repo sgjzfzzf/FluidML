@@ -145,52 +145,21 @@ public:
 
 class AddConstantNode : public AddNode, public SingleInputWithoutBufferNode {
 public:
-  AddConstantNode(std::string &&name, std::shared_ptr<Region> &&input,
+  AddConstantNode(std::string &&name, Type type, float64_t value,
+                  std::shared_ptr<Region> &&input,
                   std::shared_ptr<Region> &&output);
   AddConstantNode(const AddConstantNode &node) = delete;
   AddConstantNode(AddConstantNode &&node) = default;
   virtual ~AddConstantNode() = default;
   virtual std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
-  virtual std::shared_ptr<AddConstantNode> CloneAsAddConstantNode() const = 0;
-  virtual Type GetType() const noexcept = 0;
-};
-
-class AddConstantScalarNode : public AddConstantNode {
-public:
-  AddConstantScalarNode(std::string &&name, Type type, float64_t value,
-                        std::shared_ptr<Region> &&input,
-                        std::shared_ptr<Region> &&output);
-  AddConstantScalarNode(const AddConstantScalarNode &node) = delete;
-  AddConstantScalarNode(AddConstantScalarNode &&node) = default;
-  virtual ~AddConstantScalarNode() = default;
-  virtual std::shared_ptr<AddConstantNode>
-  CloneAsAddConstantNode() const override;
-  std::shared_ptr<AddConstantScalarNode> Clone() const;
-  Type GetType() const noexcept override;
+  std::shared_ptr<AddConstantNode> Clone() const;
+  Type GetType() const noexcept;
   float64_t GetValue() const noexcept;
 
 private:
   const Type type_;
   const float64_t value_;
-};
-
-class AddConstantTensorNode : public AddConstantNode {
-public:
-  AddConstantTensorNode(std::string &&name, Tensor &&tensor,
-                        std::shared_ptr<Region> &&input,
-                        std::shared_ptr<Region> &&output);
-  AddConstantTensorNode(const AddConstantTensorNode &node) = delete;
-  AddConstantTensorNode(AddConstantTensorNode &&node) = default;
-  virtual ~AddConstantTensorNode() = default;
-  virtual std::shared_ptr<AddConstantNode>
-  CloneAsAddConstantNode() const override;
-  std::shared_ptr<AddConstantTensorNode> Clone() const;
-  Type GetType() const noexcept override;
-  const Tensor &GetTensor() const noexcept;
-
-private:
-  const Tensor tensor_;
 };
 
 class AddCommonNode : public AddNode, public DoubleInputsWithoutBufferNode {

@@ -7,6 +7,7 @@
 #endif
 
 namespace cpu_transformers {
+
 Meta::Meta(Type type, std::vector<int64_t> &&shape)
     : type_(type), shape_(std::move(shape)) {}
 
@@ -14,12 +15,13 @@ Type Meta::GetType() const { return type_; }
 
 const std::vector<int64_t> &Meta::GetShape() const { return shape_; }
 
-void Meta::AlignLeftTo(size_t size, float64_t value) {
-  size_t current_size = shape_.size();
-  if (current_size >= size) {
-    return;
+Meta Meta::AlignLeftTo(size_t size, float64_t value) const {
+  std::vector<int64_t> shape = shape_;
+  const size_t current_size = shape.size();
+  if (current_size < size) {
+    shape.insert(shape.begin(), size - current_size, value);
   }
-  shape_.insert(shape_.begin(), size - current_size, value);
+  return Meta(type_, std::move(shape));
 }
 
 size_t Meta::GetElementsNum() const {
@@ -42,18 +44,18 @@ bool operator==(const Meta &lhs, const Meta &rhs) {
 
 bool operator!=(const Meta &lhs, const Meta &rhs) { return !(lhs == rhs); }
 
-std::optional<Meta> BroadcastShape(Meta lhs, Meta rhs, Type type) {
-  std::vector<int64_t> lhs_shape = lhs.GetShape();
-  std::vector<int64_t> rhs_shape = rhs.GetShape();
-  size_t lhs_size = lhs_shape.size();
-  size_t rhs_size = rhs_shape.size();
+std::optional<Meta> BroadcastShape(const Meta &lhs, const Meta &rhs,
+                                   Type type) {
+  Meta mlhs = lhs, mrhs = rhs;
+  std::vector<int64_t> lhs_shape = mlhs.GetShape(), rhs_shape = mrhs.GetShape();
+  size_t lhs_size = lhs_shape.size(), rhs_size = rhs_shape.size();
   if (lhs_size > rhs_size) {
-    rhs.AlignLeftTo(lhs_size);
+    mrhs = mrhs.AlignLeftTo(lhs_size);
   } else if (lhs_size < rhs_size) {
-    lhs.AlignLeftTo(rhs_size);
+    mlhs = mlhs.AlignLeftTo(rhs_size);
   }
-  lhs_shape = lhs.GetShape();
-  rhs_shape = rhs.GetShape();
+  lhs_shape = mlhs.GetShape();
+  rhs_shape = mrhs.GetShape();
   lhs_size = lhs_shape.size();
   rhs_size = rhs_shape.size();
 #ifdef DEBUG
@@ -75,21 +77,23 @@ std::optional<Meta> BroadcastShape(Meta lhs, Meta rhs, Type type) {
   return Meta(type, std::move(output_shape));
 }
 
-std::optional<Meta> BroadcastMatMulShape(Meta lhs, Meta rhs, Type type) {
-  std::vector<int64_t> lhs_shape = lhs.GetShape();
-  std::vector<int64_t> rhs_shape = rhs.GetShape();
+std::optional<Meta> BroadcastMatMulShape(const Meta &lhs, const Meta &rhs,
+                                         Type type) {
+  Meta mlhs = lhs, mrhs = rhs;
+  std::vector<int64_t> lhs_shape = mlhs.GetShape();
+  std::vector<int64_t> rhs_shape = mrhs.GetShape();
   size_t lhs_size = lhs_shape.size();
   size_t rhs_size = rhs_shape.size();
   if (lhs_size < 2 || rhs_size < 2) {
     return std::nullopt;
   }
   if (lhs_size < rhs_size) {
-    lhs.AlignLeftTo(rhs_size);
+    mlhs = mlhs.AlignLeftTo(rhs_size);
   } else if (lhs_size > rhs_size) {
-    rhs.AlignLeftTo(lhs_size);
+    mrhs = mrhs.AlignLeftTo(lhs_size);
   }
-  lhs_shape = lhs.GetShape();
-  rhs_shape = rhs.GetShape();
+  lhs_shape = mlhs.GetShape();
+  rhs_shape = mrhs.GetShape();
   lhs_size = lhs_shape.size();
   rhs_size = rhs_shape.size();
   size_t aligned_size = std::max(lhs_size, rhs_size);
@@ -120,7 +124,7 @@ std::optional<Meta> BroadcastMatMulShape(Meta lhs, Meta rhs, Type type) {
   return Meta(type, std::move(output_shape));
 }
 
-std::optional<Meta> ReshapeShapeInference(Meta shape, size_t items) {
+std::optional<Meta> ReshapeShapeInference(const Meta &shape, size_t items) {
   int64_t neg_one = -1;
   std::vector<int64_t> shape_vec = shape.GetShape();
   size_t len = shape_vec.size();
@@ -148,4 +152,5 @@ std::optional<Meta> ReshapeShapeInference(Meta shape, size_t items) {
   }
   return Meta(shape.GetType(), std::move(real_shape_vec));
 }
+
 } // namespace cpu_transformers

@@ -171,87 +171,28 @@ DoubleInputsWithBufferNode::CloneAsDoubleInputsNode() const {
 
 AddNode::AddNode(std::string &&name) : Node(std::move(name)) {}
 
-AddConstantNode::AddConstantNode(std::string &&name,
+AddConstantNode::AddConstantNode(std::string &&name, Type type, float64_t value,
                                  std::shared_ptr<Region> &&input,
                                  std::shared_ptr<Region> &&output)
-    : AddNode(std::move(name)),
+    : Node(std::move(name)), AddNode(std::move(name)),
       SingleInputWithoutBufferNode(std::move(name), std::move(input),
-                                   std::move(output)) {
-#ifdef DEBUG
-  const Meta &input_Meta = input_->GetMeta();
-  const Meta &output_Meta = output_->GetMeta();
-  std::optional<Meta> expected_opt =
-      BroadcastShape(input_Meta, output_Meta, output_Meta.GetType());
-  assert(expected_opt.has_value());
-  assert(*expected_opt == output_Meta);
-#endif
-}
+                                   std::move(output)),
+      type_(type), value_(value) {}
 
 std::shared_ptr<SingleInputWithoutBufferNode>
 AddConstantNode::CloneAsSingleInputWithoutBufferNode() const {
-  return CloneAsAddConstantNode();
-}
-
-AddConstantScalarNode::AddConstantScalarNode(std::string &&name, Type type,
-                                             float64_t value,
-                                             std::shared_ptr<Region> &&input,
-                                             std::shared_ptr<Region> &&output)
-    : Node(std::move(name)),
-      AddConstantNode(std::move(name), std::move(input), std::move(output)),
-      type_(type), value_(value) {}
-
-std::shared_ptr<AddConstantNode>
-AddConstantScalarNode::CloneAsAddConstantNode() const {
   return Clone();
 }
 
-std::shared_ptr<AddConstantScalarNode> AddConstantScalarNode::Clone() const {
+std::shared_ptr<AddConstantNode> AddConstantNode::Clone() const {
   std::string name = GetName();
-  return std::make_shared<AddConstantScalarNode>(
-      std::move(name), GetType(), GetValue(), GetInput(), GetOutput());
+  return std::make_shared<AddConstantNode>(std::move(name), GetType(),
+                                           GetValue(), GetInput(), GetOutput());
 }
 
-Type AddConstantScalarNode::GetType() const noexcept { return type_; }
+Type AddConstantNode::GetType() const noexcept { return type_; }
 
-float64_t AddConstantScalarNode::GetValue() const noexcept { return value_; }
-
-AddConstantTensorNode::AddConstantTensorNode(std::string &&name,
-                                             Tensor &&tensor,
-                                             std::shared_ptr<Region> &&input,
-                                             std::shared_ptr<Region> &&output)
-    : Node(std::move(name)),
-      AddConstantNode(std::move(name), std::move(input), std::move(output)),
-      tensor_(std::move(tensor)) {
-#ifdef DEBUG
-  const Meta &input_meta = input_->GetMeta();
-  const Meta &tensor_meta = tensor_.GetMeta();
-  const Meta &output_meta = output_->GetMeta();
-  std::optional<Meta> broadcasted_meta_opt =
-      BroadcastShape(input_meta, tensor_meta, output_meta.GetType());
-  assert(broadcasted_meta_opt.has_value());
-  assert(*broadcasted_meta_opt == output_meta);
-#endif
-}
-
-std::shared_ptr<AddConstantNode>
-AddConstantTensorNode::CloneAsAddConstantNode() const {
-  return Clone();
-}
-
-std::shared_ptr<AddConstantTensorNode> AddConstantTensorNode::Clone() const {
-  std::string name = GetName();
-  Tensor tensor = GetTensor();
-  return std::make_shared<AddConstantTensorNode>(
-      std::move(name), std::move(tensor), GetInput(), GetOutput());
-}
-
-Type AddConstantTensorNode::GetType() const noexcept {
-  return GetTensor().GetType();
-}
-
-const Tensor &AddConstantTensorNode::GetTensor() const noexcept {
-  return tensor_;
-}
+float64_t AddConstantNode::GetValue() const noexcept { return value_; }
 
 AddCommonNode::AddCommonNode(std::string &&name, std::shared_ptr<Region> &&lhs,
                              std::shared_ptr<Region> &&rhs,

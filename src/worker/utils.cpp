@@ -27,16 +27,11 @@ namespace worker {
 
 std::shared_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
   std::shared_ptr<kernel::Kernel> kernel = nullptr;
-  if (const flow::AddConstantScalarNode *ptr =
-          dynamic_cast<const flow::AddConstantScalarNode *>(node)) {
+  if (const flow::AddConstantNode *ptr =
+          dynamic_cast<const flow::AddConstantNode *>(node)) {
     Type type = ptr->GetType();
     float64_t constant = ptr->GetValue();
     kernel = std::make_shared<kernel::AddConstantScalarKernel>(type, constant);
-  } else if (const flow::AddConstantTensorNode *ptr =
-                 dynamic_cast<const flow::AddConstantTensorNode *>(node)) {
-    Tensor tensor = ptr->GetTensor();
-    kernel =
-        std::make_shared<kernel::AddConstantTensorKernel>(std::move(tensor));
   } else if (const flow::AddCommonNode *ptr =
                  dynamic_cast<const flow::AddCommonNode *>(node)) {
     kernel = std::make_shared<kernel::AddCommonKernel>();
@@ -88,7 +83,6 @@ std::shared_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
                      node)) {
     Tensor weights = ptr->GetWeights();
     Tensor bias = ptr->GetBias();
-    ;
     float64_t alpha = ptr->GetAlpha();
     float64_t beta = ptr->GetBeta();
     bool transA = ptr->GetTransA();

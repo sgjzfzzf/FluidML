@@ -3,7 +3,6 @@
 
 #include "mlir/IR/Builders.h"
 #include "structure/kernel/kernel.h"
-#include "structure/tensor/tensor.h"
 #include "utils/float.h"
 #include "utils/type.h"
 
@@ -22,19 +21,6 @@ public:
 private:
   Type type_;
   float64_t constant_;
-};
-
-class AddConstantTensorKernel : public SingleInputWithoutBufferKernel {
-public:
-  AddConstantTensorKernel(Tensor &&tensor);
-  AddConstantTensorKernel(const AddConstantTensorKernel &add_kernel) = delete;
-  AddConstantTensorKernel(AddConstantTensorKernel &&add_kernel) = default;
-  ~AddConstantTensorKernel() = default;
-  void Run(mlir::OpBuilder &builder, mlir::Value &input,
-           mlir::Value &output) const override;
-
-private:
-  Tensor tensor_;
 };
 
 class AddCommonKernel : public DoubleInputsWithoutBufferKernel {

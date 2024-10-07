@@ -23,8 +23,6 @@ class DoubleInputsWithoutBufferNode;
 class DoubleInputsWithBufferNode;
 class AddNode;
 class AddConstantNode;
-class AddConstantScalarNode;
-class AddConstantTensorNode;
 class AddCommonNode;
 class AddDivErfAddMulMulNode;
 class DivNode;
