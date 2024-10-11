@@ -1,11 +1,13 @@
 #include "evaluation/eval.h"
-#include "mlir/IR/BuiltinOps.h"
-#include "mlir/IR/MLIRContext.h"
 #include "structure/kernel/kernel.h"
 #include "utils/utils.h"
 #include "worker/builder.h"
+#ifndef DP_DEBUG
+#include "mlir/IR/BuiltinOps.h"
+#include "mlir/IR/MLIRContext.h"
 #include "worker/lower.h"
 #include "worker/runner.h"
+#endif
 
 namespace cpu_transformers {
 namespace evaluation {
@@ -45,9 +47,11 @@ SingleInputKernelEval::SingleInputKernelEval(Meta &&input_meta,
 size_t
 SingleInputKernelEval::GetTimeCost(const std::vector<size_t> &input_layout,
                                    const std::vector<size_t> &output_layout) {
+#ifdef DP_DEBUG
   // TODO: this return statement is a placeholder, to accelerate the execution
   // during development
-  // return 1;
+  return 1;
+#else
   // Add a cache to save time on evaluate the same kernel.
   auto it = time_costs_.find({input_layout, output_layout});
   if (it != time_costs_.end()) {
@@ -70,6 +74,7 @@ SingleInputKernelEval::GetTimeCost(const std::vector<size_t> &input_layout,
                   {worker::KernelBuilder::kOutputKey, output_buffer.data()}});
   time_costs_.insert_or_assign({input_layout, output_layout}, time_cost);
   return time_cost;
+#endif
 }
 
 size_t SingleInputKernelEval::GetShortestTimeCost() {
@@ -107,7 +112,7 @@ SingleInputWithoutBufferKernelEval::SingleInputWithoutBufferKernelEval(
 
 kernel::SingleInputWithoutBufferKernel &
 SingleInputWithoutBufferKernelEval::GetKernel() {
-#ifdef DEBUG
+#ifdef DP_DEBUG
   assert(kernel_ != nullptr);
 #endif
   return *kernel_;
@@ -182,9 +187,11 @@ size_t
 DoubleInputsKernelEval::GetTimeCost(const std::vector<size_t> &lhs_layout,
                                     const std::vector<size_t> &rhs_layout,
                                     const std::vector<size_t> &output_layout) {
+#ifdef DP_DEBUG
   // TODO: this return statement is a placeholder, to accelerate the execution
   // during development
-  // return 1;
+  return 1;
+#else
   // Add a cache to save time on evaluate the same kernel.
   auto it = time_costs_.find({lhs_layout, rhs_layout, output_layout});
   if (it != time_costs_.end()) {
@@ -210,6 +217,7 @@ DoubleInputsKernelEval::GetTimeCost(const std::vector<size_t> &lhs_layout,
   time_costs_.insert_or_assign({lhs_layout, rhs_layout, output_layout},
                                time_cost);
   return time_cost;
+#endif
 }
 
 size_t DoubleInputsKernelEval::GetShortestTimeCost() {

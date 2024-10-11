@@ -79,13 +79,17 @@ std::vector<int64_t> GenStrides(const std::vector<int64_t> &shape,
   return strides;
 }
 
-std::vector<size_t> GenDefaultLayout(const std::vector<int64_t> &shape) {
-  const size_t shape_len = shape.size();
+std::vector<size_t> GenDefaultLayout(size_t shape_len) {
   std::vector<size_t> layout(shape_len);
   for (size_t i = 0; i < shape_len; ++i) {
     layout[i] = i;
   }
   return layout;
+}
+
+std::vector<size_t> GenDefaultLayout(const std::vector<int64_t> &shape) {
+  const size_t shape_len = shape.size();
+  return GenDefaultLayout(shape_len);
 }
 
 } // namespace utils

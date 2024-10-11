@@ -18,6 +18,7 @@ public:
   DynamicProgrammingPlan &
   operator=(const DynamicProgrammingPlan &plan) = delete;
   DynamicProgrammingPlan &operator=(DynamicProgrammingPlan &&plan) = default;
+  bool HasLayout(const std::string &name) const;
   const std::vector<size_t> &GetLayout(const std::string &name) const;
   friend DynamicProgrammingPlan Merge(const DynamicProgrammingPlan &lhs,
                                       const DynamicProgrammingPlan &rhs);

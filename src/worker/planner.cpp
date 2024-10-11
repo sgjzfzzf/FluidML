@@ -8,6 +8,7 @@
 #include "structure/memory/index.h"
 #include "structure/memory/info.h"
 #include "structure/memory/linear.h"
+#include "utils/isa.hpp"
 #include <memory>
 #include <unordered_map>
 #ifdef DEBUG
@@ -22,21 +23,40 @@ flow::Sequence ExecutionPlanner::topologicalSort(const flow::Flow &flow) const {
   flow::Sequence sequence;
   std::unordered_map<std::string, std::shared_ptr<flow::Node>> unvisited_nodes;
   std::list<std::shared_ptr<flow::Node>> waiting_nodes;
-  const std::vector<std::shared_ptr<flow::Node>> &nodes = flow.GetNodes();
-  const std::vector<std::shared_ptr<flow::Edge>> &edges = flow.GetEdges();
-  for (const std::shared_ptr<flow::Node> &node : nodes) {
-    unvisited_nodes.insert({node->GetName(), node});
-  }
-  for (std::shared_ptr<flow::Edge> edge : edges) {
-    if (std::shared_ptr<flow::InputEdge> input_edge =
-            std::dynamic_pointer_cast<flow::InputEdge>(edge)) {
-      std::shared_ptr<flow::Node> to = input_edge->GetTo();
-      const std::string &to_name = to->GetName();
-      auto it = unvisited_nodes.find(to_name);
-      if (it != unvisited_nodes.end()) {
-        waiting_nodes.push_back(std::move(it->second));
-        unvisited_nodes.erase(it);
+  std::vector<std::shared_ptr<flow::Node>> nodes = flow.GetNodes();
+  std::vector<std::shared_ptr<flow::Edge>> edges = flow.GetEdges();
+  for (std::shared_ptr<flow::Node> &node : nodes) {
+    std::string name = node->GetName();
+    if (std::shared_ptr<flow::SingleInputNode> single_input_node =
+            std::dynamic_pointer_cast<flow::SingleInputNode>(node)) {
+      std::shared_ptr<flow::OwnToEdge> input_edge =
+          flow.GetInputEdge(*single_input_node);
+      if (isa<flow::InputEdge>(input_edge) ||
+          isa<flow::ConstantEdge>(input_edge)) {
+        waiting_nodes.push_back(std::move(node));
+      } else {
+        unvisited_nodes.insert({std::move(name), std::move(node)});
       }
+    } else if (std::shared_ptr<flow::DoubleInputsNode> double_inputs_node =
+                   std::dynamic_pointer_cast<flow::DoubleInputsNode>(node)) {
+      std::shared_ptr<flow::OwnToEdge> lhs_edge =
+                                           flow.GetLhsEdge(*double_inputs_node),
+                                       rhs_edge =
+                                           flow.GetRhsEdge(*double_inputs_node);
+      if ((isa<flow::InputEdge>(lhs_edge) ||
+           isa<flow::ConstantEdge>(lhs_edge)) &&
+          (isa<flow::InputEdge>(rhs_edge) ||
+           isa<flow::ConstantEdge>(rhs_edge))) {
+        waiting_nodes.push_back(std::move(node));
+      } else {
+        unvisited_nodes.insert({std::move(name), std::move(node)});
+      }
+    } else {
+#ifdef DEBUG
+      assert(false && "unreachable");
+#else
+      __builtin_unreachable();
+#endif
     }
   }
   std::unordered_multimap<std::string, std::string> prev_nodes;
@@ -98,8 +118,10 @@ DynamicProgrammingPlanner::FlowToSequence(const flow::Flow &flow) const {
   std::vector<std::shared_ptr<flow::Region>> regions = sequence.GetRegions();
   for (std::shared_ptr<flow::Region> region : regions) {
     const std::string &name = region->GetName();
-    std::vector<size_t> layout = plan.GetLayout(name);
-    region->SetLayout(std::move(layout));
+    if (plan.HasLayout(name)) {
+      std::vector<size_t> layout = plan.GetLayout(name);
+      region->SetLayout(std::move(layout));
+    }
   }
   return sequence;
 }

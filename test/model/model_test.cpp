@@ -17,21 +17,21 @@ using namespace cpu_transformers::worker;
 
 TEST(ModelTest, BertTest) {
   Parser parser;
-  GraphPassesManager pm;
+  // GraphPassesManager pm;
   Converter converter;
   std::shared_ptr<Context> context = Context::Make();
   GeneralBuilder builder("bert", context);
   Lower lower(context);
   Runner runner(context);
   Graph graph = parser.Run(BERT_MODEL_PATH);
-  pm.RegisterAllPasses();
-  pm.Run(graph);
+  // pm.RegisterAllPasses();
+  // pm.Run(graph);
   Flow flow = converter.Run(graph);
   PlainLinearPlanner plain_linear_planner;
   PlainGreedyPlanner plain_greedy_planner;
   DPGreedyPlanner dp_greedy_planner;
-  Sequence sequence = plain_greedy_planner.FlowToSequence(flow);
-  // Sequence sequence = dp_greedy_planner.FlowToSequence(flow);
+  // Sequence sequence = plain_greedy_planner.FlowToSequence(flow);
+  Sequence sequence = dp_greedy_planner.FlowToSequence(flow);
   Index plain_linear_index = plain_linear_planner.Run(sequence);
   Index greedy_index = plain_greedy_planner.Run(sequence);
   Index plain_dp_greedy_index = dp_greedy_planner.Run(sequence);

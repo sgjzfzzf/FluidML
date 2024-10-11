@@ -10,6 +10,7 @@ include(ExternalProject)
 option(CMAKE_BUILD_TYPE "Build type" Debug)
 option(BUILD_TESTS "Build tests" OFF)
 option(BUILD_PYTHON "Build python bindings" OFF)
+option(DP_DEBUG "Skip the Dynamic Programming optimization for debug" OFF)
 
 add_compile_options(-fPIC -Werror)
 
@@ -30,6 +31,10 @@ if(BUILD_PYTHON)
     OUTPUT_VARIABLE PYBIND11_INCLUDE_DIR)
     include_directories(${PYBIND11_INCLUDE_DIR})
     add_compile_definitions(BUILD_PYTHON=ON)
+endif()
+
+if(DP_DEBUG)
+    add_compile_definitions(DP_DEBUG=ON)
 endif()
 
 ExternalProject_Add(

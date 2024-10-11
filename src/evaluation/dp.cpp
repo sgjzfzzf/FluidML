@@ -316,8 +316,8 @@ std::vector<flow::Flow> SubFlowsBuilder::Run() {
             real_input_edge = std::make_shared<flow::InputEdge>(
                 input_edge->GetRegion(), std::move(node_clone));
           }
-        } else if (std::shared_ptr<flow::InputEdge> input_input_edge =
-                       std::dynamic_pointer_cast<flow::InputEdge>(input_edge)) {
+        } else if (isa<flow::InputEdge>(input_edge) ||
+                   isa<flow::ConstantEdge>(input_edge)) {
           real_input_edge = input_edge;
         } else {
 #ifdef DEBUG
@@ -397,7 +397,6 @@ std::vector<flow::Flow> SubFlowsBuilder::Run() {
         std::shared_ptr<flow::OwnToEdge> real_lhs_edge = nullptr,
                                          real_rhs_edge = nullptr;
         std::shared_ptr<flow::OwnFromEdge> real_output_edge = nullptr;
-        std::shared_ptr<flow::DoubleInputsNode> real_node = nullptr;
         if (std::shared_ptr<flow::MemoryEdge> lhs_memory_edge =
                 std::dynamic_pointer_cast<flow::MemoryEdge>(lhs_edge)) {
           std::shared_ptr<flow::Node> from = lhs_memory_edge->GetFrom();
@@ -406,11 +405,11 @@ std::vector<flow::Flow> SubFlowsBuilder::Run() {
           } else {
             std::shared_ptr<flow::DoubleInputsNode> node_clone =
                 double_inputs_node;
-            real_lhs_edge = std::make_shared<flow::OwnToEdge>(
+            real_lhs_edge = std::make_shared<flow::InputEdge>(
                 lhs_edge->GetRegion(), std::move(node_clone));
           }
-        } else if (std::shared_ptr<flow::InputEdge> lhs_input_edge =
-                       std::dynamic_pointer_cast<flow::InputEdge>(lhs_edge)) {
+        } else if (isa<flow::OwnToEdge>(lhs_edge) ||
+                   isa<flow::InputEdge>(lhs_edge)) {
           real_lhs_edge = lhs_edge;
         } else {
 #ifdef DEBUG
@@ -427,11 +426,11 @@ std::vector<flow::Flow> SubFlowsBuilder::Run() {
           } else {
             std::shared_ptr<flow::DoubleInputsNode> node_clone =
                 double_inputs_node;
-            real_rhs_edge = std::make_shared<flow::OwnToEdge>(
+            real_rhs_edge = std::make_shared<flow::InputEdge>(
                 rhs_edge->GetRegion(), std::move(node_clone));
           }
-        } else if (std::shared_ptr<flow::InputEdge> rhs_input_edge =
-                       std::dynamic_pointer_cast<flow::InputEdge>(rhs_edge)) {
+        } else if (isa<flow::InputEdge>(rhs_edge) ||
+                   isa<flow::ConstantEdge>(rhs_edge)) {
           real_rhs_edge = rhs_edge;
         } else {
 #ifdef DEBUG
@@ -448,7 +447,7 @@ std::vector<flow::Flow> SubFlowsBuilder::Run() {
           } else {
             std::shared_ptr<flow::DoubleInputsNode> node_clone =
                 double_inputs_node;
-            real_output_edge = std::make_shared<flow::OwnFromEdge>(
+            real_output_edge = std::make_shared<flow::OutputEdge>(
                 output_edge->GetRegion(), std::move(node_clone));
           }
         } else if (std::shared_ptr<flow::OutputEdge> output_output_edge =
@@ -471,7 +470,7 @@ std::vector<flow::Flow> SubFlowsBuilder::Run() {
                                       rhs_region = real_rhs_edge->GetRegion(),
                                       output_region =
                                           real_output_edge->GetRegion();
-        branch_subflow.PutNode(std::move(real_node));
+        branch_subflow.PutNode(std::move(node));
         std::vector<std::shared_ptr<flow::Edge>>
             potential_lhs_edges =
                 branch_subflow.GetEdges(real_lhs_edge->GetName()),
@@ -529,8 +528,7 @@ size_t SubFlowsBuilder::findLongestPathTo(std::shared_ptr<flow::Edge> edge) {
   }
   size_t distance = -1;
   std::shared_ptr<flow::Edge> prev = nullptr;
-  if (std::shared_ptr<flow::InputEdge> input_edge =
-          std::dynamic_pointer_cast<flow::InputEdge>(edge)) {
+  if (isa<flow::InputEdge>(edge) || isa<flow::ConstantEdge>(edge)) {
     distance = 0;
   } else if (std::shared_ptr<flow::OwnFromEdge> own_from_edge =
                  std::dynamic_pointer_cast<flow::OwnFromEdge>(edge)) {
@@ -687,8 +685,7 @@ size_t DPOnNoOverlapFlowWoker::runOn(std::shared_ptr<flow::Edge> edge,
   if (it != dp_table_.end()) {
     return std::get<0>(it->second);
   }
-  if (std::shared_ptr<flow::InputEdge> input_edge =
-          std::dynamic_pointer_cast<flow::InputEdge>(edge)) {
+  if (isa<flow::InputEdge>(edge) || isa<flow::ConstantEdge>(edge)) {
     constexpr size_t kInputEdgeTimeCost = 0;
     std::tuple<size_t, std::vector<EdgeLayout>> result = {kInputEdgeTimeCost,
                                                           {}};
@@ -773,6 +770,10 @@ size_t DPOnNoOverlapFlowWoker::runOn(std::shared_ptr<flow::Edge> edge,
 DynamicProgrammingPlan::DynamicProgrammingPlan(
     std::unordered_map<std::string, std::vector<size_t>> &&plan)
     : plan_(std::move(plan)) {}
+
+bool DynamicProgrammingPlan::HasLayout(const std::string &name) const {
+  return plan_.find(name) != plan_.end();
+}
 
 const std::vector<size_t> &
 DynamicProgrammingPlan::GetLayout(const std::string &name) const {
