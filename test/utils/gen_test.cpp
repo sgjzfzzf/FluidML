@@ -24,6 +24,24 @@ TEST(GenTest, OrderTest) {
   }
 }
 
+TEST(GenTest, IndexTest) {
+  std::vector<int64_t> shape = {2, 3, 4};
+  const size_t shape_len = shape.size();
+  std::vector<std::vector<size_t>> indices =
+      cpu_transformers::utils::GenAllIndicesInOrder(shape);
+  ASSERT_EQ(indices.size(), 2 * 3 * 4);
+  int64_t cur_index = -1;
+  for (const std::vector<size_t> &indices : indices) {
+    ASSERT_EQ(indices.size(), shape_len);
+    ASSERT_LE(indices[0], shape[0]);
+    ASSERT_LE(indices[1], shape[1]);
+    ASSERT_LE(indices[2], shape[2]);
+    int64_t real_index = indices[0] * 12 + indices[1] * 4 + indices[2];
+    ASSERT_EQ(cur_index + 1, real_index);
+    cur_index = real_index;
+  }
+}
+
 TEST(GenTest, StrideTest) {
   std::vector<int64_t> shape = {2, 3, 4};
   std::vector<int64_t> strides = cpu_transformers::utils::GenStrides(shape);

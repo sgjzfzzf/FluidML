@@ -4,6 +4,7 @@
 #include "structure/flow/object.h"
 #include "structure/tensor/meta.h"
 #include "structure/tensor/tensor.h"
+#include "utils/float.h"
 #include <string>
 
 namespace cpu_transformers {

@@ -1,4 +1,5 @@
 #include "utils/utils.h"
+#include <cstddef>
 #include <random>
 #ifdef DEBUG
 #include <cassert>
@@ -37,6 +38,27 @@ std::vector<std::vector<size_t>> GenAllOrders(size_t len) {
     }
   }
   return orders;
+}
+
+std::vector<std::vector<size_t>>
+GenAllIndicesInOrder(const std::vector<int64_t> &shape) {
+  std::vector<std::vector<size_t>> results = {};
+  if (shape.size() == 0) {
+    results = {{}};
+  } else {
+    const size_t last_size = shape.back();
+    std::vector<int64_t> shape_slice(shape.begin(), shape.end() - 1);
+    std::vector<std::vector<size_t>> prev_results =
+        GenAllIndicesInOrder(shape_slice);
+    for (std::vector<size_t> prev_result : prev_results) {
+      for (size_t i = 0; i < last_size; ++i) {
+        std::vector<size_t> result = prev_result;
+        result.push_back(i);
+        results.push_back(std::move(result));
+      }
+    }
+  }
+  return results;
 }
 
 std::vector<int64_t> GenPhysicalShape(const std::vector<int64_t> &shape,
@@ -90,6 +112,16 @@ std::vector<size_t> GenDefaultLayout(size_t shape_len) {
 std::vector<size_t> GenDefaultLayout(const std::vector<int64_t> &shape) {
   const size_t shape_len = shape.size();
   return GenDefaultLayout(shape_len);
+}
+
+size_t GenIndex(const std::vector<size_t> &indices,
+                const std::vector<int64_t> &strides) {
+  size_t index = 0;
+  const size_t indices_len = indices.size(), strides_len = strides.size();
+  for (size_t i = 0; i < indices_len; ++i) {
+    index += indices[i] * strides[i];
+  }
+  return index;
 }
 
 } // namespace utils

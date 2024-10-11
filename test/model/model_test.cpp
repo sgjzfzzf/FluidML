@@ -17,15 +17,15 @@ using namespace cpu_transformers::worker;
 
 TEST(ModelTest, BertTest) {
   Parser parser;
-  // GraphPassesManager pm;
+  GraphPassesManager pm;
   Converter converter;
   std::shared_ptr<Context> context = Context::Make();
   GeneralBuilder builder("bert", context);
   Lower lower(context);
   Runner runner(context);
   Graph graph = parser.Run(BERT_MODEL_PATH);
-  // pm.RegisterAllPasses();
-  // pm.Run(graph);
+  pm.RegisterAllPasses();
+  pm.Run(graph);
   Flow flow = converter.Run(graph);
   PlainLinearPlanner plain_linear_planner;
   PlainGreedyPlanner plain_greedy_planner;
@@ -55,5 +55,6 @@ TEST(ModelTest, BertTest) {
           {"1272", output1.data()},
       },
       10);
-  llvm::outs() << "Time cost: " << time_cost << "\n";
+  llvm::outs() << "Time cost: " << time_cost << ", the first element is "
+               << output0[0] << "\n";
 }

@@ -19,6 +19,7 @@
 #include "utils/utils.h"
 #include "worker/scheduler.h"
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <string>
 #ifdef DEBUG
@@ -166,31 +167,49 @@ void GeneralBuilder::Run(const flow::Sequence &sequence,
     const Tensor &tensor = constant_region->GetTensor();
     const std::vector<int64_t> &shape = tensor.GetShape();
     const std::vector<float64_t> &buffer = tensor.Get();
+    const std::vector<size_t> &layout = constant_region->GetLayout();
+    std::vector<int64_t> strides = utils::GenStrides(shape, layout);
     Type type = tensor.GetType();
     mlir::OpBuilder::InsertPoint ip = builder.saveInsertionPoint();
     builder.setInsertionPoint(*module);
-    mlir::MemRefType memref_type;
+    mlir::MemRefType plain_memref_type;
     if (type == Type::kFloat32) {
-      memref_type = mlir::MemRefType::get(shape, builder.getF32Type());
+      plain_memref_type = mlir::MemRefType::get(shape, builder.getF32Type());
       mlir::RankedTensorType tensor_type =
           mlir::RankedTensorType::get(shape, builder.getF32Type());
-      llvm::SmallVector<float32_t> data(buffer.begin(), buffer.end());
+      llvm::SmallVector<float32_t> data;
+      for (const std::vector<size_t> &indices :
+           utils::GenAllIndicesInOrder(shape)) {
+        size_t index = utils::GenIndex(indices, strides);
+#ifdef DEBUG
+        assert(index < buffer.size());
+#endif
+        data.push_back(buffer[index]);
+      }
       mlir::DenseElementsAttr elements =
           mlir::DenseElementsAttr::get(tensor_type, llvm::ArrayRef(data));
       mlir::memref::GlobalOp global_op = builder.create<mlir::memref::GlobalOp>(
           builder.getUnknownLoc(), name, builder.getStringAttr("private"),
-          memref_type, elements, true, mlir::IntegerAttr());
+          plain_memref_type, elements, true, mlir::IntegerAttr());
       sym_table.insert(global_op);
     } else if (type == Type::kInt64) {
-      memref_type = mlir::MemRefType::get(shape, builder.getI64Type());
+      plain_memref_type = mlir::MemRefType::get(shape, builder.getI64Type());
       mlir::RankedTensorType tensor_type =
           mlir::RankedTensorType::get(shape, builder.getI64Type());
-      llvm::SmallVector<int64_t> data(buffer.begin(), buffer.end());
+      llvm::SmallVector<int64_t> data;
+      for (const std::vector<size_t> &indices :
+           utils::GenAllIndicesInOrder(shape)) {
+        size_t index = utils::GenIndex(indices, strides);
+#ifdef DEBUG
+        assert(index < buffer.size());
+#endif
+        data.push_back(buffer[index]);
+      }
       mlir::DenseElementsAttr elements =
           mlir::DenseElementsAttr::get(tensor_type, llvm::ArrayRef(data));
       mlir::memref::GlobalOp global_op = builder.create<mlir::memref::GlobalOp>(
           builder.getUnknownLoc(), name, builder.getStringAttr("private"),
-          memref_type, elements, true, mlir::IntegerAttr());
+          plain_memref_type, elements, true, mlir::IntegerAttr());
       sym_table.insert(global_op);
     } else {
 #ifdef DEBUG
@@ -200,9 +219,17 @@ void GeneralBuilder::Run(const flow::Sequence &sequence,
 #endif
     }
     builder.restoreInsertionPoint(ip);
+    mlir::StridedLayoutAttr strided_layout =
+        mlir::StridedLayoutAttr::get(&mlir_context, 0, strides);
+    mlir::MemRefType memref_type = mlir::MemRefType::get(
+        shape, plain_memref_type.getElementType(), strided_layout);
     mlir::Value get_op = builder.create<mlir::memref::GetGlobalOp>(
-        builder.getUnknownLoc(), memref_type, name);
-    symbol_table.insert({std::move(name), std::move(get_op)});
+                    builder.getUnknownLoc(), plain_memref_type, name),
+                reinterpret_cast_op =
+                    builder.create<mlir::memref::ReinterpretCastOp>(
+                        builder.getUnknownLoc(), memref_type, get_op, 0, shape,
+                        strides);
+    symbol_table.insert({std::move(name), std::move(reinterpret_cast_op)});
   }
   // Allocate memory for the nodes and put them into the symbol table.
   for (std::shared_ptr<flow::Node> node : sequence.GetNodes()) {
