@@ -1,5 +1,7 @@
 #include "evaluation/dp.h"
 #include "evaluation/eval.h"
+#include "nlohmann/json.hpp"
+#include "nlohmann/json_fwd.hpp"
 #include "structure/flow/edge.h"
 #include "structure/flow/flow.h"
 #include "structure/flow/node.h"
@@ -15,7 +17,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #ifdef DEBUG
-#include "fmt/ranges.h"
 #include <cassert>
 #endif
 
@@ -74,6 +75,7 @@ public:
   DynamicProgrammingTableImpl(const DynamicProgrammingTableImpl &table) =
       delete;
   DynamicProgrammingTableImpl(DynamicProgrammingTableImpl &&table) = default;
+  virtual ~DynamicProgrammingTableImpl() = default;
   DynamicProgrammingPlan Run() override;
 
 private:
@@ -800,12 +802,14 @@ DynamicProgrammingPlan Merge(const DynamicProgrammingPlan &lhs,
   return DynamicProgrammingPlan(std::move(plan));
 }
 
-#ifdef DEBUG
+nlohmann::json DynamicProgrammingPlan::ToJson() const {
+  return nlohmann::json(plan_);
+}
+
 std::ostream &operator<<(std::ostream &os, const DynamicProgrammingPlan &plan) {
-  os << fmt::format("{}", plan.plan_);
+  os << plan.ToJson();
   return os;
 }
-#endif
 
 DynamicProgrammingTableImpl::DynamicProgrammingTableImpl(const flow::Flow &flow)
     : flow_(flow) {}

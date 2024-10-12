@@ -42,6 +42,15 @@ ExternalProject_Add(
     INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
 )
 
+ExternalProject_Add(
+    libjson
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG v3.11.3
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/external -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    BUILD_COMMAND ${CMAKE_COMMAND} --build . --target all
+    INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
+)
+
 find_package(LLVM 18.1.6 REQUIRED CONFIG)
 
 include_directories(include)

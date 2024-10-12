@@ -6,7 +6,6 @@
 #include "mlir/IR/MLIRContext.h"
 #include "structure/context/attr.h"
 #include <memory>
-#include <string_view>
 
 namespace cpu_transformers {
 namespace context {
@@ -21,13 +20,11 @@ public:
   mlir::MLIRContext &GetMLIRContext();
   mlir::ModuleOp GetModule();
   FuncAttr &GetFuncAttr();
-#ifdef DEBUG
-  void DumpModule(std::string_view filename);
-#endif
   void SetModule(mlir::OwningOpRef<mlir::ModuleOp> &&module);
   void SetFuncAttr(FuncAttr &&func_attr);
   std::unique_ptr<mlir::ExecutionEngine> MakeExecutionEngine();
   std::string ExportHeaderFile();
+  friend std::ostream &operator<<(std::ostream &os, Context &context);
 
 private:
   mlir::MLIRContext mlir_context_;

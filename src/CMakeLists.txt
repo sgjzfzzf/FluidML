@@ -17,5 +17,5 @@ if (${BUILD_PYTHON})
     set_target_properties(${PROJECT_NAME}Shared PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 endif()
 
-add_dependencies(${PROJECT_NAME}Static libfmt libglog)
-add_dependencies(${PROJECT_NAME}Shared libfmt libglog)
+add_dependencies(${PROJECT_NAME}Static libfmt libglog libjson)
+add_dependencies(${PROJECT_NAME}Shared libfmt libglog libjson)

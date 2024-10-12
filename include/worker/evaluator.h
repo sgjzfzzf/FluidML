@@ -2,7 +2,14 @@
 #define CPU_TRANSFORMERS_WORKER_EVALUATOR_H_
 
 #include "evaluation/eval.h"
+#include "nlohmann/json_fwd.hpp"
+#include "worker/fwd.h"
 #include <memory>
+
+namespace ns {
+void to_json(nlohmann::json &json,
+             const cpu_transformers::worker::Evaluator &evaluator);
+}
 
 namespace cpu_transformers {
 namespace worker {
@@ -16,12 +23,15 @@ public:
   GetSingleInputEval(const std::string &name) = 0;
   virtual evaluation::DoubleInputsKernelEval &
   GetDoubleInputsEval(const std::string &name) = 0;
+  virtual nlohmann::json ToJson() const = 0;
   static std::shared_ptr<Evaluator> Make();
+  friend std::ostream &operator<<(std::ostream &os, const Evaluator &evaluator);
 
 protected:
   Evaluator() = default;
   Evaluator(const Evaluator &evaluator) = delete;
   Evaluator(Evaluator &&evaluator) = default;
+  virtual ~Evaluator() = default;
 };
 
 } // namespace worker

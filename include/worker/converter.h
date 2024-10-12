@@ -3,6 +3,7 @@
 
 #include "structure/flow/flow.h"
 #include "structure/graph/graph.h"
+#include "worker/fwd.h"
 
 namespace cpu_transformers {
 namespace worker {

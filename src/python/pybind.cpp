@@ -28,9 +28,6 @@ PYBIND11_MODULE(libCpuTransformers, m) {
       m, "Context")
       .def(pybind11::init())
       .def("Make", &cpu_transformers::context::Context::Make)
-#ifdef DEBUG
-      .def("DumpModule", &cpu_transformers::context::Context::DumpModule)
-#endif
       .def("ExportHeaderFile",
            &cpu_transformers::context::Context::ExportHeaderFile);
 

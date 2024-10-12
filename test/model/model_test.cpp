@@ -6,6 +6,9 @@
 #include "worker/planner.h"
 #include "worker/runner.h"
 #include "gtest/gtest.h"
+#ifdef DEBUG
+#include <fstream>
+#endif
 #ifdef USE_LOGS
 #define GLOG_USE_GLOG_EXPORT
 #include "glog/flags.h"
@@ -42,12 +45,17 @@ TEST(ModelTest, BertTest) {
   Index plain_dp_greedy_index = dp_greedy_planner.Run(sequence);
   ASSERT_LE(greedy_index.GetMaximum(), plain_linear_index.GetMaximum());
   builder.Run(sequence, greedy_index);
+  Context &ctx = *context;
 #ifdef DEBUG
-  context->DumpModule("bert.mlir");
+  std::ofstream ofs("bert.mlir");
+  ofs << ctx;
+  ofs.close();
 #endif
   lower.Run();
 #ifdef DEBUG
-  context->DumpModule("bert-llvm.mlir");
+  ofs.open("bert-llvm.mlir");
+  ofs << ctx;
+  ofs.close();
 #endif
   std::vector<int64_t> input_ids(1 * 128, 0);
   std::vector<float32_t> attention_mask(1 * 128, 0), output0(1 * 128 * 768, 0),
@@ -59,7 +67,7 @@ TEST(ModelTest, BertTest) {
           {"onnx::Gather_1269", output0.data()},
           {"1272", output1.data()},
       },
-      10);
+      1);
 #ifdef USE_LOGS
   LOG(INFO) << "Time cost: " << time_cost << " ns\n";
 #endif

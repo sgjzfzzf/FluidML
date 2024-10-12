@@ -17,17 +17,16 @@
 #include "mlir/IR/DialectRegistry.h"
 #include "mlir/InitAllDialects.h"
 #include "mlir/InitAllExtensions.h"
-#include "mlir/Parser/Parser.h"
 #include "mlir/Target/LLVMIR/Dialect/Builtin/BuiltinToLLVMIRTranslation.h"
 #include "mlir/Target/LLVMIR/Dialect/LLVMIR/LLVMToLLVMIRTranslation.h"
 #include "mlir/Target/LLVMIR/Dialect/OpenMP/OpenMPToLLVMIRTranslation.h"
 #include "structure/context/attr.h"
 #include "llvm/Support/TargetSelect.h"
 #include <memory>
+#include <string>
 #ifdef DEBUG
 #include "llvm/Support/raw_ostream.h"
 #include <cassert>
-#include <system_error>
 #endif
 
 namespace cpu_transformers {
@@ -67,15 +66,6 @@ FuncAttr &Context::GetFuncAttr() {
 #endif
   return *func_attr_opt_;
 }
-
-#ifdef DEBUG
-void Context::DumpModule(std::string_view filename) {
-  std::error_code ec;
-  llvm::raw_fd_ostream file(filename.data(), ec);
-  assert(!ec);
-  module_->print(file);
-}
-#endif
 
 void Context::SetModule(mlir::OwningOpRef<mlir::ModuleOp> &&module) {
   module_ = std::move(module);
@@ -164,6 +154,14 @@ size_t {}({});
   )",
                                  notes, func_name, params);
   return code;
+}
+
+std::ostream &operator<<(std::ostream &os, Context &context) {
+  std::string str = "";
+  llvm::raw_string_ostream llvm_os(str);
+  context.module_->print(llvm_os);
+  os << str;
+  return os;
 }
 
 } // namespace context

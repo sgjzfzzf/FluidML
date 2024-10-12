@@ -1,5 +1,6 @@
 #include "evaluation/eval.h"
 #include "fmt/ranges.h"
+#include "nlohmann/json.hpp"
 #include "structure/kernel/kernel.h"
 #include "utils/utils.h"
 #include "worker/builder.h"
@@ -13,6 +14,15 @@
 #define GLOG_USE_GLOG_EXPORT
 #include "glog/logging.h"
 #endif
+
+namespace ns {
+
+void to_json(nlohmann::json &j,
+             const cpu_transformers::evaluation::KernelEval &eval) {
+  j = eval.ToJson();
+}
+
+} // namespace ns
 
 namespace cpu_transformers {
 namespace evaluation {
@@ -30,6 +40,12 @@ SingleInputKernelEval::Key::Key(std::vector<size_t> &&input_shape,
 
 bool SingleInputKernelEval::Key::operator==(const Key &rhs) const {
   return input_shape_ == rhs.input_shape_ && output_shape_ == rhs.output_shape_;
+}
+
+std::ostream &operator<<(std::ostream &os,
+                         const SingleInputKernelEval::Key &key) {
+  os << fmt::format("{},{}", key.input_shape_, key.output_shape_);
+  return os;
 }
 
 size_t SingleInputKernelEval::KeyHash::operator()(const Key &key) const {
@@ -53,6 +69,8 @@ size_t
 SingleInputKernelEval::GetTimeCost(const std::vector<size_t> &input_layout,
                                    const std::vector<size_t> &output_layout) {
   size_t time_cost;
+  const kernel::Kernel &kernel = GetKernel();
+  std::string kernel_name = kernel.GetKernelName();
 #ifdef DP_DEBUG
   // TODO: this return statement is a placeholder, to accelerate the execution
   // during development
@@ -68,7 +86,8 @@ SingleInputKernelEval::GetTimeCost(const std::vector<size_t> &input_layout,
       mlir::ModuleOp::create(mlir::UnknownLoc::get(&mlir_context));
   std::shared_ptr<context::Context> context = context::Context::Make();
   context->SetModule(std::move(module));
-  worker::KernelBuilder builder(kEvalModuleName, context);
+  worker::KernelBuilder builder(std::move(kernel_name), context);
+  kernel_name = kernel.GetKernelName();
   runKernel(builder, input_layout, output_layout);
   worker::Lower lower(context);
   lower.Run();
@@ -78,14 +97,13 @@ SingleInputKernelEval::GetTimeCost(const std::vector<size_t> &input_layout,
   time_cost =
       runner.Run({{worker::KernelBuilder::kInputKey, input_buffer.data()},
                   {worker::KernelBuilder::kOutputKey, output_buffer.data()}});
-  time_costs_.insert_or_assign({input_layout, output_layout}, time_cost);
 #endif
 #ifdef USE_LOGS
   LOG(INFO) << fmt::format("For kernel {} with the input layout: {}, output "
                            "layout: {}, the time cost is {}\n",
-                           GetKernel().GetKernelName(), input_layout,
-                           output_layout, time_cost);
+                           kernel_name, input_layout, output_layout, time_cost);
 #endif
+  time_costs_.insert_or_assign({input_layout, output_layout}, time_cost);
   return time_cost;
 }
 
@@ -114,6 +132,19 @@ const Meta &SingleInputKernelEval::GetInputMeta() const { return input_meta_; }
 
 const Meta &SingleInputKernelEval::GetOutputMeta() const {
   return output_meta_;
+}
+
+nlohmann::json SingleInputKernelEval::ToJson() const {
+  nlohmann::json json;
+  for (const auto &[key, value] : time_costs_) {
+    nlohmann::json elem = {
+        {"input_shape", key.input_shape_},
+        {"output_shape", key.output_shape_},
+        {"time_cost", value},
+    };
+    json.push_back(std::move(elem));
+  }
+  return json;
 }
 
 SingleInputWithoutBufferKernelEval::SingleInputWithoutBufferKernelEval(
@@ -175,6 +206,13 @@ bool DoubleInputsKernelEval::Key::operator==(const Key &rhs) const {
          output_shape_ == rhs.output_shape_;
 }
 
+std::ostream &operator<<(std::ostream &os,
+                         const DoubleInputsKernelEval::Key &key) {
+  os << fmt::format("{},{},{}", key.lhs_shape_, key.rhs_shape_,
+                    key.output_shape_);
+  return os;
+}
+
 size_t DoubleInputsKernelEval::KeyHash::operator()(const Key &key) const {
   size_t hash = 0;
   std::hash<int64_t> hasher;
@@ -200,6 +238,8 @@ DoubleInputsKernelEval::GetTimeCost(const std::vector<size_t> &lhs_layout,
                                     const std::vector<size_t> &rhs_layout,
                                     const std::vector<size_t> &output_layout) {
   size_t time_cost;
+  const kernel::Kernel &kernel = GetKernel();
+  std::string kernel_name = kernel.GetKernelName();
 #ifdef DP_DEBUG
   // TODO: this return statement is a placeholder, to accelerate the execution
   // during development
@@ -215,7 +255,8 @@ DoubleInputsKernelEval::GetTimeCost(const std::vector<size_t> &lhs_layout,
       mlir::ModuleOp::create(mlir::UnknownLoc::get(&mlir_context));
   std::shared_ptr<context::Context> context = context::Context::Make();
   context->SetModule(std::move(module));
-  worker::KernelBuilder builder(kEvalModuleName, context);
+  worker::KernelBuilder builder(std::move(kernel_name), context);
+  kernel_name = kernel.GetKernelName();
   runKernel(builder, lhs_layout, rhs_layout, output_layout);
   worker::Lower lower(context);
   lower.Run();
@@ -227,9 +268,9 @@ DoubleInputsKernelEval::GetTimeCost(const std::vector<size_t> &lhs_layout,
       runner.Run({{worker::KernelBuilder::kLhsKey, lhs_buffer.data()},
                   {worker::KernelBuilder::kRhsKey, rhs_buffer.data()},
                   {worker::KernelBuilder::kOutputKey, output_buffer.data()}});
+#endif
   time_costs_.insert_or_assign({lhs_layout, rhs_layout, output_layout},
                                time_cost);
-#endif
 #ifdef USE_LOGS
   LOG(INFO) << fmt::format(
       "For kernel {} with the left input layout: {}, right input layout: {}, "
@@ -274,6 +315,20 @@ const Meta &DoubleInputsKernelEval::GetRhsMeta() const { return rhs_meta_; }
 
 const Meta &DoubleInputsKernelEval::GetOutputMeta() const {
   return output_meta_;
+}
+
+nlohmann::json DoubleInputsKernelEval::ToJson() const {
+  nlohmann::json json;
+  for (const auto &[key, value] : time_costs_) {
+    nlohmann::json elem = {
+        {"lhs_shape", key.lhs_shape_},
+        {"rhs_shape", key.rhs_shape_},
+        {"output_shape", key.output_shape_},
+        {"time_cost", value},
+    };
+    json.push_back(std::move(elem));
+  }
+  return json;
 }
 
 DoubleInputsWithoutBufferKernelEval::DoubleInputsWithoutBufferKernelEval(

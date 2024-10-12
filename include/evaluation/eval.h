@@ -1,12 +1,21 @@
 #ifndef CPU_TRANSFORMERS_EVALUATION_EVAL_H_
 #define CPU_TRANSFORMERS_EVALUATION_EVAL_H_
 
+#include "evaluation/fwd.h"
+#include "nlohmann/json_fwd.hpp"
 #include "structure/kernel/kernel.h"
 #include "structure/tensor/meta.h"
 #include "worker/fwd.h"
 #include <cstddef>
 #include <unordered_map>
 #include <vector>
+
+namespace ns {
+
+void to_json(nlohmann::json &j,
+             const cpu_transformers::evaluation::KernelEval &eval);
+
+} // namespace ns
 
 namespace cpu_transformers {
 namespace evaluation {
@@ -19,10 +28,10 @@ public:
   virtual ~KernelEval() = default;
   virtual const kernel::Kernel &GetKernel() = 0;
   virtual size_t GetShortestTimeCost() = 0;
+  virtual nlohmann::json ToJson() const = 0;
 
 protected:
   const size_t epoch;
-  static constexpr char kEvalModuleName[] = "eval_module";
 };
 
 class SingleInputKernelEval : public KernelEval {
@@ -37,8 +46,11 @@ public:
     Key(std::vector<size_t> &&input_shape, std::vector<size_t> &&output_shape);
     Key(const Key &) = default;
     Key(Key &&) = default;
+    ~Key() = default;
     bool operator==(const Key &rhs) const;
+    friend class SingleInputKernelEval;
     friend struct SingleInputKernelEval::KeyHash;
+    friend std::ostream &operator<<(std::ostream &os, const Key &key);
 
   private:
     const std::vector<size_t> input_shape_;
@@ -59,6 +71,7 @@ public:
   size_t GetShortestTimeCost() override;
   const Meta &GetInputMeta() const;
   const Meta &GetOutputMeta() const;
+  nlohmann::json ToJson() const override;
 
 protected:
   virtual void runKernel(worker::KernelBuilder &builer,
@@ -121,8 +134,11 @@ public:
         std::vector<size_t> &&output_layout);
     Key(const Key &) = default;
     Key(Key &&) = default;
+    ~Key() = default;
     bool operator==(const Key &rhs) const;
+    friend class DoubleInputsKernelEval;
     friend struct DoubleInputsKernelEval::KeyHash;
+    friend std::ostream &operator<<(std::ostream &os, const Key &key);
 
   private:
     const std::vector<size_t> lhs_shape_;
@@ -146,6 +162,7 @@ public:
   const Meta &GetLhsMeta() const;
   const Meta &GetRhsMeta() const;
   const Meta &GetOutputMeta() const;
+  nlohmann::json ToJson() const override;
 
 protected:
   virtual void runKernel(worker::KernelBuilder &builer,

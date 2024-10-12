@@ -3,6 +3,7 @@
 
 #include "mlir/Pass/PassManager.h"
 #include "structure/context/context.h"
+#include "worker/fwd.h"
 
 namespace cpu_transformers {
 namespace worker {

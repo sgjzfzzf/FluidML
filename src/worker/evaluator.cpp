@@ -1,5 +1,7 @@
 #include "worker/evaluator.h"
 #include "evaluation/eval.h"
+#include "nlohmann/json.hpp"
+#include "structure/kernel/kernel.h"
 #include <cassert>
 #include <memory>
 #include <unordered_set>
@@ -72,6 +74,15 @@ struct KeyKernelEvalEqual {
 
 } // namespace
 
+namespace ns {
+
+void to_json(nlohmann::json &j,
+             const cpu_transformers::worker::Evaluator &evaluator) {
+  j = evaluator.ToJson();
+}
+
+} // namespace ns
+
 namespace cpu_transformers {
 namespace worker {
 
@@ -80,6 +91,7 @@ public:
   EvaluatorImpl() = default;
   EvaluatorImpl(const EvaluatorImpl &evaluator) = delete;
   EvaluatorImpl(EvaluatorImpl &&evaluator_impl) = default;
+  virtual ~EvaluatorImpl() = default;
   void RegisterEval(std::string &&name,
                     std::shared_ptr<evaluation::KernelEval> &&eval) override;
   evaluation::KernelEval &GetEval(const std::string &name) override;
@@ -87,6 +99,7 @@ public:
   GetSingleInputEval(const std::string &name) override;
   evaluation::DoubleInputsKernelEval &
   GetDoubleInputsEval(const std::string &name) override;
+  nlohmann::json ToJson() const override;
 
 protected:
   std::unordered_set<std::shared_ptr<evaluation::KernelEval>, KeyKernelEvalHash,
@@ -98,6 +111,11 @@ protected:
 
 std::shared_ptr<Evaluator> Evaluator::Make() {
   return std::make_shared<EvaluatorImpl>();
+}
+
+std::ostream &operator<<(std::ostream &os, const Evaluator &evaluator) {
+  os << evaluator.ToJson();
+  return os;
 }
 
 void EvaluatorImpl::RegisterEval(
@@ -143,6 +161,16 @@ EvaluatorImpl::GetDoubleInputsEval(const std::string &name) {
   assert(double_inputs_eval != nullptr);
 #endif
   return *double_inputs_eval;
+}
+
+nlohmann::json EvaluatorImpl::ToJson() const {
+  nlohmann::json json;
+  for (const std::shared_ptr<evaluation::KernelEval> &eval : eval_set_) {
+    const kernel::Kernel &kernel = eval->GetKernel();
+    const std::string kernel_name = kernel.GetKernelName();
+    json.push_back({kernel_name, eval->ToJson()});
+  }
+  return json;
 }
 
 } // namespace worker

@@ -5,6 +5,7 @@
 #include "pybind11/numpy.h"
 #endif
 #include "structure/context/context.h"
+#include "worker/fwd.h"
 
 namespace cpu_transformers {
 namespace worker {

@@ -1,7 +1,9 @@
 #ifndef CPU_TRANSFORMERS_WORKER_PARSER_H_
 #define CPU_TRANSFORMERS_WORKER_PARSER_H_
+
 #include "onnx/onnx_pb.h"
 #include "structure/graph/graph.h"
+#include "worker/fwd.h"
 
 namespace cpu_transformers {
 namespace worker {
