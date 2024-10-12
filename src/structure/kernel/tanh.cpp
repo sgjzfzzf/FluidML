@@ -7,6 +7,8 @@
 namespace cpu_transformers {
 namespace kernel {
 
+std::string TanhKernel::GetKernelName() const { return kKernelName; }
+
 void TanhKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                      mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();

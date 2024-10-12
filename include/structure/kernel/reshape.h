@@ -11,8 +11,13 @@ public:
   ReshapeKernel() = default;
   ReshapeKernel(const ReshapeKernel &) = delete;
   ReshapeKernel(ReshapeKernel &&) = default;
+  virtual ~ReshapeKernel() = default;
+  std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,
            mlir::Value &output) const override;
+
+private:
+  static constexpr char kKernelName[] = "ReshapeKernel";
 };
 
 } // namespace kernel

@@ -19,11 +19,14 @@ public:
   GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel(
       GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel &&gather_kernel) =
       default;
-  ~GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel() = default;
+  virtual ~GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel() = default;
+  std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,
            mlir::Value &output) const override;
 
 private:
+  static constexpr char kKernelName[] =
+      "GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel";
   Tensor data_;
   Tensor add0_weight_;
   Tensor add1_weight_;

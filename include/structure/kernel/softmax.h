@@ -14,10 +14,13 @@ public:
   SoftmaxKernel(int64_t axis);
   SoftmaxKernel(const SoftmaxKernel &) = delete;
   SoftmaxKernel(SoftmaxKernel &&) = default;
+  virtual ~SoftmaxKernel() = default;
+  std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input, mlir::Value &output,
            mlir::Value &buffer) const override;
 
 private:
+  static constexpr char kKernelName[] = "SoftmaxKernel";
   const int64_t axis_;
 };
 

@@ -18,6 +18,11 @@
 
 namespace cpu_transformers {
 namespace kernel {
+
+std::string GatherConstantIndexScalarKernel::GetKernelName() const {
+  return kKernelName;
+}
+
 GatherConstantIndexScalarKernel::GatherConstantIndexScalarKernel(int64_t axis,
                                                                  int64_t index)
     : axis_(axis), index_(index) {}
@@ -70,6 +75,10 @@ void GatherConstantIndexScalarKernel::Run(mlir::OpBuilder &builder,
 
 GatherConstantDataTensorKernel::GatherConstantDataTensorKernel(Tensor &&data)
     : data_(std::move(data)) {}
+
+std::string GatherConstantDataTensorKernel::GetKernelName() const {
+  return kKernelName;
+}
 
 void GatherConstantDataTensorKernel::Run(mlir::OpBuilder &builder,
                                          mlir::Value &input,

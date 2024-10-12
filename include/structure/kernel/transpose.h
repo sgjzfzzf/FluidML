@@ -12,10 +12,13 @@ public:
   TransposeKernel(std::vector<int64_t> perms);
   TransposeKernel(const TransposeKernel &) = delete;
   TransposeKernel(TransposeKernel &&) = default;
+  virtual ~TransposeKernel() = default;
+  std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,
-           mlir::Value &output) const;
+           mlir::Value &output) const override;
 
 private:
+  static constexpr char kKernelName[] = "TransposeKernel";
   std::vector<int64_t> perms_;
 };
 

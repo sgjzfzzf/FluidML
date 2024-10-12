@@ -14,6 +14,7 @@ public:
   Kernel(const Kernel &kernel) = delete;
   Kernel(Kernel &&kernel) = default;
   virtual ~Kernel() = default;
+  virtual std::string GetKernelName() const = 0;
 
 protected:
   static llvm::SmallVector<mlir::AffineMap>

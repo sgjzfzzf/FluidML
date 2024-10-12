@@ -17,6 +17,8 @@ namespace kernel {
 
 SoftmaxKernel::SoftmaxKernel(int64_t axis) : axis_(axis) {}
 
+std::string SoftmaxKernel::GetKernelName() const { return kKernelName; }
+
 void SoftmaxKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                         mlir::Value &output, mlir::Value &buffer) const {
   mlir::MLIRContext *context = builder.getContext();

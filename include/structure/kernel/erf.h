@@ -11,9 +11,13 @@ public:
   ErfKernel() = default;
   ErfKernel(const ErfKernel &erf_kernel) = delete;
   ErfKernel(ErfKernel &&erf_kernel) = default;
-  ~ErfKernel() = default;
+  virtual ~ErfKernel() = default;
+  std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,
            mlir::Value &output) const override;
+
+private:
+  static constexpr char kKernelName[] = "ErfKernel";
 };
 
 } // namespace kernel

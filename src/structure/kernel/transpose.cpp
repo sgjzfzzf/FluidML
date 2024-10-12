@@ -13,6 +13,8 @@ namespace kernel {
 
 TransposeKernel::TransposeKernel(std::vector<int64_t> perms) : perms_(perms) {}
 
+std::string TransposeKernel::GetKernelName() const { return kKernelName; }
+
 void TransposeKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                           mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();

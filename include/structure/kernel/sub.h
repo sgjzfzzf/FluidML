@@ -14,11 +14,13 @@ public:
   SubConstantScalarLhsKernel(const SubConstantScalarLhsKernel &sub_kernel) =
       delete;
   SubConstantScalarLhsKernel(SubConstantScalarLhsKernel &&sub_kernel) = default;
-  ~SubConstantScalarLhsKernel() = default;
+  virtual ~SubConstantScalarLhsKernel() = default;
+  std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,
            mlir::Value &output) const override;
 
 protected:
+  static constexpr char kKernelName[] = "SubConstantScalarLhsKernel";
   Type type_;
   float64_t value_;
 };

@@ -11,8 +11,11 @@
 
 namespace cpu_transformers {
 namespace kernel {
+
 UnSqueezeKernel::UnSqueezeKernel(std::vector<int64_t> &&axes)
     : axes_(std::move(axes)) {}
+
+std::string UnSqueezeKernel::GetKernelName() const { return kKernelName; }
 
 void UnSqueezeKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                           mlir::Value &output) const {
@@ -54,5 +57,6 @@ void UnSqueezeKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
         b.create<mlir::linalg::YieldOp>(loc, input);
       });
 }
+
 } // namespace kernel
 } // namespace cpu_transformers

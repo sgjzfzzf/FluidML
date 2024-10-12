@@ -12,10 +12,13 @@ public:
   SplitKernel(int64_t axis);
   SplitKernel(const SplitKernel &other) = delete;
   SplitKernel(SplitKernel &&other) = default;
+  virtual ~SplitKernel() = default;
+  std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,
            mlir::ValueRange outputs);
 
 private:
+  static constexpr char kKernelName[] = "SplitKernel";
   int64_t axis_;
 };
 

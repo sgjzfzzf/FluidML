@@ -9,6 +9,8 @@ namespace kernel {
 
 PowKernel::PowKernel(Type type, float64_t exp) : type_(type), exp_(exp) {}
 
+std::string PowKernel::GetKernelName() const { return kKernelName; }
+
 void PowKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                     mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();

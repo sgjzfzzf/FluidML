@@ -11,6 +11,8 @@ namespace kernel {
 DivConstScalarKernel::DivConstScalarKernel(Type type, float64_t constant)
     : type_(type), constant_(constant) {}
 
+std::string DivConstScalarKernel::GetKernelName() const { return kKernelName; }
+
 void DivConstScalarKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                                mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();

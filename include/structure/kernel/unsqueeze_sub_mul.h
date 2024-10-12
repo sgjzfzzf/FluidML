@@ -18,10 +18,14 @@ public:
       const UnsqueezeSubLhsScalarMulRhsScalarKernel &other) = delete;
   UnsqueezeSubLhsScalarMulRhsScalarKernel(
       UnsqueezeSubLhsScalarMulRhsScalarKernel &&other) = default;
+  virtual ~UnsqueezeSubLhsScalarMulRhsScalarKernel() = default;
+  std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,
            mlir::Value &output) const override;
 
 private:
+  static constexpr char kKernelName[] =
+      "UnsqueezeSubLhsScalarMulRhsScalarKernel";
   llvm::SmallVector<int64_t> unsqueeze_axes_;
   Type sub_type_;
   float64_t sub_val_;

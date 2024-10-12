@@ -10,6 +10,10 @@ SubConstantScalarLhsKernel::SubConstantScalarLhsKernel(Type type,
                                                        float64_t value)
     : type_(type), value_(value) {}
 
+std::string SubConstantScalarLhsKernel::GetKernelName() const {
+  return kKernelName;
+}
+
 void SubConstantScalarLhsKernel::Run(mlir::OpBuilder &builder,
                                      mlir::Value &input,
                                      mlir::Value &output) const {

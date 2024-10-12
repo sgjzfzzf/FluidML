@@ -13,6 +13,8 @@
 namespace cpu_transformers {
 namespace kernel {
 
+std::string ErfKernel::GetKernelName() const { return kKernelName; }
+
 void ErfKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                     mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();

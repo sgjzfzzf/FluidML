@@ -12,6 +12,8 @@ namespace kernel {
 
 SplitKernel::SplitKernel(int64_t axis) : axis_(axis) {}
 
+std::string SplitKernel::GetKernelName() const { return kKernelName; }
+
 void SplitKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                       mlir::ValueRange outputs) {
   mlir::MLIRContext *context = builder.getContext();

@@ -12,6 +12,10 @@ UnsqueezeSubLhsScalarMulRhsScalarKernel::
     : unsqueeze_axes_(unsqueeze_axes), sub_type_(sub_type), sub_val_(sub_val),
       mul_type_(mul_type), mul_val_(mul_val) {}
 
+std::string UnsqueezeSubLhsScalarMulRhsScalarKernel::GetKernelName() const {
+  return kKernelName;
+}
+
 void UnsqueezeSubLhsScalarMulRhsScalarKernel::Run(mlir::OpBuilder &builder,
                                                   mlir::Value &input,
                                                   mlir::Value &output) const {

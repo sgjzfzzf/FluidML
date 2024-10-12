@@ -15,6 +15,8 @@
 namespace cpu_transformers {
 namespace kernel {
 
+std::string MatMulKernel::GetKernelName() const { return kKernelName; }
+
 void MatMulKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
                        mlir::Value &rhs, mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();

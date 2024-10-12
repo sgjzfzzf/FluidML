@@ -13,10 +13,13 @@ public:
   PowKernel(Type type, float64_t exp);
   PowKernel(const PowKernel &other) = delete;
   PowKernel(PowKernel &&other) = default;
+  virtual ~PowKernel() = default;
+  std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,
            mlir::Value &output) const override;
 
 private:
+  static constexpr char kKernelName[] = "PowKernel";
   Type type_;
   float64_t exp_;
 };

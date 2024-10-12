@@ -20,6 +20,10 @@
 namespace cpu_transformers {
 namespace kernel {
 
+std::string LayerNormalizationConstantScaleBiasKernel::GetKernelName() const {
+  return kKernelName;
+}
+
 LayerNormalizationConstantScaleBiasKernel::
     LayerNormalizationConstantScaleBiasKernel(int64_t axis, float64_t epsilon,
                                               Tensor &&scale, Tensor &&bias)

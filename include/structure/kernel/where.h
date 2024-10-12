@@ -15,10 +15,14 @@ public:
       const WhereConstantCondConstantScalarYKernel &) = delete;
   WhereConstantCondConstantScalarYKernel(
       WhereConstantCondConstantScalarYKernel &&) = default;
+  virtual ~WhereConstantCondConstantScalarYKernel() = default;
+  std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,
            mlir::Value &output) const override;
 
 private:
+  static constexpr char kKernelName[] =
+      "WhereConstantCondConstantScalarYKernel";
   Tensor cond_;
   Type type_;
   float64_t y_;
@@ -32,10 +36,14 @@ public:
       const WhereConstantCondConstantTensorYKernel &) = delete;
   WhereConstantCondConstantTensorYKernel(
       WhereConstantCondConstantTensorYKernel &&) = default;
+  virtual ~WhereConstantCondConstantTensorYKernel() = default;
+  std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,
            mlir::Value &output) const override;
 
 private:
+  static constexpr char kKernelName[] =
+      "WhereConstantCondConstantTensorYKernel";
   Tensor cond_;
   Tensor y_;
 };

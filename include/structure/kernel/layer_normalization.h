@@ -16,10 +16,14 @@ public:
       const LayerNormalizationConstantScaleBiasKernel &other) = delete;
   LayerNormalizationConstantScaleBiasKernel(
       LayerNormalizationConstantScaleBiasKernel &&other) = default;
+  virtual ~LayerNormalizationConstantScaleBiasKernel() = default;
+  std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input, mlir::Value &output,
            mlir::Value &buffer) const override;
 
 private:
+  static constexpr char kKernelName[] =
+      "LayerNormalizationConstantScaleBiasKernel";
   int64_t axis_;
   float64_t epsilon_;
   Tensor scale_;

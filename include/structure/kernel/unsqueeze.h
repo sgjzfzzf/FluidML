@@ -11,10 +11,13 @@ public:
   UnSqueezeKernel(std::vector<int64_t> &&axes);
   UnSqueezeKernel(const UnSqueezeKernel &other) = delete;
   UnSqueezeKernel(UnSqueezeKernel &&other) = default;
+  virtual ~UnSqueezeKernel() = default;
+  std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,
            mlir::Value &output) const override;
 
 private:
+  static constexpr char kKernelName[] = "UnSqueezeKernel";
   std::vector<int64_t> axes_;
 };
 

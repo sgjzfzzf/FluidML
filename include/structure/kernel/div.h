@@ -13,11 +13,13 @@ public:
   DivConstScalarKernel(Type type, float64_t constant);
   DivConstScalarKernel(const DivConstScalarKernel &div_kernel) = delete;
   DivConstScalarKernel(DivConstScalarKernel &&div_kernel) = default;
-  ~DivConstScalarKernel() = default;
+  virtual ~DivConstScalarKernel() = default;
+  std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,
            mlir::Value &output) const override;
 
 private:
+  static constexpr char kKernelName[] = "DivConstScalarKernel";
   Type type_;
   float64_t constant_;
 };

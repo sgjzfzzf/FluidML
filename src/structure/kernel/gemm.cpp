@@ -22,6 +22,10 @@ GemmConstantWeightsBiasKernel::GemmConstantWeightsBiasKernel(
     : alpha_(alpha), beta_(beta), transA_(transA), transB_(transB),
       weights_(weights), bias_(bias) {}
 
+std::string GemmConstantWeightsBiasKernel::GetKernelName() const {
+  return kKernelName;
+}
+
 void GemmConstantWeightsBiasKernel::Run(mlir::OpBuilder &builder,
                                         mlir::Value &input,
                                         mlir::Value &output) const {

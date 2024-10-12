@@ -17,11 +17,13 @@ public:
       const AddDivErfAddMulMulKernel &add_div_erf_add_mul_mul_kernel) = delete;
   AddDivErfAddMulMulKernel(
       AddDivErfAddMulMulKernel &&add_div_erf_add_mul_mul_kernel) = default;
-  ~AddDivErfAddMulMulKernel() = default;
+  virtual ~AddDivErfAddMulMulKernel() = default;
+  std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,
            mlir::Value &output) const override;
 
 private:
+  static constexpr char kKernelName[] = "AddDivErfAddMulMulKernel";
   const Tensor add0_weight_;
   const Type div_type_;
   const float64_t div_weight_;

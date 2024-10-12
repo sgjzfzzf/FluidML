@@ -11,6 +11,8 @@ namespace kernel {
 MulConstantKernel::MulConstantKernel(Type type, float64_t constant)
     : type_(type), constant_(constant) {}
 
+std::string MulConstantKernel::GetKernelName() const { return kKernelName; }
+
 void MulConstantKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
                             mlir::Value &output) const {
   mlir::Value constant;
@@ -75,6 +77,8 @@ void MulCommonKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
         b.create<mlir::linalg::YieldOp>(loc, mul_op);
       });
 }
+
+std::string MulCommonKernel::GetKernelName() const { return kKernelName; }
 
 } // namespace kernel
 } // namespace cpu_transformers

@@ -15,10 +15,13 @@ public:
       delete;
   GemmConstantWeightsBiasKernel(GemmConstantWeightsBiasKernel &&other) =
       default;
+  virtual ~GemmConstantWeightsBiasKernel() = default;
+  std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,
            mlir::Value &output) const override;
 
 private:
+  static constexpr char kKernelName[] = "GemmConstantWeightsBiasKernel";
   const float64_t alpha_;
   const float64_t beta_;
   const bool transA_;

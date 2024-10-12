@@ -12,6 +12,9 @@
 
 namespace cpu_transformers {
 namespace kernel {
+
+std::string ReshapeKernel::GetKernelName() const { return kKernelName; }
+
 void ReshapeKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                         mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
@@ -59,5 +62,6 @@ void ReshapeKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
         b.create<mlir::affine::AffineYieldOp>(loc);
       });
 }
+
 } // namespace kernel
 } // namespace cpu_transformers

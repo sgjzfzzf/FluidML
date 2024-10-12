@@ -13,6 +13,7 @@ public:
   MulKernel() = default;
   MulKernel(const MulKernel &other) = delete;
   MulKernel(MulKernel &&other) = default;
+  virtual ~MulKernel() = default;
 };
 
 class MulConstantKernel : public SingleInputWithoutBufferKernel,
@@ -21,10 +22,13 @@ public:
   MulConstantKernel(Type type, float64_t constant);
   MulConstantKernel(const MulConstantKernel &other) = delete;
   MulConstantKernel(MulConstantKernel &&other) = default;
+  virtual ~MulConstantKernel() = default;
+  std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &lhs,
-           mlir::Value &output) const;
+           mlir::Value &output) const override;
 
 private:
+  static constexpr char kKernelName[] = "MulConstantKernel";
   const Type type_;
   const float64_t constant_;
 };
@@ -35,8 +39,13 @@ public:
   MulCommonKernel() = default;
   MulCommonKernel(const MulCommonKernel &other) = delete;
   MulCommonKernel(MulCommonKernel &&other) = default;
+  virtual ~MulCommonKernel() = default;
+  std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &lhs, mlir::Value &rhs,
-           mlir::Value &output) const;
+           mlir::Value &output) const override;
+
+private:
+  static constexpr char kKernelName[] = "MulCommonKernel";
 };
 
 } // namespace kernel

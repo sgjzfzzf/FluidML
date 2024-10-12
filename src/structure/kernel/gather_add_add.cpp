@@ -10,6 +10,11 @@
 namespace cpu_transformers {
 namespace kernel {
 
+std::string
+GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel::GetKernelName() const {
+  return kKernelName;
+}
+
 GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel::
     GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel(Tensor &&data,
                                                            Tensor &&add0_weight,

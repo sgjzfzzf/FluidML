@@ -16,6 +16,8 @@ namespace kernel {
 AddConstantKernel::AddConstantKernel(Type type, float64_t constant)
     : type_(type), constant_(constant) {}
 
+std::string AddConstantKernel::GetKernelName() const { return kKernelName; }
+
 void AddConstantKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                             mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
@@ -64,6 +66,8 @@ void AddConstantKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
         b.create<mlir::linalg::YieldOp>(loc, add_op);
       });
 }
+
+std::string AddCommonKernel::GetKernelName() const { return kKernelName; }
 
 void AddCommonKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
                           mlir::Value &rhs, mlir::Value &output) const {

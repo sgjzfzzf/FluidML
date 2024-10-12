@@ -22,6 +22,10 @@ WhereConstantCondConstantScalarYKernel::WhereConstantCondConstantScalarYKernel(
     Tensor &&cond, Type type, float64_t y)
     : cond_(std::move(cond)), type_(type), y_(y) {}
 
+std::string WhereConstantCondConstantScalarYKernel::GetKernelName() const {
+  return kKernelName;
+}
+
 void WhereConstantCondConstantScalarYKernel::Run(mlir::OpBuilder &builder,
                                                  mlir::Value &input,
                                                  mlir::Value &output) const {
@@ -77,6 +81,10 @@ void WhereConstantCondConstantScalarYKernel::Run(mlir::OpBuilder &builder,
 WhereConstantCondConstantTensorYKernel::WhereConstantCondConstantTensorYKernel(
     Tensor &&cond, Tensor &&y)
     : cond_(std::move(cond)), y_(std::move(y)) {}
+
+std::string WhereConstantCondConstantTensorYKernel::GetKernelName() const {
+  return kKernelName;
+}
 
 void WhereConstantCondConstantTensorYKernel::Run(mlir::OpBuilder &builder,
                                                  mlir::Value &input,

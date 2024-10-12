@@ -14,6 +14,10 @@
 namespace cpu_transformers {
 namespace kernel {
 
+std::string AddDivErfAddMulMulKernel::GetKernelName() const {
+  return kKernelName;
+}
+
 AddDivErfAddMulMulKernel::AddDivErfAddMulMulKernel(
     Tensor &&add0_weight, Type div_type, float64_t div_weight, Type add1_type,
     float64_t add1_weight, Type mul1_type, float64_t mul1_weight)

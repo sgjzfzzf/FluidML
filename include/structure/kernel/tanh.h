@@ -11,8 +11,13 @@ public:
   TanhKernel() = default;
   TanhKernel(const TanhKernel &other) = delete;
   TanhKernel(TanhKernel &&other) = default;
+  virtual ~TanhKernel() = default;
+  std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,
            mlir::Value &output) const override;
+
+private:
+  static constexpr char kKernelName[] = "TanhKernel";
 };
 
 } // namespace kernel
