@@ -9,28 +9,6 @@ include_directories(${CMAKE_BINARY_DIR}/external/include)
 
 link_directories(${CMAKE_BINARY_DIR}/external/lib)
 
-# if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/bert_Opset18.onnx)
-#     execute_process(
-#         COMMAND ${WGET_EXECUTABLE} -q -O bert_Opset18.onnx "https://github.com/onnx/models/raw/main/Natural_Language_Processing/bert_Opset18_transformers/bert_Opset18.onnx"
-#         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-#     )
-#     execute_process(
-#         COMMAND ${ONNXSIM} bert_Opset18.onnx bert_Opset18.onnx
-#         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-#     )
-# endif()
-
-# if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/gpt2_Opset18.onnx)
-#     execute_process(
-#         COMMAND ${WGET_EXECUTABLE} -q -O gpt2_Opset18.onnx "https://github.com/onnx/models/raw/main/Generative_AI/skip/gpt2_Opset18_transformers/gpt2_Opset18.onnx"
-#         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-#     )
-#     execute_process(
-#         COMMAND ${ONNXSIM} gpt2_Opset18.onnx gpt2_Opset18.onnx
-#         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-#     )
-# endif()
-
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/bert_Opset18.onnx
     COMMAND ${WGET_EXECUTABLE} -q -O bert_Opset18.onnx "https://github.com/onnx/models/raw/main/Natural_Language_Processing/bert_Opset18_transformers/bert_Opset18.onnx"
