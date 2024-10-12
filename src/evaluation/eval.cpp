@@ -81,9 +81,10 @@ SingleInputKernelEval::GetTimeCost(const std::vector<size_t> &input_layout,
   time_costs_.insert_or_assign({input_layout, output_layout}, time_cost);
 #endif
 #ifdef USE_LOGS
-  LOG(INFO) << fmt::format(
-      "For input layout: {}, output layout: {}, the time cost is {}\n",
-      input_layout, output_layout, time_cost);
+  LOG(INFO) << fmt::format("For kernel {} with the input layout: {}, output "
+                           "layout: {}, the time cost is {}\n",
+                           GetKernel().GetKernelName(), input_layout,
+                           output_layout, time_cost);
 #endif
   return time_cost;
 }
@@ -230,9 +231,11 @@ DoubleInputsKernelEval::GetTimeCost(const std::vector<size_t> &lhs_layout,
                                time_cost);
 #endif
 #ifdef USE_LOGS
-  LOG(INFO) << fmt::format("For left input layout: {}, right input layout: {}, "
-                           "output_layout: {}, the time cost is {}\n",
-                           lhs_layout, rhs_layout, output_layout, time_cost);
+  LOG(INFO) << fmt::format(
+      "For kernel {} with the left input layout: {}, right input layout: {}, "
+      "output_layout: {}, the time cost is {}\n",
+      GetKernel().GetKernelName(), lhs_layout, rhs_layout, output_layout,
+      time_cost);
 #endif
   return time_cost;
 }

@@ -35,8 +35,8 @@ TEST(ModelTest, BertTest) {
   PlainLinearPlanner plain_linear_planner;
   PlainGreedyPlanner plain_greedy_planner;
   DPGreedyPlanner dp_greedy_planner;
-  Sequence sequence = plain_greedy_planner.FlowToSequence(flow);
-  // Sequence sequence = dp_greedy_planner.FlowToSequence(flow);
+  // Sequence sequence = plain_greedy_planner.FlowToSequence(flow);
+  Sequence sequence = dp_greedy_planner.FlowToSequence(flow);
   Index plain_linear_index = plain_linear_planner.Run(sequence);
   Index greedy_index = plain_greedy_planner.Run(sequence);
   Index plain_dp_greedy_index = dp_greedy_planner.Run(sequence);
