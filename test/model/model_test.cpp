@@ -1,7 +1,3 @@
-#define GLOG_USE_GLOG_EXPORT
-
-#include "glog/flags.h"
-#include "glog/logging.h"
 #include "optimization/graph/manager.h"
 #include "worker/builder.h"
 #include "worker/converter.h"
@@ -10,6 +6,11 @@
 #include "worker/planner.h"
 #include "worker/runner.h"
 #include "gtest/gtest.h"
+#ifdef USE_LOGS
+#define GLOG_USE_GLOG_EXPORT
+#include "glog/flags.h"
+#include "glog/logging.h"
+#endif
 
 using namespace cpu_transformers;
 using namespace cpu_transformers::context;
@@ -58,15 +59,21 @@ TEST(ModelTest, BertTest) {
           {"onnx::Gather_1269", output0.data()},
           {"1272", output1.data()},
       },
-      1);
+      10);
+#ifdef USE_LOGS
   LOG(INFO) << "Time cost: " << time_cost << " ns\n";
+#endif
 }
 
 int main(int argc, char *argv[]) {
   testing::InitGoogleTest(&argc, argv);
+#ifdef USE_LOGS
   google::InitGoogleLogging(argv[0]);
   FLAGS_log_dir = ".";
+#endif
   int result = RUN_ALL_TESTS();
+#ifdef USE_LOGS
   google::ShutdownGoogleLogging();
+#endif
   return result;
 }

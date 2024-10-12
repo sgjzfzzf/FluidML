@@ -11,6 +11,7 @@ option(CMAKE_BUILD_TYPE "Build type" Debug)
 option(BUILD_TESTS "Build tests" OFF)
 option(BUILD_PYTHON "Build python bindings" OFF)
 option(DP_DEBUG "Skip the Dynamic Programming optimization for debug" OFF)
+option(USE_LOGS "Use logs" OFF)
 
 add_compile_options(-fPIC -Werror)
 

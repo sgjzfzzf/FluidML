@@ -1,4 +1,5 @@
 #include "evaluation/eval.h"
+#include "fmt/ranges.h"
 #include "structure/kernel/kernel.h"
 #include "utils/utils.h"
 #include "worker/builder.h"
@@ -7,6 +8,10 @@
 #include "mlir/IR/MLIRContext.h"
 #include "worker/lower.h"
 #include "worker/runner.h"
+#endif
+#ifdef USE_LOGS
+#define GLOG_USE_GLOG_EXPORT
+#include "glog/logging.h"
 #endif
 
 namespace cpu_transformers {
@@ -47,10 +52,11 @@ SingleInputKernelEval::SingleInputKernelEval(Meta &&input_meta,
 size_t
 SingleInputKernelEval::GetTimeCost(const std::vector<size_t> &input_layout,
                                    const std::vector<size_t> &output_layout) {
+  size_t time_cost;
 #ifdef DP_DEBUG
   // TODO: this return statement is a placeholder, to accelerate the execution
   // during development
-  return 1;
+  time_cost = 1;
 #else
   // Add a cache to save time on evaluate the same kernel.
   auto it = time_costs_.find({input_layout, output_layout});
@@ -69,12 +75,17 @@ SingleInputKernelEval::GetTimeCost(const std::vector<size_t> &input_layout,
   worker::Runner runner(context);
   std::vector<uint8_t> input_buffer = utils::FillBuffer(input_meta_),
                        output_buffer = utils::FillBuffer(output_meta_);
-  const size_t time_cost =
+  time_cost =
       runner.Run({{worker::KernelBuilder::kInputKey, input_buffer.data()},
                   {worker::KernelBuilder::kOutputKey, output_buffer.data()}});
   time_costs_.insert_or_assign({input_layout, output_layout}, time_cost);
-  return time_cost;
 #endif
+#ifdef USE_LOGS
+  LOG(INFO) << fmt::format(
+      "For input layout: {}, output layout: {}, the time cost is {}\n",
+      input_layout, output_layout, time_cost);
+#endif
+  return time_cost;
 }
 
 size_t SingleInputKernelEval::GetShortestTimeCost() {
@@ -187,10 +198,11 @@ size_t
 DoubleInputsKernelEval::GetTimeCost(const std::vector<size_t> &lhs_layout,
                                     const std::vector<size_t> &rhs_layout,
                                     const std::vector<size_t> &output_layout) {
+  size_t time_cost;
 #ifdef DP_DEBUG
   // TODO: this return statement is a placeholder, to accelerate the execution
   // during development
-  return 1;
+  time_cost = 1;
 #else
   // Add a cache to save time on evaluate the same kernel.
   auto it = time_costs_.find({lhs_layout, rhs_layout, output_layout});
@@ -210,14 +222,19 @@ DoubleInputsKernelEval::GetTimeCost(const std::vector<size_t> &lhs_layout,
   std::vector<uint8_t> lhs_buffer = utils::FillBuffer(lhs_meta_),
                        rhs_buffer = utils::FillBuffer(rhs_meta_),
                        output_buffer = utils::FillBuffer(output_meta_);
-  const size_t time_cost =
+  time_cost =
       runner.Run({{worker::KernelBuilder::kLhsKey, lhs_buffer.data()},
                   {worker::KernelBuilder::kRhsKey, rhs_buffer.data()},
                   {worker::KernelBuilder::kOutputKey, output_buffer.data()}});
   time_costs_.insert_or_assign({lhs_layout, rhs_layout, output_layout},
                                time_cost);
-  return time_cost;
 #endif
+#ifdef USE_LOGS
+  LOG(INFO) << fmt::format("For left input layout: {}, right input layout: {}, "
+                           "output_layout: {}, the time cost is {}\n",
+                           lhs_layout, rhs_layout, output_layout, time_cost);
+#endif
+  return time_cost;
 }
 
 size_t DoubleInputsKernelEval::GetShortestTimeCost() {

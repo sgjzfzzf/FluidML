@@ -20,3 +20,7 @@ endif()
 if(DP_DEBUG STREQUAL "ON")
     add_compile_definitions(DP_DEBUG)
 endif()
+
+if (USE_LOGS STREQUAL "ON")
+    add_compile_definitions(USE_LOGS)
+endif()
