@@ -4,7 +4,7 @@
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/Value.h"
 #include "structure/flow/sequence.h"
-#include "worker/worker.h"
+#include "worker/fwd.h"
 #include <unordered_map>
 
 namespace cpu_transformers {

@@ -6,7 +6,7 @@
 #include "structure/kernel/kernel.h"
 #include "structure/memory/index.h"
 #include "structure/tensor/meta.h"
-#include "worker/worker.h"
+#include "worker/fwd.h"
 #include <memory>
 
 namespace cpu_transformers {

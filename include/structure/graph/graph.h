@@ -1,7 +1,7 @@
 #ifndef CPU_TRANSFORMERS_STRUCTURE_GRAPH_GRAPH_H_
 #define CPU_TRANSFORMERS_STRUCTURE_GRAPH_GRAPH_H_
 
-#include "structure/graph/def.h"
+#include "structure/graph/fwd.h"
 #include <memory>
 #include <optional>
 #include <string>

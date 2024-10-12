@@ -1,5 +1,5 @@
-#ifndef CPU_TRANSFORMERS_WORKER_WORKER_H_
-#define CPU_TRANSFORMERS_WORKER_WORKER_H_
+#ifndef CPU_TRANSFORMERS_WORKER_FWD_H_
+#define CPU_TRANSFORMERS_WORKER_FWD_H_
 
 namespace cpu_transformers {
 namespace worker {

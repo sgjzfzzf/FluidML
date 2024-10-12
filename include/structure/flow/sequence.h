@@ -1,7 +1,7 @@
 #ifndef CPU_TRANSFORMERS_STRUCTURE_FLOW_SEQUENCE_H_
 #define CPU_TRANSFORMERS_STRUCTURE_FLOW_SEQUENCE_H_
 
-#include "structure/flow/object.h"
+#include "structure/flow/fwd.h"
 #include <memory>
 #include <vector>
 

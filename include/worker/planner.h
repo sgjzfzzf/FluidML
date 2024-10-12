@@ -5,7 +5,7 @@
 #include "structure/flow/sequence.h"
 #include "structure/memory/index.h"
 #include "structure/memory/plan.h"
-#include "worker/worker.h"
+#include "worker/fwd.h"
 #include <memory>
 
 namespace cpu_transformers {

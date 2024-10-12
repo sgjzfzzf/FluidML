@@ -2,7 +2,7 @@
 #define CPU_TRANSFORMERS_STRUCTURE_GRAPH_NODE_H_
 
 #include "structure/graph/attribute.h"
-#include "structure/graph/def.h"
+#include "structure/graph/fwd.h"
 #include <string>
 #include <unordered_map>
 

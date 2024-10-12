@@ -1,7 +1,7 @@
 #ifndef CPU_TRANSFORMERS_STRUCTURE_GRAPH_EDGE_H_
 #define CPU_TRANSFORMERS_STRUCTURE_GRAPH_EDGE_H_
 
-#include "structure/graph/def.h"
+#include "structure/graph/fwd.h"
 #include "structure/tensor/meta.h"
 #include "structure/tensor/tensor.h"
 #include "utils/type.h"

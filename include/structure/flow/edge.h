@@ -1,7 +1,7 @@
 #ifndef CPU_TRANSFORMERS_STRUCTURE_FLOW_EDGE_H_
 #define CPU_TRANSFORMERS_STRUCTURE_FLOW_EDGE_H_
 
-#include "structure/flow/object.h"
+#include "structure/flow/fwd.h"
 #include "structure/tensor/meta.h"
 #include <string>
 

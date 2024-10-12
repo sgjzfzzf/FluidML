@@ -3,7 +3,7 @@
 
 #include "structure/kernel/kernel.h"
 #include "structure/tensor/meta.h"
-#include "worker/worker.h"
+#include "worker/fwd.h"
 #include <cstddef>
 #include <unordered_map>
 #include <vector>

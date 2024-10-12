@@ -1,7 +1,7 @@
 #ifndef CPU_TRANSFORMERS_STRUCTURE_GRAPH_ATTRIBUTE_H_
 #define CPU_TRANSFORMERS_STRUCTURE_GRAPH_ATTRIBUTE_H_
 
-#include "structure/graph/def.h"
+#include "structure/graph/fwd.h"
 #include "structure/tensor/tensor.h"
 #include "utils/float.h"
 #include "utils/type.h"
