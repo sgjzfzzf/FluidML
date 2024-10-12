@@ -1,3 +1,5 @@
+include(${CMAKE_SOURCE_DIR}/cmake/options.cmake)
+
 find_program(ONNXSIM NAMES onnxsim REQUIRED)
 
 find_package(GTest REQUIRED)

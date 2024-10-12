@@ -1,3 +1,7 @@
+#define GLOG_USE_GLOG_EXPORT
+
+#include "glog/flags.h"
+#include "glog/logging.h"
 #include "optimization/graph/manager.h"
 #include "worker/builder.h"
 #include "worker/converter.h"
@@ -30,8 +34,8 @@ TEST(ModelTest, BertTest) {
   PlainLinearPlanner plain_linear_planner;
   PlainGreedyPlanner plain_greedy_planner;
   DPGreedyPlanner dp_greedy_planner;
-  // Sequence sequence = plain_greedy_planner.FlowToSequence(flow);
-  Sequence sequence = dp_greedy_planner.FlowToSequence(flow);
+  Sequence sequence = plain_greedy_planner.FlowToSequence(flow);
+  // Sequence sequence = dp_greedy_planner.FlowToSequence(flow);
   Index plain_linear_index = plain_linear_planner.Run(sequence);
   Index greedy_index = plain_greedy_planner.Run(sequence);
   Index plain_dp_greedy_index = dp_greedy_planner.Run(sequence);
@@ -54,7 +58,15 @@ TEST(ModelTest, BertTest) {
           {"onnx::Gather_1269", output0.data()},
           {"1272", output1.data()},
       },
-      10);
-  llvm::outs() << "Time cost: " << time_cost << ", the first element is "
-               << output0[0] << "\n";
+      1);
+  LOG(INFO) << "Time cost: " << time_cost << " ns\n";
+}
+
+int main(int argc, char *argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  google::InitGoogleLogging(argv[0]);
+  FLAGS_log_dir = ".";
+  int result = RUN_ALL_TESTS();
+  google::ShutdownGoogleLogging();
+  return result;
 }

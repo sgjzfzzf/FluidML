@@ -15,7 +15,7 @@ option(DP_DEBUG "Skip the Dynamic Programming optimization for debug" OFF)
 add_compile_options(-fPIC -Werror)
 
 ExternalProject_Add(
-    benchmark
+    libbenchmark
     GIT_REPOSITORY https://github.com/google/benchmark.git
     GIT_TAG v1.9.0
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/external -DBENCHMARK_DOWNLOAD_DEPENDENCIES=ON -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
@@ -24,9 +24,18 @@ ExternalProject_Add(
 )
 
 ExternalProject_Add(
-    fmtlib
+    libfmt
     GIT_REPOSITORY https://github.com/fmtlib/fmt.git
     GIT_TAG 10.2.1
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/external -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    BUILD_COMMAND ${CMAKE_COMMAND} --build . --target all
+    INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
+)
+
+ExternalProject_Add(
+    libglog
+    GIT_REPOSITORY https://github.com/google/glog.git
+    GIT_TAG v0.7.1
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/external -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
     BUILD_COMMAND ${CMAKE_COMMAND} --build . --target all
     INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
