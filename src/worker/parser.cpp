@@ -2,6 +2,7 @@
 #include "onnx/checker.h"
 #include "onnx/common/file_utils.h"
 #include "onnx/onnx-ml.pb.h"
+#include "onnx/onnx_pb.h"
 #include "structure/graph/attribute.h"
 #include "structure/graph/edge.h"
 #include "structure/graph/graph.h"
@@ -173,13 +174,10 @@ void createNode(Graph &graph, const onnx::NodeProto &nodeProto, Node::Op op) {
 
 namespace cpu_transformers {
 namespace worker {
+
 Graph Parser::Run(const std::string &file) {
   onnx::ModelProto model_proto;
   onnx::LoadProtoFromPath(file, model_proto);
-  return Run(model_proto);
-}
-
-Graph Parser::Run(onnx::ModelProto &model_proto) {
   Graph graph;
 #ifdef DEBUG
   onnx::checker::check_model(model_proto);
@@ -295,5 +293,6 @@ Graph Parser::Run(onnx::ModelProto &model_proto) {
 #endif
   return graph;
 }
+
 } // namespace worker
 } // namespace cpu_transformers

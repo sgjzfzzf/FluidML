@@ -19,7 +19,7 @@ ExternalProject_Add(
     libbenchmark
     GIT_REPOSITORY https://github.com/google/benchmark.git
     GIT_TAG v1.9.0
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/external -DBENCHMARK_DOWNLOAD_DEPENDENCIES=ON -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    CMAKE_ARGS -DBENCHMARK_DOWNLOAD_DEPENDENCIES=ON -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/external 
     BUILD_COMMAND ${CMAKE_COMMAND} --build . --target all
     INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
 )
@@ -66,6 +66,7 @@ add_subdirectory(src)
 
 if(${BUILD_TESTS})
     enable_testing()
+    add_subdirectory(benchmark)
     add_subdirectory(test)
 endif()
 
