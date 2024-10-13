@@ -7,6 +7,7 @@
 #include "mlir/IR/AffineMap.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/Support/LLVM.h"
+#include "structure/kernel/utils.h"
 #ifdef DEBUG
 #include <cassert>
 #endif
@@ -100,7 +101,7 @@ void AddDivErfAddMulMulKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
     __builtin_unreachable();
 #endif
   }
-  llvm::SmallVector<mlir::AffineMap> maps = getBroadcastAffineMaps(
+  llvm::SmallVector<mlir::AffineMap> maps = GetBroadcastAffineMaps(
       builder, llvm::ArrayRef{input_type, add0_weight_memref_type},
       output_type);
   mlir::Value mul1_weight = builder.create<mlir::arith::ConstantOp>(

@@ -15,15 +15,6 @@ public:
   Kernel(Kernel &&kernel) = default;
   virtual ~Kernel() = default;
   virtual std::string GetKernelName() const = 0;
-
-protected:
-  static llvm::SmallVector<mlir::AffineMap>
-  getBroadcastAffineMaps(mlir::Builder &builder,
-                         llvm::ArrayRef<mlir::MemRefType> input_types,
-                         const mlir::MemRefType &output_type);
-  static llvm::SmallVector<mlir::AffineMap> getBroadcastMatMulAffineMaps(
-      mlir::MLIRContext *context, const mlir::MemRefType &lhs_type,
-      const mlir::MemRefType &rhs_type, const mlir::MemRefType &output_type);
 };
 
 class SingleInputWithoutBufferKernel : virtual public Kernel {

@@ -6,6 +6,7 @@
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/Location.h"
 #include "mlir/IR/MLIRContext.h"
+#include "structure/kernel/utils.h"
 #include "structure/tensor/meta.h"
 #include "utils/float.h"
 #include "utils/type.h"
@@ -91,7 +92,7 @@ void AddCommonKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
   assert(*broadcast_meta_opt == output_meta);
 #endif
   llvm::SmallVector<mlir::AffineMap> maps =
-      getBroadcastAffineMaps(builder, {lhs_type, rhs_type}, output_type);
+      GetBroadcastAffineMaps(builder, {lhs_type, rhs_type}, output_type);
   llvm::SmallVector<mlir::utils::IteratorType> iterator_types;
   for (size_t i = 0; i < rank; ++i) {
     iterator_types.push_back(mlir::utils::IteratorType::parallel);

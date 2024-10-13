@@ -4,6 +4,7 @@
 #include "mlir/Dialect/Utils/StructuredOpsUtils.h"
 #include "mlir/IR/AffineMap.h"
 #include "mlir/IR/MLIRContext.h"
+#include "structure/kernel/utils.h"
 
 namespace cpu_transformers {
 namespace kernel {
@@ -62,7 +63,7 @@ void MulCommonKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
   assert(rank <= rhs_type.getRank());
 #endif
   llvm::SmallVector<mlir::AffineMap> maps =
-      getBroadcastAffineMaps(builder, {lhs_type, rhs_type}, output_type);
+      GetBroadcastAffineMaps(builder, {lhs_type, rhs_type}, output_type);
   llvm::SmallVector<mlir::utils::IteratorType> iterator_types(
       rank, mlir::utils::IteratorType::parallel);
   builder.create<mlir::linalg::GenericOp>(

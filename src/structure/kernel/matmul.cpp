@@ -7,6 +7,7 @@
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/TypeRange.h"
+#include "structure/kernel/utils.h"
 #include <cstdint>
 #ifdef DEBUG
 #include <cassert>
@@ -24,7 +25,7 @@ void MatMulKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
   mlir::MemRefType rhs_type = mlir::cast<mlir::MemRefType>(rhs.getType());
   mlir::MemRefType output_type = mlir::cast<mlir::MemRefType>(output.getType());
   llvm::SmallVector<mlir::AffineMap> maps =
-      getBroadcastMatMulAffineMaps(context, lhs_type, rhs_type, output_type);
+      GetBroadcastMatMulAffineMaps(context, lhs_type, rhs_type, output_type);
   const int64_t rank = output_type.getRank();
 #ifdef DEBUG
   assert(rank >= 2);

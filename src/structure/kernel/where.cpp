@@ -7,6 +7,7 @@
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/Support/LLVM.h"
+#include "structure/kernel/utils.h"
 #include "structure/tensor/tensor.h"
 #include "utils/float.h"
 #include "utils/type.h"
@@ -58,7 +59,7 @@ void WhereConstantCondConstantScalarYKernel::Run(mlir::OpBuilder &builder,
   mlir::bufferization::ToMemrefOp cond_memref =
       builder.create<mlir::bufferization::ToMemrefOp>(
           builder.getUnknownLoc(), cond_memref_type, cond_value);
-  llvm::SmallVector<mlir::AffineMap> maps = getBroadcastAffineMaps(
+  llvm::SmallVector<mlir::AffineMap> maps = GetBroadcastAffineMaps(
       builder, llvm::ArrayRef<mlir::MemRefType>{cond_memref_type, x_type},
       output_type);
   llvm::SmallVector<mlir::utils::IteratorType> iterator_types(
@@ -128,7 +129,7 @@ void WhereConstantCondConstantTensorYKernel::Run(mlir::OpBuilder &builder,
   mlir::bufferization::ToMemrefOp y_memref =
       builder.create<mlir::bufferization::ToMemrefOp>(builder.getUnknownLoc(),
                                                       y_memref_type, y_value);
-  llvm::SmallVector<mlir::AffineMap> maps = getBroadcastAffineMaps(
+  llvm::SmallVector<mlir::AffineMap> maps = GetBroadcastAffineMaps(
       builder, llvm::ArrayRef<mlir::MemRefType>{cond_memref_type, x_type},
       output_type);
   llvm::SmallVector<mlir::utils::IteratorType> iterator_types(

@@ -1,19 +1,14 @@
-#include "structure/kernel/kernel.h"
-#include "mlir/IR/AffineExpr.h"
-#include "mlir/IR/AffineMap.h"
+#include "structure/kernel/utils.h"
 #include "mlir/IR/BuiltinTypes.h"
-#include "llvm/ADT/ArrayRef.h"
-#include <cstdint>
-#ifdef DEBUG
-#include <cassert>
-#endif
+#include "structure/kernel/utils.h"
 
 namespace cpu_transformers {
 namespace kernel {
+
 llvm::SmallVector<mlir::AffineMap>
-Kernel::getBroadcastAffineMaps(mlir::Builder &builder,
-                               llvm::ArrayRef<mlir::MemRefType> input_types,
-                               const mlir::MemRefType &output_type) {
+GetBroadcastAffineMaps(mlir::Builder &builder,
+                       llvm::ArrayRef<mlir::MemRefType> input_types,
+                       const mlir::MemRefType &output_type) {
   llvm::ArrayRef<int64_t> output_shape = output_type.getShape();
   const size_t rank = output_shape.size(), size = input_types.size();
   llvm::SmallVector<llvm::SmallVector<mlir::AffineExpr>> exprs(size);
@@ -48,7 +43,7 @@ Kernel::getBroadcastAffineMaps(mlir::Builder &builder,
   return maps;
 }
 
-llvm::SmallVector<mlir::AffineMap> Kernel::getBroadcastMatMulAffineMaps(
+llvm::SmallVector<mlir::AffineMap> GetBroadcastMatMulAffineMaps(
     mlir::MLIRContext *context, const mlir::MemRefType &lhs_type,
     const mlir::MemRefType &rhs_type, const mlir::MemRefType &output_type) {
   llvm::ArrayRef<int64_t> lhs_shape = lhs_type.getShape(),
@@ -113,5 +108,6 @@ llvm::SmallVector<mlir::AffineMap> Kernel::getBroadcastMatMulAffineMaps(
                                                     output_exprs, context);
   return {lhs_map, rhs_map, output_map};
 }
+
 } // namespace kernel
 } // namespace cpu_transformers
