@@ -80,19 +80,15 @@ SingleInputKernelEval::GetTimeCost(const std::vector<size_t> &input_layout,
   mlir::MLIRContext mlir_context;
   mlir::OwningOpRef<mlir::ModuleOp> module =
       mlir::ModuleOp::create(mlir::UnknownLoc::get(&mlir_context));
-  std::shared_ptr<context::Context> context = context::Context::Make(),
-                                    mcontext = context;
+  context::Context context;
   context->SetModule(std::move(module));
   std::unique_ptr<worker::KernelBuilder> builder =
-      worker::KernelBuilder::Make(std::move(kernel_name), std::move(mcontext));
+      context.MakeKernelBuilder(kernel_name.c_str());
   kernel_name = kernel.GetKernelName();
   runKernel(*builder, input_layout, output_layout);
-  std::unique_ptr<worker::Lower> lower =
-      worker::Lower::Make(std::move(mcontext));
+  std::unique_ptr<worker::Lower> lower = context.MakeLower();
   lower->Run();
-  mcontext = context;
-  std::unique_ptr<worker::Runner> runner =
-      worker::Runner::Make(std::move(mcontext));
+  std::unique_ptr<worker::Runner> runner = context.MakeRunner();
   std::vector<uint8_t> input_buffer = utils::FillBuffer(input_meta_),
                        output_buffer = utils::FillBuffer(output_meta_);
   time_cost =
@@ -249,20 +245,15 @@ DoubleInputsKernelEval::GetTimeCost(const std::vector<size_t> &lhs_layout,
   mlir::MLIRContext mlir_context;
   mlir::OwningOpRef<mlir::ModuleOp> module =
       mlir::ModuleOp::create(mlir::UnknownLoc::get(&mlir_context));
-  std::shared_ptr<context::Context> context = context::Context::Make(),
-                                    mcontext = context;
+  context::Context context;
   context->SetModule(std::move(module));
   std::unique_ptr<worker::KernelBuilder> builder =
-      worker::KernelBuilder::Make(std::move(kernel_name), std::move(mcontext));
+      context.MakeKernelBuilder(kernel_name.c_str());
   kernel_name = kernel.GetKernelName();
   runKernel(*builder, lhs_layout, rhs_layout, output_layout);
-  mcontext = context;
-  std::unique_ptr<worker::Lower> lower =
-      worker::Lower::Make(std::move(mcontext));
+  std::unique_ptr<worker::Lower> lower = context.MakeLower();
   lower->Run();
-  mcontext = context;
-  std::unique_ptr<worker::Runner> runner =
-      worker::Runner::Make(std::move(mcontext));
+  std::unique_ptr<worker::Runner> runner = context.MakeRunner();
   std::vector<uint8_t> lhs_buffer = utils::FillBuffer(lhs_meta_),
                        rhs_buffer = utils::FillBuffer(rhs_meta_),
                        output_buffer = utils::FillBuffer(output_meta_);

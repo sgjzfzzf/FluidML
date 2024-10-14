@@ -8,15 +8,24 @@ class Builder;
 class GeneralBuilder;
 class KernelBuilder;
 class NaiveBuilder;
+
 class DynamicProgrammingBuilder;
+
 class Converter;
+
 class Evaluator;
+
 class Lower;
+
 class Parser;
-class MemoryPlanner;
-class LinearPlanner;
-class GreedyPlanner;
+
+class Planner;
+class PlainLinearPlanner;
+class PlainGreedyPlanner;
+class DPGreedyPlanner;
+
 class Runner;
+
 class Scheduler;
 class NaiveScheduler;
 class DynamicProgrammingScheduler;

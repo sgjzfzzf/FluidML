@@ -27,9 +27,8 @@ public:
   virtual ~GeneralBuilder() = default;
   virtual void Run(const flow::Sequence &sequence,
                    const memory::Index &index) = 0;
-  static std::unique_ptr<GeneralBuilder>
-  Make(std::string &&function_name,
-       std::shared_ptr<context::Context> &&context);
+  static std::unique_ptr<GeneralBuilder> Make(std::string &&function_name,
+                                              context::Context &&context);
 
 protected:
   GeneralBuilder() = default;
@@ -67,9 +66,8 @@ public:
   static constexpr char kLhsKey[] = "lhs";
   static constexpr char kRhsKey[] = "rhs";
   static constexpr char kOutputKey[] = "output";
-  static std::unique_ptr<KernelBuilder>
-  Make(std::string &&function_name,
-       std::shared_ptr<context::Context> &&context);
+  static std::unique_ptr<KernelBuilder> Make(std::string &&function_name,
+                                             context::Context &&context);
 
 protected:
   KernelBuilder() = default;

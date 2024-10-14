@@ -1,5 +1,6 @@
 #include "worker/planner.h"
 #include "evaluation/dp.h"
+#include "structure/context/context.h"
 #include "structure/flow/edge.h"
 #include "structure/flow/node.h"
 #include "structure/flow/region.h"
@@ -20,7 +21,7 @@ namespace worker {
 
 class PlainLinearPlannerImpl : public PlainLinearPlanner {
 public:
-  PlainLinearPlannerImpl() = default;
+  PlainLinearPlannerImpl(context::Context &&context);
   PlainLinearPlannerImpl(const PlainLinearPlannerImpl &planner) = delete;
   PlainLinearPlannerImpl(PlainLinearPlannerImpl &&planner) = default;
   virtual ~PlainLinearPlannerImpl() = default;
@@ -28,7 +29,7 @@ public:
 
 class PlainGreedyPlannerImpl : public PlainGreedyPlanner {
 public:
-  PlainGreedyPlannerImpl() = default;
+  PlainGreedyPlannerImpl(context::Context &&context);
   PlainGreedyPlannerImpl(const PlainGreedyPlannerImpl &planner) = delete;
   PlainGreedyPlannerImpl(PlainGreedyPlannerImpl &&planner) = default;
   virtual ~PlainGreedyPlannerImpl() = default;
@@ -36,11 +37,13 @@ public:
 
 class DPGreedyPlannerImpl : public DPGreedyPlanner {
 public:
-  DPGreedyPlannerImpl() = default;
+  DPGreedyPlannerImpl(context::Context &&context);
   DPGreedyPlannerImpl(const DPGreedyPlannerImpl &planner) = delete;
   DPGreedyPlannerImpl(DPGreedyPlannerImpl &&planner) = default;
   virtual ~DPGreedyPlannerImpl() = default;
 };
+
+Planner::Planner(context::Context &&context) : context_(std::move(context)) {}
 
 flow::Sequence ExecutionPlanner::topologicalSort(const flow::Flow &flow) const {
   // Run the topological sort algorithm to get the sequence.
@@ -150,8 +153,9 @@ DynamicProgrammingPlanner::FlowToSequence(const flow::Flow &flow) const {
   return sequence;
 }
 
-MemoryPlanner::MemoryPlanner(std::unique_ptr<memory::Plan> &&plan)
-    : plan_(std::move(plan)) {}
+MemoryPlanner::MemoryPlanner(context::Context &&context,
+                             std::unique_ptr<memory::Plan> &&plan)
+    : Planner(std::move(context)), plan_(std::move(plan)) {}
 
 memory::Index MemoryPlanner::Run(const flow::Sequence &sequence) const {
   const std::vector<std::shared_ptr<flow::Node>> &nodes = sequence.GetNodes();
@@ -211,31 +215,60 @@ memory::Index MemoryPlanner::Run(const flow::Sequence &sequence) const {
   return index;
 }
 
-LinearPlanner::LinearPlanner()
-    : Planner(), MemoryPlanner(std::make_unique<memory::LinearPlan>()) {}
+LinearPlanner::LinearPlanner(context::Context &&context)
+    : Planner(std::move(context)),
+      MemoryPlanner(std::move(context),
+                    std::make_unique<memory::LinearPlan>()) {}
 
 std::unique_ptr<memory::Infos> LinearPlanner::createInfos() const {
   return std::make_unique<memory::PlainInfos>();
 }
 
-GreedyPlanner::GreedyPlanner()
-    : Planner(), MemoryPlanner(std::make_unique<memory::GreedyPlan>()) {}
+GreedyPlanner::GreedyPlanner(context::Context &&context)
+    : Planner(std::move(context)),
+      MemoryPlanner(std::move(context),
+                    std::make_unique<memory::GreedyPlan>()) {}
 
 std::unique_ptr<memory::Infos> GreedyPlanner::createInfos() const {
   return std::make_unique<memory::GreedyInfos>();
 }
 
-std::unique_ptr<PlainLinearPlanner> PlainLinearPlanner::Make() {
-  return std::make_unique<PlainLinearPlannerImpl>();
+std::unique_ptr<PlainLinearPlanner>
+PlainLinearPlanner::Make(context::Context &&context) {
+  return std::make_unique<PlainLinearPlannerImpl>(std::move(context));
 }
 
-std::unique_ptr<PlainGreedyPlanner> PlainGreedyPlanner::Make() {
-  return std::make_unique<PlainGreedyPlannerImpl>();
+std::unique_ptr<PlainGreedyPlanner>
+PlainGreedyPlanner::Make(context::Context &&context) {
+  return std::make_unique<PlainGreedyPlannerImpl>(std::move(context));
 }
 
-std::unique_ptr<DPGreedyPlanner> DPGreedyPlanner::Make() {
-  return std::make_unique<DPGreedyPlannerImpl>();
+std::unique_ptr<DPGreedyPlanner>
+DPGreedyPlanner::Make(context::Context &&context) {
+  return std::make_unique<DPGreedyPlannerImpl>(std::move(context));
 }
+
+PlainLinearPlanner::PlainLinearPlanner(context::Context &&context)
+    : Planner(std::move(context)), PlainPlanner(std::move(context)),
+      LinearPlanner(std::move(context)) {}
+
+PlainGreedyPlanner::PlainGreedyPlanner(context::Context &&context)
+    : Planner(std::move(context)), PlainPlanner(std::move(context)),
+      GreedyPlanner(std::move(context)) {}
+
+DPGreedyPlanner::DPGreedyPlanner(context::Context &&context)
+    : Planner(std::move(context)),
+      DynamicProgrammingPlanner(std::move(context)),
+      GreedyPlanner(std::move(context)) {}
+
+PlainLinearPlannerImpl::PlainLinearPlannerImpl(context::Context &&context)
+    : Planner(std::move(context)), PlainLinearPlanner(std::move(context)) {}
+
+PlainGreedyPlannerImpl::PlainGreedyPlannerImpl(context::Context &&context)
+    : Planner(std::move(context)), PlainGreedyPlanner(std::move(context)) {}
+
+DPGreedyPlannerImpl::DPGreedyPlannerImpl(context::Context &&context)
+    : Planner(std::move(context)), DPGreedyPlanner(std::move(context)) {}
 
 } // namespace worker
 } // namespace cpu_transformers

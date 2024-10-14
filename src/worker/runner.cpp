@@ -31,7 +31,7 @@ namespace worker {
 
 class RunnerImpl : public Runner {
 public:
-  RunnerImpl(std::shared_ptr<context::Context> &&context);
+  RunnerImpl(context::Context &&context);
   RunnerImpl(const RunnerImpl &runner) = delete;
   RunnerImpl(RunnerImpl &&runner) = default;
   virtual ~RunnerImpl() = default;
@@ -43,16 +43,14 @@ public:
 #endif
 
 private:
-  std::shared_ptr<context::Context> context_;
+  context::Context context_;
 };
 
-std::unique_ptr<Runner>
-Runner::Make(std::shared_ptr<context::Context> &&context) {
+std::unique_ptr<Runner> Runner::Make(context::Context &&context) {
   return std::make_unique<RunnerImpl>(std::move(context));
 }
 
-RunnerImpl::RunnerImpl(std::shared_ptr<context::Context> &&context)
-    : context_(context ? std::move(context) : context::Context::Make()) {}
+RunnerImpl::RunnerImpl(context::Context &&context) : context_(context) {}
 
 size_t RunnerImpl::Run(const std::unordered_map<std::string, void *> &args,
                        size_t epoch) {

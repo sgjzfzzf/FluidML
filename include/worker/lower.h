@@ -12,8 +12,7 @@ class Lower {
 public:
   virtual ~Lower() = default;
   virtual void Run() = 0;
-  static std::unique_ptr<Lower>
-  Make(std::shared_ptr<context::Context> &&context);
+  static std::unique_ptr<Lower> Make(context::Context &&context);
 
 protected:
   Lower() = default;

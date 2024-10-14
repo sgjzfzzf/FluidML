@@ -29,26 +29,21 @@ static void BM_RunBertModel(benchmark::State &state) {
     cpu_transformers::optimization::GraphPassesManager pm;
     std::unique_ptr<cpu_transformers::worker::Converter> converter =
         cpu_transformers::worker::Converter::Make();
-    std::shared_ptr<cpu_transformers::context::Context>
-        context = cpu_transformers::context::Context::Make(),
-        mcontext = context;
+    cpu_transformers::context::Context context;
     std::unique_ptr<cpu_transformers::worker::GeneralBuilder> builder =
-        cpu_transformers::worker::GeneralBuilder::Make(name.c_str(),
-                                                       std::move(mcontext));
-    mcontext = context;
+        context.MakeGeneralBuilder(name.c_str());
     std::unique_ptr<cpu_transformers::worker::Lower> lower =
-        cpu_transformers::worker::Lower::Make(std::move(mcontext));
-    mcontext = context;
-    std::unique_ptr<cpu_transformers::worker::Runner> runner = cpu_transformers::worker::Runner::Make(std::move(mcontext));
+        context.MakeLower();
+    std::unique_ptr<cpu_transformers::worker::Runner> runner =
+        context.MakeRunner();
     cpu_transformers::graph::Graph graph = parser->Run(path);
     pm.RegisterAllPasses();
     pm.Run(graph);
     cpu_transformers::flow::Flow flow = converter->Run(graph);
     std::unique_ptr<cpu_transformers::worker::PlainGreedyPlanner>
-        plain_greedy_planner =
-            cpu_transformers::worker::PlainGreedyPlanner::Make();
+        plain_greedy_planner = context.MakePlainGreedyPlanner();
     std::unique_ptr<cpu_transformers::worker::DPGreedyPlanner>
-        dp_greedy_planner = cpu_transformers::worker::DPGreedyPlanner::Make();
+        dp_greedy_planner = context.MakeDPGreedyPlanner();
     cpu_transformers::flow::Sequence sequence =
         plain_greedy_planner->FlowToSequence(flow);
     // cpu_transformers::flow::Sequence sequence =
@@ -56,16 +51,15 @@ static void BM_RunBertModel(benchmark::State &state) {
     cpu_transformers::memory::Index greedy_index =
         plain_greedy_planner->Run(sequence);
     builder->Run(sequence, greedy_index);
-    cpu_transformers::context::Context &ctx = *context;
 #ifdef DEBUG
     std::ofstream ofs(fmt::format("{}.mlir", name));
-    ofs << ctx;
+    ofs << context;
     ofs.close();
 #endif
     lower->Run();
 #ifdef DEBUG
     ofs.open(fmt::format("{}-llvm.mlir", name));
-    ofs << ctx;
+    ofs << context;
     ofs.close();
 #endif
     std::vector<int64_t> input_ids(1 * 128, 0);

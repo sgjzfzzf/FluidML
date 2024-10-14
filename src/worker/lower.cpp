@@ -19,25 +19,23 @@ namespace worker {
 
 class LowerImpl : public Lower {
 public:
-  LowerImpl(std::shared_ptr<context::Context> context);
+  LowerImpl(context::Context context);
   LowerImpl(const LowerImpl &lower) = delete;
   LowerImpl(LowerImpl &&lower) = delete;
   virtual ~LowerImpl() = default;
   void Run() override;
 
 private:
-  std::shared_ptr<context::Context> context_;
+  context::Context context_;
   mlir::PassManager pm_;
 };
 
-std::unique_ptr<Lower>
-Lower::Make(std::shared_ptr<context::Context> &&context) {
+std::unique_ptr<Lower> Lower::Make(context::Context &&context) {
   return std::make_unique<LowerImpl>(std::move(context));
 }
 
-LowerImpl::LowerImpl(std::shared_ptr<context::Context> context)
-    : context_(context ? std::move(context) : context::Context::Make()),
-      pm_(&context_->GetMLIRContext()) {
+LowerImpl::LowerImpl(context::Context context)
+    : context_(context), pm_(&context_->GetMLIRContext()) {
   pm_.addPass(mlir::createConvertLinalgToAffineLoopsPass());
   pm_.addPass(mlir::createLowerAffinePass());
   pm_.addPass(mlir::createConvertSCFToCFPass());

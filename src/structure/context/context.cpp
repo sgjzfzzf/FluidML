@@ -21,6 +21,10 @@
 #include "mlir/Target/LLVMIR/Dialect/LLVMIR/LLVMToLLVMIRTranslation.h"
 #include "mlir/Target/LLVMIR/Dialect/OpenMP/OpenMPToLLVMIRTranslation.h"
 #include "structure/context/attr.h"
+#include "worker/builder.h"
+#include "worker/lower.h"
+#include "worker/planner.h"
+#include "worker/runner.h"
 #include "llvm/Support/TargetSelect.h"
 #include <memory>
 #include <string>
@@ -32,50 +36,95 @@
 namespace cpu_transformers {
 namespace context {
 
-Context::Context() : module_(nullptr), func_attr_opt_(std::nullopt) {
-  llvm::InitializeNativeTarget();
-  llvm::InitializeNativeTargetAsmPrinter();
-  mlir_context_
-      .loadDialect<mlir::affine::AffineDialect, mlir::arith::ArithDialect,
-                   mlir::bufferization::BufferizationDialect,
-                   mlir::BuiltinDialect, mlir::cf::ControlFlowDialect,
-                   mlir::func::FuncDialect, mlir::linalg::LinalgDialect,
-                   mlir::LLVM::LLVMDialect, mlir::math::MathDialect,
-                   mlir::memref::MemRefDialect, mlir::omp::OpenMPDialect,
-                   mlir::scf::SCFDialect, mlir::tensor::TensorDialect>();
-  mlir::registerBuiltinDialectTranslation(mlir_context_);
-  mlir::registerLLVMDialectTranslation(mlir_context_);
-  mlir::registerOpenMPDialectTranslation(mlir_context_);
-  mlir::DialectRegistry registry;
-  mlir::registerAllExtensions(registry);
-  mlir_context_.appendDialectRegistry(registry);
+Context::Context() : std::shared_ptr<ContextImpl>(ContextImpl::Make()) {}
+
+Context::Context(const std::shared_ptr<ContextImpl> &context_impl)
+    : std::shared_ptr<ContextImpl>(context_impl) {}
+
+Context::Context(std::shared_ptr<ContextImpl> &&context_impl)
+    : std::shared_ptr<ContextImpl>(std::move(context_impl)) {}
+
+Context &Context::operator=(const std::shared_ptr<ContextImpl> &context_impl) {
+  std::shared_ptr<ContextImpl>::operator=(context_impl);
+  return *this;
 }
 
-std::shared_ptr<Context> Context::Make() { return std::make_shared<Context>(); }
+Context &Context::operator=(std::shared_ptr<ContextImpl> &&context_impl) {
+  std::shared_ptr<ContextImpl>::operator=(std::move(context_impl));
+  return *this;
+}
 
-mlir::MLIRContext &Context::GetMLIRContext() { return mlir_context_; }
+std::unique_ptr<worker::GeneralBuilder>
+Context::MakeGeneralBuilder(std::string &&function_name) {
+  context::Context context = *this;
+  return worker::GeneralBuilder::Make(std::move(function_name),
+                                      std::move(context));
+}
 
-mlir::ModuleOp Context::GetModule() {
+std::unique_ptr<worker::KernelBuilder>
+Context::MakeKernelBuilder(std::string &&function_name) {
+  context::Context context = *this;
+  return worker::KernelBuilder::Make(std::move(function_name),
+                                     std::move(context));
+}
+
+std::unique_ptr<worker::PlainLinearPlanner> Context::MakePlainLinearPlanner() {
+  context::Context context = *this;
+  return worker::PlainLinearPlanner::Make(std::move(context));
+}
+
+std::unique_ptr<worker::PlainGreedyPlanner> Context::MakePlainGreedyPlanner() {
+  context::Context context = *this;
+  return worker::PlainGreedyPlanner::Make(std::move(context));
+}
+
+std::unique_ptr<worker::DPGreedyPlanner> Context::MakeDPGreedyPlanner() {
+  context::Context context = *this;
+  return worker::DPGreedyPlanner::Make(std::move(context));
+}
+
+std::unique_ptr<worker::Lower> Context::MakeLower() {
+  context::Context context = *this;
+  return worker::Lower::Make(std::move(context));
+}
+
+std::unique_ptr<worker::Runner> Context::MakeRunner() {
+  context::Context context = *this;
+  return worker::Runner::Make(std::move(context));
+}
+
+std::ostream &operator<<(std::ostream &os, Context &context) {
+  os << *context;
+  return os;
+}
+
+std::unique_ptr<ContextImpl> ContextImpl::Make() {
+  return std::unique_ptr<ContextImpl>(new ContextImpl);
+}
+
+mlir::MLIRContext &ContextImpl::GetMLIRContext() { return mlir_context_; }
+
+mlir::ModuleOp ContextImpl::GetModule() {
   mlir::ModuleOp p = module_.get();
   return p;
 }
 
-FuncAttr &Context::GetFuncAttr() {
+FuncAttr &ContextImpl::GetFuncAttr() {
 #ifdef DEBUG
   assert(func_attr_opt_);
 #endif
   return *func_attr_opt_;
 }
 
-void Context::SetModule(mlir::OwningOpRef<mlir::ModuleOp> &&module) {
+void ContextImpl::SetModule(mlir::OwningOpRef<mlir::ModuleOp> &&module) {
   module_ = std::move(module);
 }
 
-void Context::SetFuncAttr(FuncAttr &&func_attr) {
+void ContextImpl::SetFuncAttr(FuncAttr &&func_attr) {
   func_attr_opt_ = std::move(func_attr);
 }
 
-std::unique_ptr<mlir::ExecutionEngine> Context::MakeExecutionEngine() {
+std::unique_ptr<mlir::ExecutionEngine> ContextImpl::MakeExecutionEngine() {
   mlir::ExecutionEngineOptions engine_options;
   engine_options.jitCodeGenOptLevel = llvm::CodeGenOptLevel::Aggressive;
   llvm::Expected<std::unique_ptr<mlir::ExecutionEngine>> maybe_engine =
@@ -91,7 +140,7 @@ std::unique_ptr<mlir::ExecutionEngine> Context::MakeExecutionEngine() {
   return engine;
 }
 
-std::string Context::ExportHeaderFile() {
+std::string ContextImpl::ExportHeaderFile() {
   if (!func_attr_opt_) {
     return "";
   }
@@ -156,12 +205,31 @@ size_t {}({});
   return code;
 }
 
-std::ostream &operator<<(std::ostream &os, Context &context) {
+std::ostream &operator<<(std::ostream &os, ContextImpl &context_impl) {
   std::string str = "";
   llvm::raw_string_ostream llvm_os(str);
-  context.module_->print(llvm_os);
+  context_impl.module_->print(llvm_os);
   os << str;
   return os;
+}
+
+ContextImpl::ContextImpl() : module_(nullptr), func_attr_opt_(std::nullopt) {
+  llvm::InitializeNativeTarget();
+  llvm::InitializeNativeTargetAsmPrinter();
+  mlir_context_
+      .loadDialect<mlir::affine::AffineDialect, mlir::arith::ArithDialect,
+                   mlir::bufferization::BufferizationDialect,
+                   mlir::BuiltinDialect, mlir::cf::ControlFlowDialect,
+                   mlir::func::FuncDialect, mlir::linalg::LinalgDialect,
+                   mlir::LLVM::LLVMDialect, mlir::math::MathDialect,
+                   mlir::memref::MemRefDialect, mlir::omp::OpenMPDialect,
+                   mlir::scf::SCFDialect, mlir::tensor::TensorDialect>();
+  mlir::registerBuiltinDialectTranslation(mlir_context_);
+  mlir::registerLLVMDialectTranslation(mlir_context_);
+  mlir::registerOpenMPDialectTranslation(mlir_context_);
+  mlir::DialectRegistry registry;
+  mlir::registerAllExtensions(registry);
+  mlir_context_.appendDialectRegistry(registry);
 }
 
 } // namespace context

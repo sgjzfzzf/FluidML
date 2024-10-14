@@ -20,14 +20,13 @@ public:
   Run(const std::unordered_map<std::string, pybind11::array> &args,
       size_t epoch) = 0;
 #endif
-  static std::unique_ptr<Runner>
-  Make(std::shared_ptr<context::Context> &&context = nullptr);
+  static std::unique_ptr<Runner> Make(context::Context &&context);
 
 protected:
   Runner() = default;
   Runner(const Runner &runner) = delete;
   Runner(Runner &&runner) = default;
-  std::shared_ptr<context::Context> context_;
+  context::Context context_;
 };
 
 } // namespace worker

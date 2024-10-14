@@ -31,8 +31,7 @@ namespace worker {
 
 class GeneralBuilderImpl : public GeneralBuilder {
 public:
-  GeneralBuilderImpl(std::string &&function_name,
-                     std::shared_ptr<context::Context> &&context);
+  GeneralBuilderImpl(std::string &&function_name, context::Context &&context);
   GeneralBuilderImpl(const GeneralBuilderImpl &builder) = delete;
   GeneralBuilderImpl(GeneralBuilderImpl &&builder) = default;
   virtual ~GeneralBuilderImpl() = default;
@@ -40,14 +39,13 @@ public:
 
 private:
   const std::string function_name_;
-  std::shared_ptr<context::Context> context_;
+  context::Context context_;
   std::unique_ptr<Scheduler> scheduler_;
 };
 
 class KernelBuilderImpl : public KernelBuilder {
 public:
-  KernelBuilderImpl(std::string &&function_name,
-                    std::shared_ptr<context::Context> &&context);
+  KernelBuilderImpl(std::string &&function_name, context::Context &&context);
   KernelBuilderImpl(const KernelBuilderImpl &builder) = delete;
   KernelBuilderImpl(KernelBuilderImpl &&builder) = default;
   virtual ~KernelBuilderImpl() = default;
@@ -80,20 +78,19 @@ public:
 
 private:
   std::string function_name_;
-  std::shared_ptr<context::Context> context_;
+  context::Context context_;
 };
 
 std::unique_ptr<GeneralBuilder>
-GeneralBuilder::Make(std::string &&function_name,
-                     std::shared_ptr<context::Context> &&context) {
+GeneralBuilder::Make(std::string &&function_name, context::Context &&context) {
   return std::make_unique<GeneralBuilderImpl>(std::move(function_name),
                                               std::move(context));
 }
 
-GeneralBuilderImpl::GeneralBuilderImpl(
-    std::string &&function_name, std::shared_ptr<context::Context> &&context)
+GeneralBuilderImpl::GeneralBuilderImpl(std::string &&function_name,
+                                       context::Context &&context)
     : scheduler_(Scheduler::Make()), function_name_(std::move(function_name)),
-      context_(context ? std::move(context) : context::Context::Make()) {}
+      context_(context) {}
 
 void GeneralBuilderImpl::Run(const flow::Sequence &sequence,
                              const memory::Index &index) {
@@ -318,15 +315,14 @@ void GeneralBuilderImpl::Run(const flow::Sequence &sequence,
   context_->SetFuncAttr(std::move(func_attr));
 }
 
-std::unique_ptr<KernelBuilder>
-KernelBuilder::Make(std::string &&function_name,
-                    std::shared_ptr<context::Context> &&context) {
+std::unique_ptr<KernelBuilder> KernelBuilder::Make(std::string &&function_name,
+                                                   context::Context &&context) {
   return std::make_unique<KernelBuilderImpl>(std::move(function_name),
                                              std::move(context));
 }
 
-KernelBuilderImpl::KernelBuilderImpl(
-    std::string &&function_name, std::shared_ptr<context::Context> &&context)
+KernelBuilderImpl::KernelBuilderImpl(std::string &&function_name,
+                                     context::Context &&context)
     : function_name_(std::move(function_name)), context_(std::move(context)) {}
 
 void KernelBuilderImpl::RunOnSingleInputWithoutBuffer(

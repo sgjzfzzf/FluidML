@@ -1,6 +1,7 @@
 #ifndef CPU_TRANSFORMERS_WORKER_PLANNER_H_
 #define CPU_TRANSFORMERS_WORKER_PLANNER_H_
 
+#include "structure/context/context.h"
 #include "structure/flow/flow.h"
 #include "structure/flow/sequence.h"
 #include "structure/memory/index.h"
@@ -16,9 +17,10 @@ public:
   virtual ~Planner() = default;
 
 protected:
-  Planner() = default;
+  Planner(context::Context &&context);
   Planner(const Planner &) = delete;
   Planner(Planner &&) = default;
+  context::Context context_;
 };
 
 class ExecutionPlanner : virtual public Planner {
@@ -27,7 +29,7 @@ public:
   virtual flow::Sequence FlowToSequence(const flow::Flow &flow) const = 0;
 
 protected:
-  ExecutionPlanner() = default;
+  using Planner::Planner;
   ExecutionPlanner(const ExecutionPlanner &) = delete;
   ExecutionPlanner(ExecutionPlanner &&) = default;
   flow::Sequence topologicalSort(const flow::Flow &flow) const;
@@ -39,7 +41,7 @@ public:
   flow::Sequence FlowToSequence(const flow::Flow &flow) const override;
 
 protected:
-  PlainPlanner() = default;
+  using ExecutionPlanner::ExecutionPlanner;
   PlainPlanner(const PlainPlanner &) = delete;
   PlainPlanner(PlainPlanner &&) = default;
 };
@@ -50,7 +52,7 @@ public:
   flow::Sequence FlowToSequence(const flow::Flow &flow) const override;
 
 protected:
-  DynamicProgrammingPlanner() = default;
+  using ExecutionPlanner::ExecutionPlanner;
   DynamicProgrammingPlanner(const DynamicProgrammingPlanner &) = delete;
   DynamicProgrammingPlanner(DynamicProgrammingPlanner &&) = default;
 };
@@ -61,7 +63,8 @@ public:
   memory::Index Run(const flow::Sequence &sequence) const;
 
 protected:
-  MemoryPlanner(std::unique_ptr<memory::Plan> &&plan);
+  MemoryPlanner(context::Context &&context,
+                std::unique_ptr<memory::Plan> &&plan);
   MemoryPlanner(const MemoryPlanner &) = delete;
   MemoryPlanner(MemoryPlanner &&) = default;
   virtual std::unique_ptr<memory::Infos> createInfos() const = 0;
@@ -73,7 +76,7 @@ public:
   virtual ~LinearPlanner() = default;
 
 protected:
-  LinearPlanner();
+  LinearPlanner(context::Context &&context);
   LinearPlanner(const LinearPlanner &) = delete;
   LinearPlanner(LinearPlanner &&) = default;
   std::unique_ptr<memory::Infos> createInfos() const override;
@@ -84,7 +87,7 @@ public:
   virtual ~GreedyPlanner() = default;
 
 protected:
-  GreedyPlanner();
+  GreedyPlanner(context::Context &&context);
   GreedyPlanner(const GreedyPlanner &) = delete;
   GreedyPlanner(GreedyPlanner &&) = default;
   std::unique_ptr<memory::Infos> createInfos() const override;
@@ -93,10 +96,10 @@ protected:
 class PlainLinearPlanner : public PlainPlanner, public LinearPlanner {
 public:
   virtual ~PlainLinearPlanner() = default;
-  static std::unique_ptr<PlainLinearPlanner> Make();
+  static std::unique_ptr<PlainLinearPlanner> Make(context::Context &&context);
 
 protected:
-  PlainLinearPlanner() = default;
+  PlainLinearPlanner(context::Context &&context);
   PlainLinearPlanner(const PlainLinearPlanner &) = delete;
   PlainLinearPlanner(PlainLinearPlanner &&) = default;
 };
@@ -104,10 +107,10 @@ protected:
 class PlainGreedyPlanner : public PlainPlanner, public GreedyPlanner {
 public:
   virtual ~PlainGreedyPlanner() = default;
-  static std::unique_ptr<PlainGreedyPlanner> Make();
+  static std::unique_ptr<PlainGreedyPlanner> Make(context::Context &&context);
 
 protected:
-  PlainGreedyPlanner() = default;
+  PlainGreedyPlanner(context::Context &&context);
   PlainGreedyPlanner(const PlainGreedyPlanner &) = delete;
   PlainGreedyPlanner(PlainGreedyPlanner &&) = default;
 };
@@ -115,10 +118,10 @@ protected:
 class DPGreedyPlanner : public DynamicProgrammingPlanner, public GreedyPlanner {
 public:
   virtual ~DPGreedyPlanner() = default;
-  static std::unique_ptr<DPGreedyPlanner> Make();
+  static std::unique_ptr<DPGreedyPlanner> Make(context::Context &&context);
 
 protected:
-  DPGreedyPlanner() = default;
+  DPGreedyPlanner(context::Context &&context);
   DPGreedyPlanner(const DPGreedyPlanner &) = delete;
   DPGreedyPlanner(DPGreedyPlanner &&) = default;
 };
