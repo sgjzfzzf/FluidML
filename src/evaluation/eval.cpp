@@ -10,10 +10,6 @@
 #include "worker/lower.h"
 #include "worker/runner.h"
 #endif
-#ifdef USE_LOGS
-#define GLOG_USE_GLOG_EXPORT
-#include "glog/logging.h"
-#endif
 
 namespace ns {
 
@@ -84,24 +80,24 @@ SingleInputKernelEval::GetTimeCost(const std::vector<size_t> &input_layout,
   mlir::MLIRContext mlir_context;
   mlir::OwningOpRef<mlir::ModuleOp> module =
       mlir::ModuleOp::create(mlir::UnknownLoc::get(&mlir_context));
-  std::shared_ptr<context::Context> context = context::Context::Make();
+  std::shared_ptr<context::Context> context = context::Context::Make(),
+                                    mcontext = context;
   context->SetModule(std::move(module));
-  worker::KernelBuilder builder(std::move(kernel_name), context);
+  std::unique_ptr<worker::KernelBuilder> builder =
+      worker::KernelBuilder::Make(std::move(kernel_name), std::move(mcontext));
   kernel_name = kernel.GetKernelName();
-  runKernel(builder, input_layout, output_layout);
-  worker::Lower lower(context);
-  lower.Run();
-  worker::Runner runner(context);
+  runKernel(*builder, input_layout, output_layout);
+  std::unique_ptr<worker::Lower> lower =
+      worker::Lower::Make(std::move(mcontext));
+  lower->Run();
+  mcontext = context;
+  std::unique_ptr<worker::Runner> runner =
+      worker::Runner::Make(std::move(mcontext));
   std::vector<uint8_t> input_buffer = utils::FillBuffer(input_meta_),
                        output_buffer = utils::FillBuffer(output_meta_);
   time_cost =
-      runner.Run({{worker::KernelBuilder::kInputKey, input_buffer.data()},
-                  {worker::KernelBuilder::kOutputKey, output_buffer.data()}});
-#endif
-#ifdef USE_LOGS
-  LOG(INFO) << fmt::format("For kernel {} with the input layout: {}, output "
-                           "layout: {}, the time cost is {}\n",
-                           kernel_name, input_layout, output_layout, time_cost);
+      runner->Run({{worker::KernelBuilder::kInputKey, input_buffer.data()},
+                   {worker::KernelBuilder::kOutputKey, output_buffer.data()}});
 #endif
   time_costs_.insert_or_assign({input_layout, output_layout}, time_cost);
   return time_cost;
@@ -253,31 +249,30 @@ DoubleInputsKernelEval::GetTimeCost(const std::vector<size_t> &lhs_layout,
   mlir::MLIRContext mlir_context;
   mlir::OwningOpRef<mlir::ModuleOp> module =
       mlir::ModuleOp::create(mlir::UnknownLoc::get(&mlir_context));
-  std::shared_ptr<context::Context> context = context::Context::Make();
+  std::shared_ptr<context::Context> context = context::Context::Make(),
+                                    mcontext = context;
   context->SetModule(std::move(module));
-  worker::KernelBuilder builder(std::move(kernel_name), context);
+  std::unique_ptr<worker::KernelBuilder> builder =
+      worker::KernelBuilder::Make(std::move(kernel_name), std::move(mcontext));
   kernel_name = kernel.GetKernelName();
-  runKernel(builder, lhs_layout, rhs_layout, output_layout);
-  worker::Lower lower(context);
-  lower.Run();
-  worker::Runner runner(context);
+  runKernel(*builder, lhs_layout, rhs_layout, output_layout);
+  mcontext = context;
+  std::unique_ptr<worker::Lower> lower =
+      worker::Lower::Make(std::move(mcontext));
+  lower->Run();
+  mcontext = context;
+  std::unique_ptr<worker::Runner> runner =
+      worker::Runner::Make(std::move(mcontext));
   std::vector<uint8_t> lhs_buffer = utils::FillBuffer(lhs_meta_),
                        rhs_buffer = utils::FillBuffer(rhs_meta_),
                        output_buffer = utils::FillBuffer(output_meta_);
   time_cost =
-      runner.Run({{worker::KernelBuilder::kLhsKey, lhs_buffer.data()},
-                  {worker::KernelBuilder::kRhsKey, rhs_buffer.data()},
-                  {worker::KernelBuilder::kOutputKey, output_buffer.data()}});
+      runner->Run({{worker::KernelBuilder::kLhsKey, lhs_buffer.data()},
+                   {worker::KernelBuilder::kRhsKey, rhs_buffer.data()},
+                   {worker::KernelBuilder::kOutputKey, output_buffer.data()}});
 #endif
   time_costs_.insert_or_assign({lhs_layout, rhs_layout, output_layout},
                                time_cost);
-#ifdef USE_LOGS
-  LOG(INFO) << fmt::format(
-      "For kernel {} with the left input layout: {}, right input layout: {}, "
-      "output_layout: {}, the time cost is {}\n",
-      GetKernel().GetKernelName(), lhs_layout, rhs_layout, output_layout,
-      time_cost);
-#endif
   return time_cost;
 }
 

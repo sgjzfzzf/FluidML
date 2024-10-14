@@ -29,11 +29,33 @@ static_assert(std::is_trivial_v<MemRefDescriptor>);
 namespace cpu_transformers {
 namespace worker {
 
-Runner::Runner(std::shared_ptr<context::Context> context)
+class RunnerImpl : public Runner {
+public:
+  RunnerImpl(std::shared_ptr<context::Context> &&context);
+  RunnerImpl(const RunnerImpl &runner) = delete;
+  RunnerImpl(RunnerImpl &&runner) = default;
+  virtual ~RunnerImpl() = default;
+  size_t Run(const std::unordered_map<std::string, void *> &args,
+             size_t epoch) override;
+#ifdef BUILD_PYTHON
+  size_t Run(const std::unordered_map<std::string, pybind11::array> &args,
+             size_t epoch) override;
+#endif
+
+private:
+  std::shared_ptr<context::Context> context_;
+};
+
+std::unique_ptr<Runner>
+Runner::Make(std::shared_ptr<context::Context> &&context) {
+  return std::make_unique<RunnerImpl>(std::move(context));
+}
+
+RunnerImpl::RunnerImpl(std::shared_ptr<context::Context> &&context)
     : context_(context ? std::move(context) : context::Context::Make()) {}
 
-size_t Runner::Run(const std::unordered_map<std::string, void *> &args,
-                   size_t epoch) {
+size_t RunnerImpl::Run(const std::unordered_map<std::string, void *> &args,
+                       size_t epoch) {
   mlir::MLIRContext &mlir_context = context_->GetMLIRContext();
   std::unique_ptr<mlir::ExecutionEngine> engine =
       context_->MakeExecutionEngine();
@@ -100,7 +122,8 @@ size_t Runner::Run(const std::unordered_map<std::string, void *> &args,
 
 #ifdef BUILD_PYTHON
 size_t
-Runner::Run(const std::unordered_map<std::string, pybind11::array> &args) {
+RunnerImpl::Run(const std::unordered_map<std::string, pybind11::array> &args,
+                size_t epoch) {
   std::unordered_map<std::string, void *> ptrs;
   for (const auto &input : args) {
     const std::string &name = input.first;
@@ -109,7 +132,7 @@ Runner::Run(const std::unordered_map<std::string, pybind11::array> &args) {
     void *ptr = info.ptr;
     ptrs.insert({name, ptr});
   }
-  return Run(ptrs);
+  return Run(ptrs, epoch);
 }
 #endif
 

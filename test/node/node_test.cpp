@@ -13,8 +13,8 @@ using namespace cpu_transformers::graph;
 using namespace cpu_transformers::worker;
 
 TEST(NodeTest, AddTest0) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_add0_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_add0_PATH);
   std::shared_ptr<Node> add = graph.GetNode("add");
   std::shared_ptr<Edge> input0 = graph.GetEdge("input0");
   std::shared_ptr<Edge> input1 = graph.GetEdge("input1");
@@ -48,8 +48,8 @@ TEST(NodeTest, AddTest0) {
 }
 
 TEST(NodeTest, AddTest1) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_add1_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_add1_PATH);
   std::shared_ptr<Node> add = graph.GetNode("add");
   std::shared_ptr<Edge> input = graph.GetEdge("input");
   std::shared_ptr<Edge> weights = graph.GetEdge("weights");
@@ -70,8 +70,8 @@ TEST(NodeTest, AddTest1) {
 
 // Note: skip it
 TEST(NodeTest, CastTest) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_cast_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_cast_PATH);
   std::shared_ptr<Node> cast = graph.GetNode("cast");
   std::shared_ptr<Edge> input = graph.GetEdge("input");
   std::shared_ptr<Edge> output = graph.GetEdge("output");
@@ -100,8 +100,8 @@ TEST(NodeTest, CastTest) {
 }
 
 TEST(NodeTest, ConstantOfShapeTest) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_constant_of_shape_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_constant_of_shape_PATH);
   std::shared_ptr<Node> constant_of_shape = graph.GetNode("constant_of_shape");
   std::shared_ptr<Edge> input = graph.GetEdge("input");
   std::shared_ptr<Edge> output = graph.GetEdge("output");
@@ -125,8 +125,8 @@ TEST(NodeTest, ConstantOfShapeTest) {
 }
 
 TEST(NodeTest, DivTest) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_div_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_div_PATH);
   std::shared_ptr<Node> div = graph.GetNode("div");
   std::shared_ptr<Edge> input = graph.GetEdge("input");
   std::shared_ptr<Edge> weights = graph.GetEdge("weights");
@@ -147,8 +147,8 @@ TEST(NodeTest, DivTest) {
 }
 
 TEST(NodeTest, EqualTest) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_equal_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_equal_PATH);
   std::shared_ptr<Node> equal = graph.GetNode("equal");
   std::shared_ptr<Edge> input0 = graph.GetEdge("input0");
   std::shared_ptr<Edge> input1 = graph.GetEdge("input1");
@@ -179,8 +179,8 @@ TEST(NodeTest, EqualTest) {
 }
 
 TEST(NodeTest, ErfTest) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_erf_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_erf_PATH);
   std::shared_ptr<Node> erf = graph.GetNode("erf");
   std::shared_ptr<Edge> input = graph.GetEdge("input");
   std::shared_ptr<Edge> output = graph.GetEdge("output");
@@ -201,8 +201,8 @@ TEST(NodeTest, ErfTest) {
 }
 
 TEST(NodeTest, GatherTest0) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_gather0_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_gather0_PATH);
   std::shared_ptr<Node> gather = graph.GetNode("gather");
   std::shared_ptr<Edge> data = graph.GetEdge("data");
   std::shared_ptr<Edge> indices = graph.GetEdge("indices");
@@ -222,8 +222,8 @@ TEST(NodeTest, GatherTest0) {
 }
 
 TEST(NodeTest, GatherTest1) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_gather1_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_gather1_PATH);
   std::shared_ptr<Node> gather = graph.GetNode("gather");
   std::shared_ptr<Edge> data = graph.GetEdge("data");
   std::shared_ptr<Edge> indices = graph.GetEdge("indices");
@@ -242,8 +242,8 @@ TEST(NodeTest, GatherTest1) {
 }
 
 TEST(NodeTest, GemmTest) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_gemm_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_gemm_PATH);
   std::shared_ptr<Node> gemm = graph.GetNode("gemm");
   std::shared_ptr<Edge> input = graph.GetEdge("input");
   std::shared_ptr<Edge> weights = graph.GetEdge("weights");
@@ -265,8 +265,8 @@ TEST(NodeTest, GemmTest) {
 }
 
 TEST(NodeTest, LayerNormalizationTest) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_layer_normalization_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_layer_normalization_PATH);
   std::shared_ptr<Node> layernorm = graph.GetNode("layer_normalization");
   std::shared_ptr<Edge> input = graph.GetEdge("input");
   std::shared_ptr<Edge> scale = graph.GetEdge("scale");
@@ -288,8 +288,8 @@ TEST(NodeTest, LayerNormalizationTest) {
 }
 
 TEST(NodeTest, MatmulTest0) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_matmul0_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_matmul0_PATH);
   std::shared_ptr<Node> matmul = graph.GetNode("matmul");
   std::shared_ptr<Edge> input0 = graph.GetEdge("input0");
   std::shared_ptr<Edge> input1 = graph.GetEdge("input1");
@@ -331,8 +331,8 @@ TEST(NodeTest, MatmulTest0) {
 }
 
 TEST(NodeTest, MatmulTest1) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_matmul1_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_matmul1_PATH);
   std::shared_ptr<Node> matmul = graph.GetNode("matmul");
   std::shared_ptr<Edge> input = graph.GetEdge("input");
   std::shared_ptr<Edge> weights = graph.GetEdge("weights");
@@ -351,8 +351,8 @@ TEST(NodeTest, MatmulTest1) {
 }
 
 TEST(NodeTest, Mul0Test) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_mul0_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_mul0_PATH);
   std::shared_ptr<Node> mul = graph.GetNode("mul");
   std::shared_ptr<Edge> input0 = graph.GetEdge("input0");
   std::shared_ptr<Edge> input1 = graph.GetEdge("input1");
@@ -368,8 +368,8 @@ TEST(NodeTest, Mul0Test) {
 }
 
 TEST(NodeTest, Mul1Test) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_mul1_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_mul1_PATH);
   std::shared_ptr<Node> mul = graph.GetNode("mul");
   std::shared_ptr<Edge> input = graph.GetEdge("input");
   std::shared_ptr<Edge> weights = graph.GetEdge("weights");
@@ -390,8 +390,8 @@ TEST(NodeTest, Mul1Test) {
 }
 
 TEST(NodeTest, SplitTest) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_split_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_split_PATH);
   std::shared_ptr<Node> split = graph.GetNode("split");
   std::shared_ptr<Edge> input = graph.GetEdge("input");
   std::shared_ptr<Edge> sizes = graph.GetEdge("sizes");
@@ -440,8 +440,8 @@ TEST(NodeTest, SplitTest) {
 }
 
 TEST(NodeTest, PowTest) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_pow_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_pow_PATH);
   std::shared_ptr<Node> pow = graph.GetNode("pow");
   std::shared_ptr<Edge> input = graph.GetEdge("input");
   std::shared_ptr<Edge> exponent = graph.GetEdge("exponent");
@@ -462,8 +462,8 @@ TEST(NodeTest, PowTest) {
 }
 
 TEST(NodeTest, ReshapeTest) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_reshape_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_reshape_PATH);
   std::shared_ptr<Node> reshape = graph.GetNode("reshape");
   std::shared_ptr<Edge> data = graph.GetEdge("data");
   std::shared_ptr<Edge> shape = graph.GetEdge("shape");
@@ -496,8 +496,8 @@ TEST(NodeTest, ReshapeTest) {
 }
 
 TEST(NodeTest, SoftmaxTest) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_softmax_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_softmax_PATH);
   std::shared_ptr<Node> softmax = graph.GetNode("softmax");
   std::shared_ptr<Edge> input = graph.GetEdge("input");
   std::shared_ptr<Edge> output = graph.GetEdge("output");
@@ -523,8 +523,8 @@ TEST(NodeTest, SoftmaxTest) {
 }
 
 TEST(NodeTest, SubTest) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_sub_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_sub_PATH);
   std::shared_ptr<Node> sub = graph.GetNode("sub");
   std::shared_ptr<Edge> diff = graph.GetEdge("diff");
   std::shared_ptr<Edge> input = graph.GetEdge("input");
@@ -551,8 +551,8 @@ TEST(NodeTest, SubTest) {
 }
 
 TEST(NodeTest, TanhTest) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_tanh_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_tanh_PATH);
   std::shared_ptr<Node> tanh = graph.GetNode("tanh");
   std::shared_ptr<Edge> input = graph.GetEdge("input");
   std::shared_ptr<Edge> output = graph.GetEdge("output");
@@ -571,8 +571,8 @@ TEST(NodeTest, TanhTest) {
 }
 
 TEST(NodeTest, TransposeTest) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_transpose_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_transpose_PATH);
   std::shared_ptr<Node> transpose = graph.GetNode("transpose");
   std::shared_ptr<Edge> input = graph.GetEdge("input");
   std::shared_ptr<Edge> output = graph.GetEdge("output");
@@ -603,8 +603,8 @@ TEST(NodeTest, TransposeTest) {
 }
 
 TEST(NodeTest, UnsqueezeTest) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_unsqueeze_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_unsqueeze_PATH);
   std::shared_ptr<Node> unsqueeze = graph.GetNode("unsqueeze");
   std::shared_ptr<Edge> input = graph.GetEdge("input");
   std::shared_ptr<Edge> output = graph.GetEdge("output");
@@ -625,8 +625,8 @@ TEST(NodeTest, UnsqueezeTest) {
 }
 
 TEST(NodeTest, WhereTest) {
-  Parser parser;
-  Graph graph = parser.Run(ONNX_where_PATH);
+  std::unique_ptr<Parser> parser = Parser::Make();
+  Graph graph = parser->Run(ONNX_where_PATH);
   std::shared_ptr<Node> where = graph.GetNode("where");
   std::shared_ptr<Edge> condition = graph.GetEdge("condition");
   std::shared_ptr<Edge> input = graph.GetEdge("input");

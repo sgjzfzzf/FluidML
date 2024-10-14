@@ -18,6 +18,30 @@
 namespace cpu_transformers {
 namespace worker {
 
+class PlainLinearPlannerImpl : public PlainLinearPlanner {
+public:
+  PlainLinearPlannerImpl() = default;
+  PlainLinearPlannerImpl(const PlainLinearPlannerImpl &planner) = delete;
+  PlainLinearPlannerImpl(PlainLinearPlannerImpl &&planner) = default;
+  virtual ~PlainLinearPlannerImpl() = default;
+};
+
+class PlainGreedyPlannerImpl : public PlainGreedyPlanner {
+public:
+  PlainGreedyPlannerImpl() = default;
+  PlainGreedyPlannerImpl(const PlainGreedyPlannerImpl &planner) = delete;
+  PlainGreedyPlannerImpl(PlainGreedyPlannerImpl &&planner) = default;
+  virtual ~PlainGreedyPlannerImpl() = default;
+};
+
+class DPGreedyPlannerImpl : public DPGreedyPlanner {
+public:
+  DPGreedyPlannerImpl() = default;
+  DPGreedyPlannerImpl(const DPGreedyPlannerImpl &planner) = delete;
+  DPGreedyPlannerImpl(DPGreedyPlannerImpl &&planner) = default;
+  virtual ~DPGreedyPlannerImpl() = default;
+};
+
 flow::Sequence ExecutionPlanner::topologicalSort(const flow::Flow &flow) const {
   // Run the topological sort algorithm to get the sequence.
   flow::Sequence sequence;
@@ -199,6 +223,18 @@ GreedyPlanner::GreedyPlanner()
 
 std::unique_ptr<memory::Infos> GreedyPlanner::createInfos() const {
   return std::make_unique<memory::GreedyInfos>();
+}
+
+std::unique_ptr<PlainLinearPlanner> PlainLinearPlanner::Make() {
+  return std::make_unique<PlainLinearPlannerImpl>();
+}
+
+std::unique_ptr<PlainGreedyPlanner> PlainGreedyPlanner::Make() {
+  return std::make_unique<PlainGreedyPlannerImpl>();
+}
+
+std::unique_ptr<DPGreedyPlanner> DPGreedyPlanner::Make() {
+  return std::make_unique<DPGreedyPlannerImpl>();
 }
 
 } // namespace worker

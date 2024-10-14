@@ -175,7 +175,20 @@ void createNode(Graph &graph, const onnx::NodeProto &nodeProto, Node::Op op) {
 namespace cpu_transformers {
 namespace worker {
 
-Graph Parser::Run(const std::string &file) {
+class ParserImpl : public Parser {
+public:
+  ParserImpl() = default;
+  ~ParserImpl() = default;
+  ParserImpl(const ParserImpl &parser) = delete;
+  ParserImpl(ParserImpl &&parser) = delete;
+  Graph Run(const std::string &file) override;
+};
+
+std::unique_ptr<Parser> Parser::Make() {
+  return std::make_unique<ParserImpl>();
+}
+
+Graph ParserImpl::Run(const std::string &file) {
   onnx::ModelProto model_proto;
   onnx::LoadProtoFromPath(file, model_proto);
   Graph graph;

@@ -12,12 +12,16 @@ namespace worker {
 
 class Scheduler {
 public:
+  virtual ~Scheduler() = default;
+  virtual void
+  Run(mlir::OpBuilder &builder, const flow::Sequence &sequence,
+      std::unordered_map<std::string, mlir::Value> &symbol_table) = 0;
+  static std::unique_ptr<Scheduler> Make();
+
+protected:
   Scheduler() = default;
   Scheduler(const Scheduler &scheduler) = delete;
   Scheduler(Scheduler &&scheduler) = default;
-  virtual ~Scheduler() = default;
-  virtual void Run(mlir::OpBuilder &builder, const flow::Sequence &sequence,
-                   std::unordered_map<std::string, mlir::Value> &symbol_table);
 };
 
 } // namespace worker

@@ -13,7 +13,21 @@
 namespace cpu_transformers {
 namespace worker {
 
-void Scheduler::Run(
+class SchedulerImpl : public Scheduler {
+public:
+  SchedulerImpl() = default;
+  SchedulerImpl(const SchedulerImpl &scheduler) = delete;
+  SchedulerImpl(SchedulerImpl &&scheduler) = default;
+  virtual ~SchedulerImpl() = default;
+  void Run(mlir::OpBuilder &builder, const flow::Sequence &sequence,
+           std::unordered_map<std::string, mlir::Value> &symbol_table) override;
+};
+
+std::unique_ptr<Scheduler> Scheduler::Make() {
+  return std::make_unique<SchedulerImpl>();
+}
+
+void SchedulerImpl::Run(
     mlir::OpBuilder &builder, const flow::Sequence &sequence,
     std::unordered_map<std::string, mlir::Value> &symbol_table) {
   const std::vector<std::shared_ptr<flow::Node>> &nodes = sequence.GetNodes();

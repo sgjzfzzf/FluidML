@@ -12,17 +12,21 @@ namespace worker {
 
 class Runner {
 public:
-  Runner(std::shared_ptr<context::Context> context = nullptr);
+  virtual ~Runner() = default;
+  virtual size_t Run(const std::unordered_map<std::string, void *> &args,
+                     size_t epoch = 1) = 0;
+#ifdef BUILD_PYTHON
+  virtual size_t
+  Run(const std::unordered_map<std::string, pybind11::array> &args,
+      size_t epoch) = 0;
+#endif
+  static std::unique_ptr<Runner>
+  Make(std::shared_ptr<context::Context> &&context = nullptr);
+
+protected:
+  Runner() = default;
   Runner(const Runner &runner) = delete;
   Runner(Runner &&runner) = default;
-  virtual ~Runner() = default;
-  size_t Run(const std::unordered_map<std::string, void *> &args,
-             size_t epoch = 1);
-#ifdef BUILD_PYTHON
-  size_t Run(const std::unordered_map<std::string, pybind11::array> &args);
-#endif
-
-private:
   std::shared_ptr<context::Context> context_;
 };
 

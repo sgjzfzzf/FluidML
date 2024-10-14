@@ -29,16 +29,74 @@
 namespace cpu_transformers {
 namespace worker {
 
-GeneralBuilder::GeneralBuilder(std::string &&function_name,
-                               std::shared_ptr<context::Context> context)
-    : scheduler_(std::make_unique<Scheduler>()),
-      function_name_(std::move(function_name)),
+class GeneralBuilderImpl : public GeneralBuilder {
+public:
+  GeneralBuilderImpl(std::string &&function_name,
+                     std::shared_ptr<context::Context> &&context);
+  GeneralBuilderImpl(const GeneralBuilderImpl &builder) = delete;
+  GeneralBuilderImpl(GeneralBuilderImpl &&builder) = default;
+  virtual ~GeneralBuilderImpl() = default;
+  void Run(const flow::Sequence &sequence, const memory::Index &index) override;
+
+private:
+  const std::string function_name_;
+  std::shared_ptr<context::Context> context_;
+  std::unique_ptr<Scheduler> scheduler_;
+};
+
+class KernelBuilderImpl : public KernelBuilder {
+public:
+  KernelBuilderImpl(std::string &&function_name,
+                    std::shared_ptr<context::Context> &&context);
+  KernelBuilderImpl(const KernelBuilderImpl &builder) = delete;
+  KernelBuilderImpl(KernelBuilderImpl &&builder) = default;
+  virtual ~KernelBuilderImpl() = default;
+  void RunOnSingleInputWithoutBuffer(
+      const kernel::SingleInputWithoutBufferKernel &kernel,
+      const Meta &input_meta, const Meta &output_meta) override;
+  void RunOnSingleInputWithoutBuffer(
+      const kernel::SingleInputWithoutBufferKernel &kernel,
+      const Meta &input_meta, const std::vector<size_t> &input_layout,
+      const Meta &output_meta,
+      const std::vector<size_t> &output_layout) override;
+  void
+  RunOnSingleInputWithBuffer(const kernel::SingleInputWithBufferKernel &kernel,
+                             const Meta &input_meta, const Meta &output_meta,
+                             size_t buffer_size) override;
+  void RunOnSingleInputWithBuffer(
+      const kernel::SingleInputWithBufferKernel &kernel, const Meta &input_meta,
+      const std::vector<size_t> &input_layout, const Meta &output_meta,
+      const std::vector<size_t> &output_layout, size_t buffer_size) override;
+  void RunOnDoubleInputsWithoutBuffer(
+      const kernel::DoubleInputsWithoutBufferKernel &kernel,
+      const Meta &lhs_meta, const Meta &rhs_meta,
+      const Meta &output_meta) override;
+  void RunOnDoubleInputsWithoutBuffer(
+      const kernel::DoubleInputsWithoutBufferKernel &kernel,
+      const Meta &lhs_meta, const std::vector<size_t> &lhs_layout,
+      const Meta &rhs_meta, const std::vector<size_t> &rhs_layout,
+      const Meta &output_meta,
+      const std::vector<size_t> &output_layout) override;
+
+private:
+  std::string function_name_;
+  std::shared_ptr<context::Context> context_;
+};
+
+std::unique_ptr<GeneralBuilder>
+GeneralBuilder::Make(std::string &&function_name,
+                     std::shared_ptr<context::Context> &&context) {
+  return std::make_unique<GeneralBuilderImpl>(std::move(function_name),
+                                              std::move(context));
+}
+
+GeneralBuilderImpl::GeneralBuilderImpl(
+    std::string &&function_name, std::shared_ptr<context::Context> &&context)
+    : scheduler_(Scheduler::Make()), function_name_(std::move(function_name)),
       context_(context ? std::move(context) : context::Context::Make()) {}
 
-GeneralBuilder::~GeneralBuilder() = default;
-
-void GeneralBuilder::Run(const flow::Sequence &sequence,
-                         const memory::Index &index) {
+void GeneralBuilderImpl::Run(const flow::Sequence &sequence,
+                             const memory::Index &index) {
   mlir::MLIRContext &mlir_context = context_->GetMLIRContext();
   mlir::OpBuilder builder(&mlir_context);
   mlir::OwningOpRef<mlir::ModuleOp> module =
@@ -260,11 +318,18 @@ void GeneralBuilder::Run(const flow::Sequence &sequence,
   context_->SetFuncAttr(std::move(func_attr));
 }
 
-KernelBuilder::KernelBuilder(std::string &&function_name,
-                             std::shared_ptr<context::Context> context)
+std::unique_ptr<KernelBuilder>
+KernelBuilder::Make(std::string &&function_name,
+                    std::shared_ptr<context::Context> &&context) {
+  return std::make_unique<KernelBuilderImpl>(std::move(function_name),
+                                             std::move(context));
+}
+
+KernelBuilderImpl::KernelBuilderImpl(
+    std::string &&function_name, std::shared_ptr<context::Context> &&context)
     : function_name_(std::move(function_name)), context_(std::move(context)) {}
 
-void KernelBuilder::RunOnSingleInputWithoutBuffer(
+void KernelBuilderImpl::RunOnSingleInputWithoutBuffer(
     const kernel::SingleInputWithoutBufferKernel &kernel,
     const Meta &input_meta, const Meta &output_meta) {
   const std::vector<int64_t> input_shape = input_meta.GetShape(),
@@ -281,7 +346,7 @@ void KernelBuilder::RunOnSingleInputWithoutBuffer(
                                 output_layout);
 }
 
-void KernelBuilder::RunOnSingleInputWithoutBuffer(
+void KernelBuilderImpl::RunOnSingleInputWithoutBuffer(
     const kernel::SingleInputWithoutBufferKernel &kernel,
     const Meta &input_meta, const std::vector<size_t> &input_layout,
     const Meta &output_meta, const std::vector<size_t> &output_layout) {
@@ -338,7 +403,7 @@ void KernelBuilder::RunOnSingleInputWithoutBuffer(
   context_->SetFuncAttr(std::move(func_attr));
 }
 
-void KernelBuilder::RunOnSingleInputWithBuffer(
+void KernelBuilderImpl::RunOnSingleInputWithBuffer(
     const kernel::SingleInputWithBufferKernel &kernel, const Meta &input_meta,
     const Meta &output_meta, size_t buffer_size) {
   const std::vector<int64_t> input_shape = input_meta.GetShape(),
@@ -355,7 +420,7 @@ void KernelBuilder::RunOnSingleInputWithBuffer(
                              output_layout, buffer_size);
 }
 
-void KernelBuilder::RunOnSingleInputWithBuffer(
+void KernelBuilderImpl::RunOnSingleInputWithBuffer(
     const kernel::SingleInputWithBufferKernel &kernel, const Meta &input_meta,
     const std::vector<size_t> &input_layout, const Meta &output_meta,
     const std::vector<size_t> &output_layout, size_t buffer_size) {
@@ -417,7 +482,7 @@ void KernelBuilder::RunOnSingleInputWithBuffer(
   context_->SetFuncAttr(std::move(func_attr));
 }
 
-void KernelBuilder::RunOnDoubleInputsWithoutBuffer(
+void KernelBuilderImpl::RunOnDoubleInputsWithoutBuffer(
     const kernel::DoubleInputsWithoutBufferKernel &kernel, const Meta &lhs_meta,
     const Meta &rhs_meta, const Meta &output_meta) {
   const std::vector<int64_t> lhs_shape = lhs_meta.GetShape(),
@@ -440,7 +505,7 @@ void KernelBuilder::RunOnDoubleInputsWithoutBuffer(
                                  rhs_layout, output_meta, output_layout);
 }
 
-void KernelBuilder::RunOnDoubleInputsWithoutBuffer(
+void KernelBuilderImpl::RunOnDoubleInputsWithoutBuffer(
     const kernel::DoubleInputsWithoutBufferKernel &kernel, const Meta &lhs_meta,
     const std::vector<size_t> &lhs_layout, const Meta &rhs_meta,
     const std::vector<size_t> &rhs_layout, const Meta &output_meta,

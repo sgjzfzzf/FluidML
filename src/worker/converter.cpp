@@ -16,7 +16,65 @@
 
 namespace cpu_transformers {
 namespace worker {
-flow::Flow Converter::Run(const graph::Graph &graph) {
+
+class ConverterImpl : public Converter {
+public:
+  ConverterImpl() = default;
+  ConverterImpl(const ConverterImpl &converter) = delete;
+  ConverterImpl(ConverterImpl &&converter) = default;
+  virtual ~ConverterImpl() = default;
+  flow::Flow Run(const graph::Graph &graph) override;
+
+private:
+  void convertAddNode(flow::Flow &flow, const graph::Graph &graph,
+                      const graph::Node &node);
+  void convertAddDivErfAddMulMulNode(flow::Flow &flow,
+                                     const graph::Graph &graph,
+                                     const graph::Node &node);
+  void convertDivNode(flow::Flow &flow, const graph::Graph &graph,
+                      const graph::Node &node);
+  void convertErfNode(flow::Flow &flow, const graph::Graph &graph,
+                      const graph::Node &node);
+  void convertGatherNode(flow::Flow &flow, const graph::Graph &graph,
+                         const graph::Node &node);
+  void convertGatherAddAddNode(flow::Flow &flow, const graph::Graph &graph,
+                               const graph::Node &node);
+  void convertGemmNode(flow::Flow &flow, const graph::Graph &graph,
+                       const graph::Node &node);
+  void convertLayerNormalizationNode(flow::Flow &flow,
+                                     const graph::Graph &graph,
+                                     const graph::Node &node);
+  void convertMatMulNode(flow::Flow &flow, const graph::Graph &graph,
+                         const graph::Node &node);
+  void convertMulNode(flow::Flow &flow, const graph::Graph &graph,
+                      const graph::Node &node);
+  void convertPowNode(flow::Flow &flow, const graph::Graph &graph,
+                      const graph::Node &node);
+  void convertReshapeNode(flow::Flow &flow, const graph::Graph &graph,
+                          const graph::Node &node);
+  void convertSoftmaxNode(flow::Flow &flow, const graph::Graph &graph,
+                          const graph::Node &node);
+  void convertSplitNode(flow::Flow &flow, const graph::Graph &graph,
+                        const graph::Node &node);
+  void convertSubNode(flow::Flow &flow, const graph::Graph &graph,
+                      const graph::Node &node);
+  void convertTanhNode(flow::Flow &flow, const graph::Graph &graph,
+                       const graph::Node &node);
+  void convertTransposeNode(flow::Flow &flow, const graph::Graph &graph,
+                            const graph::Node &node);
+  void convertUnsqueezeNode(flow::Flow &flow, const graph::Graph &graph,
+                            const graph::Node &node);
+  void convertUnsqueezeSubMulNode(flow::Flow &flow, const graph::Graph &graph,
+                                  const graph::Node &node);
+  void convertWhereNode(flow::Flow &flow, const graph::Graph &graph,
+                        const graph::Node &node);
+};
+
+std::unique_ptr<Converter> Converter::Make() {
+  return std::make_unique<ConverterImpl>();
+}
+
+flow::Flow ConverterImpl::Run(const graph::Graph &graph) {
   flow::Flow flow;
   for (std::shared_ptr<graph::Edge> edge : graph.GetAllEdges()) {
     if (std::shared_ptr<graph::InputEdge> input_edge =
@@ -207,8 +265,8 @@ flow::Flow Converter::Run(const graph::Graph &graph) {
   return flow;
 }
 
-void Converter::convertAddNode(flow::Flow &flow, const graph::Graph &graph,
-                               const graph::Node &node) {
+void ConverterImpl::convertAddNode(flow::Flow &flow, const graph::Graph &graph,
+                                   const graph::Node &node) {
 #ifdef DEBUG
   assert(node.GetOp() == graph::Node::Op::Add);
 #endif
@@ -307,9 +365,9 @@ void Converter::convertAddNode(flow::Flow &flow, const graph::Graph &graph,
   flow.PutNode(std::move(ptr));
 }
 
-void Converter::convertAddDivErfAddMulMulNode(flow::Flow &flow,
-                                              const graph::Graph &graph,
-                                              const graph::Node &node) {
+void ConverterImpl::convertAddDivErfAddMulMulNode(flow::Flow &flow,
+                                                  const graph::Graph &graph,
+                                                  const graph::Node &node) {
 #ifdef DEBUG
   assert(node.GetOp() == graph::Node::Op::AddDivErfAddMulMul);
 #endif
@@ -372,8 +430,8 @@ void Converter::convertAddDivErfAddMulMulNode(flow::Flow &flow,
   flow.PutNode(std::move(ptr));
 }
 
-void Converter::convertDivNode(flow::Flow &flow, const graph::Graph &graph,
-                               const graph::Node &node) {
+void ConverterImpl::convertDivNode(flow::Flow &flow, const graph::Graph &graph,
+                                   const graph::Node &node) {
 #ifdef DEBUG
   assert(node.GetOp() == graph::Node::Op::Div);
 #endif
@@ -420,8 +478,8 @@ void Converter::convertDivNode(flow::Flow &flow, const graph::Graph &graph,
   flow.PutNode(std::move(ptr));
 }
 
-void Converter::convertErfNode(flow::Flow &flow, const graph::Graph &graph,
-                               const graph::Node &node) {
+void ConverterImpl::convertErfNode(flow::Flow &flow, const graph::Graph &graph,
+                                   const graph::Node &node) {
 #ifdef DEBUG
   assert(node.GetOp() == graph::Node::Op::Erf);
 #endif
@@ -465,8 +523,9 @@ void Converter::convertErfNode(flow::Flow &flow, const graph::Graph &graph,
 // 2. GatherConstantDataTensorNode: the first input is a scalar, and the
 // second input is a tensor edge. If new formats occur, the code should be
 // updated.
-void Converter::convertGatherNode(flow::Flow &flow, const graph::Graph &graph,
-                                  const graph::Node &node) {
+void ConverterImpl::convertGatherNode(flow::Flow &flow,
+                                      const graph::Graph &graph,
+                                      const graph::Node &node) {
 #ifdef DEBUG
   assert(node.GetOp() == graph::Node::Op::Gather);
 #endif
@@ -551,9 +610,9 @@ void Converter::convertGatherNode(flow::Flow &flow, const graph::Graph &graph,
   flow.PutNode(std::move(ptr));
 }
 
-void Converter::convertGatherAddAddNode(flow::Flow &flow,
-                                        const graph::Graph &graph,
-                                        const graph::Node &node) {
+void ConverterImpl::convertGatherAddAddNode(flow::Flow &flow,
+                                            const graph::Graph &graph,
+                                            const graph::Node &node) {
 #ifdef DEBUG
   assert(node.GetOp() == graph::Node::Op::GatherAddAdd);
 #endif
@@ -614,8 +673,8 @@ void Converter::convertGatherAddAddNode(flow::Flow &flow,
   flow.PutNode(std::move(ptr));
 }
 
-void Converter::convertGemmNode(flow::Flow &flow, const graph::Graph &graph,
-                                const graph::Node &node) {
+void ConverterImpl::convertGemmNode(flow::Flow &flow, const graph::Graph &graph,
+                                    const graph::Node &node) {
 #ifdef DEBUG
   assert(node.GetOp() == graph::Node::Op::Gemm);
 #endif
@@ -680,9 +739,9 @@ void Converter::convertGemmNode(flow::Flow &flow, const graph::Graph &graph,
   flow.PutNode(std::move(ptr));
 }
 
-void Converter::convertLayerNormalizationNode(flow::Flow &flow,
-                                              const graph::Graph &graph,
-                                              const graph::Node &node) {
+void ConverterImpl::convertLayerNormalizationNode(flow::Flow &flow,
+                                                  const graph::Graph &graph,
+                                                  const graph::Node &node) {
 #ifdef DEBUG
   assert(node.GetOp() == graph::Node::Op::LayerNormalization);
 #endif
@@ -744,8 +803,9 @@ void Converter::convertLayerNormalizationNode(flow::Flow &flow,
   flow.PutNode(std::move(ptr));
 }
 
-void Converter::convertMatMulNode(flow::Flow &flow, const graph::Graph &graph,
-                                  const graph::Node &node) {
+void ConverterImpl::convertMatMulNode(flow::Flow &flow,
+                                      const graph::Graph &graph,
+                                      const graph::Node &node) {
 #ifdef DEBUG
   assert(node.GetOp() == graph::Node::Op::MatMul);
 #endif
@@ -782,8 +842,8 @@ void Converter::convertMatMulNode(flow::Flow &flow, const graph::Graph &graph,
   flow.PutNode(std::move(ptr));
 }
 
-void Converter::convertMulNode(flow::Flow &flow, const graph::Graph &graph,
-                               const graph::Node &node) {
+void ConverterImpl::convertMulNode(flow::Flow &flow, const graph::Graph &graph,
+                                   const graph::Node &node) {
 #ifdef DEBUG
   assert(node.GetOp() == graph::Node::Op::Mul);
 #endif
@@ -869,8 +929,8 @@ void Converter::convertMulNode(flow::Flow &flow, const graph::Graph &graph,
   flow.PutNode(std::move(ptr));
 }
 
-void Converter::convertPowNode(flow::Flow &flow, const graph::Graph &graph,
-                               const graph::Node &node) {
+void ConverterImpl::convertPowNode(flow::Flow &flow, const graph::Graph &graph,
+                                   const graph::Node &node) {
 #ifdef DEBUG
   assert(node.GetOp() == graph::Node::Op::Pow);
 #endif
@@ -915,8 +975,9 @@ void Converter::convertPowNode(flow::Flow &flow, const graph::Graph &graph,
   flow.PutNode(std::move(ptr));
 }
 
-void Converter::convertReshapeNode(flow::Flow &flow, const graph::Graph &graph,
-                                   const graph::Node &node) {
+void ConverterImpl::convertReshapeNode(flow::Flow &flow,
+                                       const graph::Graph &graph,
+                                       const graph::Node &node) {
 #ifdef DEBUG
   assert(node.GetOp() == graph::Node::Op::Reshape);
 #endif
@@ -973,8 +1034,9 @@ void Converter::convertReshapeNode(flow::Flow &flow, const graph::Graph &graph,
   flow.PutNode(std::move(ptr));
 }
 
-void Converter::convertSoftmaxNode(flow::Flow &flow, const graph::Graph &graph,
-                                   const graph::Node &node) {
+void ConverterImpl::convertSoftmaxNode(flow::Flow &flow,
+                                       const graph::Graph &graph,
+                                       const graph::Node &node) {
 #ifdef DEBUG
   assert(node.GetOp() == graph::Node::Op::Softmax);
 #endif
@@ -1020,8 +1082,9 @@ void Converter::convertSoftmaxNode(flow::Flow &flow, const graph::Graph &graph,
   flow.PutNode(std::move(ptr));
 }
 
-void Converter::convertSplitNode(flow::Flow &flow, const graph::Graph &graph,
-                                 const graph::Node &node) {
+void ConverterImpl::convertSplitNode(flow::Flow &flow,
+                                     const graph::Graph &graph,
+                                     const graph::Node &node) {
 #ifdef DEBUG
   assert(node.GetOp() == graph::Node::Op::Split);
 #endif
@@ -1085,8 +1148,8 @@ void Converter::convertSplitNode(flow::Flow &flow, const graph::Graph &graph,
   flow.PutNode(std::move(ptr));
 }
 
-void Converter::convertSubNode(flow::Flow &flow, const graph::Graph &graph,
-                               const graph::Node &node) {
+void ConverterImpl::convertSubNode(flow::Flow &flow, const graph::Graph &graph,
+                                   const graph::Node &node) {
 #ifdef DEBUG
   assert(node.GetOp() == graph::Node::Op::Sub);
 #endif
@@ -1148,8 +1211,8 @@ void Converter::convertSubNode(flow::Flow &flow, const graph::Graph &graph,
   flow.PutNode(std::move(ptr));
 }
 
-void Converter::convertTanhNode(flow::Flow &flow, const graph::Graph &graph,
-                                const graph::Node &node) {
+void ConverterImpl::convertTanhNode(flow::Flow &flow, const graph::Graph &graph,
+                                    const graph::Node &node) {
 #ifdef DEBUG
   assert(node.GetOp() == graph::Node::Op::Tanh);
 #endif
@@ -1191,9 +1254,9 @@ void Converter::convertTanhNode(flow::Flow &flow, const graph::Graph &graph,
   flow.PutNode(std::move(ptr));
 }
 
-void Converter::convertTransposeNode(flow::Flow &flow,
-                                     const graph::Graph &graph,
-                                     const graph::Node &node) {
+void ConverterImpl::convertTransposeNode(flow::Flow &flow,
+                                         const graph::Graph &graph,
+                                         const graph::Node &node) {
 #ifdef DEBUG
   assert(node.GetOp() == graph::Node::Op::Transpose);
 #endif
@@ -1246,9 +1309,9 @@ void Converter::convertTransposeNode(flow::Flow &flow,
   flow.PutNode(std::move(ptr));
 }
 
-void Converter::convertUnsqueezeNode(flow::Flow &flow,
-                                     const graph::Graph &graph,
-                                     const graph::Node &node) {
+void ConverterImpl::convertUnsqueezeNode(flow::Flow &flow,
+                                         const graph::Graph &graph,
+                                         const graph::Node &node) {
 #ifdef DEBUG
   assert(node.GetOp() == graph::Node::Op::Unsqueeze);
 #endif
@@ -1297,9 +1360,9 @@ void Converter::convertUnsqueezeNode(flow::Flow &flow,
   flow.PutNode(std::move(ptr));
 }
 
-void Converter::convertUnsqueezeSubMulNode(flow::Flow &flow,
-                                           const graph::Graph &graph,
-                                           const graph::Node &node) {
+void ConverterImpl::convertUnsqueezeSubMulNode(flow::Flow &flow,
+                                               const graph::Graph &graph,
+                                               const graph::Node &node) {
 #ifdef DEBUG
   assert(node.GetOp() == graph::Node::Op::UnsqueezeSubMul);
 #endif
@@ -1360,8 +1423,9 @@ void Converter::convertUnsqueezeSubMulNode(flow::Flow &flow,
   flow.PutNode(std::move(ptr));
 }
 
-void Converter::convertWhereNode(flow::Flow &flow, const graph::Graph &graph,
-                                 const graph::Node &node) {
+void ConverterImpl::convertWhereNode(flow::Flow &flow,
+                                     const graph::Graph &graph,
+                                     const graph::Node &node) {
 #ifdef DEBUG
   assert(node.GetOp() == graph::Node::Op::Where);
 #endif

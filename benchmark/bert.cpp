@@ -24,58 +24,64 @@ static void BM_RunBertModel(benchmark::State &state) {
   const int index = state.range(0);
   auto [name, path] = kModelInfo[index];
   for (auto _ : state) {
-        cpu_transformers::worker::Parser parser;
-        cpu_transformers::optimization::GraphPassesManager pm;
-        cpu_transformers::worker::Converter converter;
-        std::shared_ptr<cpu_transformers::context::Context> context =
-            cpu_transformers::context::Context::Make();
-        cpu_transformers::worker::GeneralBuilder builder(name.c_str(),
-        context); cpu_transformers::worker::Lower lower(context);
-        cpu_transformers::worker::Runner runner(context);
-        cpu_transformers::graph::Graph graph = parser.Run(path);
-        pm.RegisterAllPasses();
-        pm.Run(graph);
-        cpu_transformers::flow::Flow flow = converter.Run(graph);
-        cpu_transformers::worker::PlainLinearPlanner plain_linear_planner;
-        cpu_transformers::worker::PlainGreedyPlanner plain_greedy_planner;
-        cpu_transformers::worker::DPGreedyPlanner dp_greedy_planner;
-        cpu_transformers::flow::Sequence sequence =
-            plain_greedy_planner.FlowToSequence(flow);
-        // cpu_transformers::flow::Sequence sequence =
-        // dp_greedy_planner.FlowToSequence(flow);
-        cpu_transformers::memory::Index plain_linear_index =
-            plain_linear_planner.Run(sequence);
-        cpu_transformers::memory::Index greedy_index =
-            plain_greedy_planner.Run(sequence);
-        cpu_transformers::memory::Index plain_dp_greedy_index =
-            dp_greedy_planner.Run(sequence);
-        builder.Run(sequence, greedy_index);
-        cpu_transformers::context::Context &ctx = *context;
-    #ifdef DEBUG
-        std::ofstream ofs(fmt::format("{}.mlir", name));
-        ofs << ctx;
-        ofs.close();
-    #endif
-        lower.Run();
-    #ifdef DEBUG
-        ofs.open(fmt::format("{}-llvm.mlir", name));
-        ofs << ctx;
-        ofs.close();
-    #endif
-        std::vector<int64_t> input_ids(1 * 128, 0);
-        std::vector<cpu_transformers::float32_t> attention_mask(1 * 128, 0),
-            output0(1 * 128 * 768, 0), output1(1 * 768, 0);
-        size_t time_cost = runner.Run(
-            {
-                {"input_ids", input_ids.data()},
-                {"attention_mask", attention_mask.data()},
-                {"onnx::Gather_1269", output0.data()},
-                {"1272", output1.data()},
-            },
-            1);
-    #ifdef USE_LOGS
-        LOG(INFO) << "Time cost: " << time_cost << " ns\n";
-    #endif
+    std::unique_ptr<cpu_transformers::worker::Parser> parser =
+        cpu_transformers::worker::Parser::Make();
+    cpu_transformers::optimization::GraphPassesManager pm;
+    std::unique_ptr<cpu_transformers::worker::Converter> converter =
+        cpu_transformers::worker::Converter::Make();
+    std::shared_ptr<cpu_transformers::context::Context>
+        context = cpu_transformers::context::Context::Make(),
+        mcontext = context;
+    std::unique_ptr<cpu_transformers::worker::GeneralBuilder> builder =
+        cpu_transformers::worker::GeneralBuilder::Make(name.c_str(),
+                                                       std::move(mcontext));
+    mcontext = context;
+    std::unique_ptr<cpu_transformers::worker::Lower> lower =
+        cpu_transformers::worker::Lower::Make(std::move(mcontext));
+    mcontext = context;
+    std::unique_ptr<cpu_transformers::worker::Runner> runner = cpu_transformers::worker::Runner::Make(std::move(mcontext));
+    cpu_transformers::graph::Graph graph = parser->Run(path);
+    pm.RegisterAllPasses();
+    pm.Run(graph);
+    cpu_transformers::flow::Flow flow = converter->Run(graph);
+    std::unique_ptr<cpu_transformers::worker::PlainGreedyPlanner>
+        plain_greedy_planner =
+            cpu_transformers::worker::PlainGreedyPlanner::Make();
+    std::unique_ptr<cpu_transformers::worker::DPGreedyPlanner>
+        dp_greedy_planner = cpu_transformers::worker::DPGreedyPlanner::Make();
+    cpu_transformers::flow::Sequence sequence =
+        plain_greedy_planner->FlowToSequence(flow);
+    // cpu_transformers::flow::Sequence sequence =
+    // dp_greedy_planner->FlowToSequence(flow);
+    cpu_transformers::memory::Index greedy_index =
+        plain_greedy_planner->Run(sequence);
+    builder->Run(sequence, greedy_index);
+    cpu_transformers::context::Context &ctx = *context;
+#ifdef DEBUG
+    std::ofstream ofs(fmt::format("{}.mlir", name));
+    ofs << ctx;
+    ofs.close();
+#endif
+    lower->Run();
+#ifdef DEBUG
+    ofs.open(fmt::format("{}-llvm.mlir", name));
+    ofs << ctx;
+    ofs.close();
+#endif
+    std::vector<int64_t> input_ids(1 * 128, 0);
+    std::vector<cpu_transformers::float32_t> attention_mask(1 * 128, 0),
+        output0(1 * 128 * 768, 0), output1(1 * 768, 0);
+    size_t time_cost = runner->Run(
+        {
+            {"input_ids", input_ids.data()},
+            {"attention_mask", attention_mask.data()},
+            {"onnx::Gather_1269", output0.data()},
+            {"1272", output1.data()},
+        },
+        1);
+#ifdef USE_LOGS
+    LOG(INFO) << "Time cost: " << time_cost << " ns\n";
+#endif
   }
 }
 

@@ -16,6 +16,7 @@ namespace worker {
 
 class Evaluator {
 public:
+  virtual ~Evaluator() = default;
   virtual void RegisterEval(std::string &&name,
                             std::shared_ptr<evaluation::KernelEval> &&eval) = 0;
   virtual evaluation::KernelEval &GetEval(const std::string &name) = 0;
@@ -31,7 +32,6 @@ protected:
   Evaluator() = default;
   Evaluator(const Evaluator &evaluator) = delete;
   Evaluator(Evaluator &&evaluator) = default;
-  virtual ~Evaluator() = default;
 };
 
 } // namespace worker
