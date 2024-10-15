@@ -7,6 +7,7 @@
 
 namespace cpu_transformers {
 namespace kernel {
+
 class LayerNormalizationConstantScaleBiasKernel
     : public SingleInputWithBufferKernel {
 public:
@@ -24,11 +25,31 @@ public:
 private:
   static constexpr char kKernelName[] =
       "LayerNormalizationConstantScaleBiasKernel";
-  int64_t axis_;
-  float64_t epsilon_;
-  Tensor scale_;
-  Tensor bias_;
+  const int64_t axis_;
+  const float64_t epsilon_;
+  const Tensor scale_;
+  const Tensor bias_;
 };
+
+class LayerNormalizationConstantScaleBiasKernelGenerator
+    : public SingleInputWithBufferKernelGenerator {
+public:
+  virtual ~LayerNormalizationConstantScaleBiasKernelGenerator() = default;
+  virtual std::shared_ptr<LayerNormalizationConstantScaleBiasKernel>
+  Yield(llvm::ArrayRef<size_t> input_layout,
+        llvm::ArrayRef<size_t> output_layout) = 0;
+  static std::unique_ptr<LayerNormalizationConstantScaleBiasKernelGenerator>
+  Make(int64_t axis, float64_t epsilon, Tensor &&scale, Tensor &&bias);
+
+protected:
+  LayerNormalizationConstantScaleBiasKernelGenerator() = default;
+  LayerNormalizationConstantScaleBiasKernelGenerator(
+      const LayerNormalizationConstantScaleBiasKernelGenerator &generator) =
+      delete;
+  LayerNormalizationConstantScaleBiasKernelGenerator(
+      LayerNormalizationConstantScaleBiasKernelGenerator &&generator) = default;
+};
+
 } // namespace kernel
 } // namespace cpu_transformers
 

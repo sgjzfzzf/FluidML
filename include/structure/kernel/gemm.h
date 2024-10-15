@@ -26,8 +26,27 @@ private:
   const float64_t beta_;
   const bool transA_;
   const bool transB_;
-  Tensor weights_;
-  Tensor bias_;
+  const Tensor weights_;
+  const Tensor bias_;
+};
+
+class GemmConstantWeightsBiasKernelGenerator
+    : public SingleInputWithoutBufferKernelGenerator {
+public:
+  virtual ~GemmConstantWeightsBiasKernelGenerator() = default;
+  virtual std::shared_ptr<GemmConstantWeightsBiasKernel>
+  Yield(llvm::ArrayRef<size_t> input_layout,
+        llvm::ArrayRef<size_t> output_layout) = 0;
+  static std::unique_ptr<GemmConstantWeightsBiasKernelGenerator>
+  Make(float64_t alpha, float64_t beta, bool transA, bool transB,
+       Tensor &&weights, Tensor &&bias);
+
+protected:
+  GemmConstantWeightsBiasKernelGenerator() = default;
+  GemmConstantWeightsBiasKernelGenerator(
+      const GemmConstantWeightsBiasKernelGenerator &generator) = delete;
+  GemmConstantWeightsBiasKernelGenerator(
+      GemmConstantWeightsBiasKernelGenerator &&generator) = default;
 };
 
 } // namespace kernel

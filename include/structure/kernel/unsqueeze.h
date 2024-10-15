@@ -18,7 +18,23 @@ public:
 
 private:
   static constexpr char kKernelName[] = "UnSqueezeKernel";
-  std::vector<int64_t> axes_;
+  const std::vector<int64_t> axes_;
+};
+
+class UnSqueezeKernelGenerator
+    : public SingleInputWithoutBufferKernelGenerator {
+public:
+  virtual ~UnSqueezeKernelGenerator() = default;
+  virtual std::shared_ptr<UnSqueezeKernel>
+  Yield(llvm::ArrayRef<size_t> input_layout,
+        llvm::ArrayRef<size_t> output_layout) = 0;
+  static std::unique_ptr<UnSqueezeKernelGenerator>
+  Make(std::vector<int64_t> axes);
+
+protected:
+  UnSqueezeKernelGenerator() = default;
+  UnSqueezeKernelGenerator(const UnSqueezeKernelGenerator &generator) = delete;
+  UnSqueezeKernelGenerator(UnSqueezeKernelGenerator &&generator) = default;
 };
 
 } // namespace kernel

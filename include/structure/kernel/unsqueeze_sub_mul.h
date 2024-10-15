@@ -11,9 +11,11 @@ namespace kernel {
 class UnsqueezeSubLhsScalarMulRhsScalarKernel
     : public SingleInputWithoutBufferKernel {
 public:
-  UnsqueezeSubLhsScalarMulRhsScalarKernel(
-      llvm::ArrayRef<int64_t> unsqueeze_axes, const Type &sub_type,
-      float64_t sub_val, const Type &mul_type, float64_t mul_val);
+  UnsqueezeSubLhsScalarMulRhsScalarKernel(std::vector<int64_t> &&unsqueeze_axes,
+                                          const Type &sub_type,
+                                          float64_t sub_val,
+                                          const Type &mul_type,
+                                          float64_t mul_val);
   UnsqueezeSubLhsScalarMulRhsScalarKernel(
       const UnsqueezeSubLhsScalarMulRhsScalarKernel &other) = delete;
   UnsqueezeSubLhsScalarMulRhsScalarKernel(
@@ -26,11 +28,31 @@ public:
 private:
   static constexpr char kKernelName[] =
       "UnsqueezeSubLhsScalarMulRhsScalarKernel";
-  llvm::SmallVector<int64_t> unsqueeze_axes_;
-  Type sub_type_;
-  float64_t sub_val_;
-  Type mul_type_;
-  float64_t mul_val_;
+  std::vector<int64_t> unsqueeze_axes_;
+  const Type sub_type_;
+  const float64_t sub_val_;
+  const Type mul_type_;
+  const float64_t mul_val_;
+};
+
+class UnsqueezeSubLhsScalarMulRhsScalarKernelGenerator
+    : public SingleInputWithoutBufferKernelGenerator {
+public:
+  virtual ~UnsqueezeSubLhsScalarMulRhsScalarKernelGenerator() = default;
+  virtual std::shared_ptr<UnsqueezeSubLhsScalarMulRhsScalarKernel>
+  Yield(llvm::ArrayRef<size_t> input_layout,
+        llvm::ArrayRef<size_t> output_layout) = 0;
+  static std::unique_ptr<UnsqueezeSubLhsScalarMulRhsScalarKernelGenerator>
+  Make(std::vector<int64_t> &&unsqueeze_axes, const Type &sub_type,
+       float64_t sub_val, const Type &mul_type, float64_t mul_val);
+
+protected:
+  UnsqueezeSubLhsScalarMulRhsScalarKernelGenerator() = default;
+  UnsqueezeSubLhsScalarMulRhsScalarKernelGenerator(
+      const UnsqueezeSubLhsScalarMulRhsScalarKernelGenerator &generator) =
+      delete;
+  UnsqueezeSubLhsScalarMulRhsScalarKernelGenerator(
+      UnsqueezeSubLhsScalarMulRhsScalarKernelGenerator &&generator) = default;
 };
 
 } // namespace kernel

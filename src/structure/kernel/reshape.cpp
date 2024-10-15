@@ -5,6 +5,7 @@
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/ValueRange.h"
 #include "llvm/ADT/SmallVector.h"
+#include <memory>
 #ifdef DEBUG
 #include <cassert>
 #include <numeric>
@@ -12,6 +13,22 @@
 
 namespace cpu_transformers {
 namespace kernel {
+
+class ReshapeKernelGeneratorImpl : public ReshapeKernelGenerator {
+public:
+  ReshapeKernelGeneratorImpl() = default;
+  ReshapeKernelGeneratorImpl(const ReshapeKernelGeneratorImpl &generator) =
+      delete;
+  ReshapeKernelGeneratorImpl(ReshapeKernelGeneratorImpl &&generator) = default;
+  virtual ~ReshapeKernelGeneratorImpl() = default;
+  std::shared_ptr<SingleInputWithoutBufferKernel>
+  YieldSingleInputWithoutBufferKernel(
+      llvm::ArrayRef<size_t> input_layout,
+      llvm::ArrayRef<size_t> output_layout) override;
+  std::shared_ptr<ReshapeKernel>
+  Yield(llvm::ArrayRef<size_t> input_layout,
+        llvm::ArrayRef<size_t> output_layout) override;
+};
 
 std::string ReshapeKernel::GetKernelName() const { return kKernelName; }
 
@@ -61,6 +78,22 @@ void ReshapeKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                                               output_indices);
         b.create<mlir::affine::AffineYieldOp>(loc);
       });
+}
+
+std::unique_ptr<ReshapeKernelGenerator> ReshapeKernelGenerator::Make() {
+  return std::make_unique<ReshapeKernelGeneratorImpl>();
+}
+
+std::shared_ptr<SingleInputWithoutBufferKernel>
+ReshapeKernelGeneratorImpl::YieldSingleInputWithoutBufferKernel(
+    llvm::ArrayRef<size_t> input_layout, llvm::ArrayRef<size_t> output_layout) {
+  return Yield(input_layout, output_layout);
+}
+
+std::shared_ptr<ReshapeKernel>
+ReshapeKernelGeneratorImpl::Yield(llvm::ArrayRef<size_t> input_layout,
+                                  llvm::ArrayRef<size_t> output_layout) {
+  return std::make_shared<ReshapeKernel>();
 }
 
 } // namespace kernel

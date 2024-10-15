@@ -144,8 +144,8 @@ std::shared_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
     kernel = std::make_shared<kernel::TanhKernel>();
   } else if (const flow::TransposeNode *ptr =
                  dynamic_cast<const flow::TransposeNode *>(node)) {
-    const std::vector<int64_t> &perm = ptr->GetPerm();
-    kernel = std::make_shared<kernel::TransposeKernel>(perm);
+    std::vector<int64_t> perm = ptr->GetPerm();
+    kernel = std::make_shared<kernel::TransposeKernel>(std::move(perm));
   } else if (const flow::UnsqueezeNode *ptr =
                  dynamic_cast<const flow::UnsqueezeNode *>(node)) {
     std::vector<int64_t> axes = ptr->GetAxes();
@@ -153,13 +153,13 @@ std::shared_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
   } else if (const flow::UnsqueezeSubLhsScalarMulRhsScalarNode *ptr =
                  dynamic_cast<const flow::UnsqueezeSubLhsScalarMulRhsScalarNode
                                   *>(node)) {
-    const std::vector<int64_t> &unsqueeze_axes = ptr->GetUnsqueezeAxes();
+    std::vector<int64_t> unsqueeze_axes = ptr->GetUnsqueezeAxes();
     Type sub_type = ptr->GetSubType();
     float64_t sub_val = ptr->GetSubVal();
     Type mul_type = ptr->GetMulType();
     float64_t mul_val = ptr->GetMulVal();
     kernel = std::make_shared<kernel::UnsqueezeSubLhsScalarMulRhsScalarKernel>(
-        unsqueeze_axes, sub_type, sub_val, mul_type, mul_val);
+        std::move(unsqueeze_axes), sub_type, sub_val, mul_type, mul_val);
   } else if (const flow::WhereConstantCondConstantScalarYNode *ptr =
                  dynamic_cast<const flow::WhereConstantCondConstantScalarYNode
                                   *>(node)) {

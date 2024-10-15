@@ -23,9 +23,9 @@ public:
 private:
   static constexpr char kKernelName[] =
       "WhereConstantCondConstantScalarYKernel";
-  Tensor cond_;
-  Type type_;
-  float64_t y_;
+  const Tensor cond_;
+  const Type type_;
+  const float64_t y_;
 };
 
 class WhereConstantCondConstantTensorYKernel
@@ -44,8 +44,44 @@ public:
 private:
   static constexpr char kKernelName[] =
       "WhereConstantCondConstantTensorYKernel";
-  Tensor cond_;
-  Tensor y_;
+  const Tensor cond_;
+  const Tensor y_;
+};
+
+class WhereConstantCondConstantScalarYKernelGenerator
+    : public SingleInputWithoutBufferKernelGenerator {
+public:
+  virtual ~WhereConstantCondConstantScalarYKernelGenerator() = default;
+  virtual std::shared_ptr<WhereConstantCondConstantScalarYKernel>
+  Yield(llvm::ArrayRef<size_t> input_layout,
+        llvm::ArrayRef<size_t> output_layout) = 0;
+  static std::unique_ptr<WhereConstantCondConstantScalarYKernelGenerator>
+  Make(Tensor &&cond, Type type, float64_t y);
+
+protected:
+  WhereConstantCondConstantScalarYKernelGenerator() = default;
+  WhereConstantCondConstantScalarYKernelGenerator(
+      const WhereConstantCondConstantScalarYKernelGenerator &) = delete;
+  WhereConstantCondConstantScalarYKernelGenerator(
+      WhereConstantCondConstantScalarYKernelGenerator &&) = default;
+};
+
+class WhereConstantCondConstantTensorYKernelGenerator
+    : public SingleInputWithoutBufferKernelGenerator {
+public:
+  virtual ~WhereConstantCondConstantTensorYKernelGenerator() = default;
+  virtual std::shared_ptr<WhereConstantCondConstantTensorYKernel>
+  Yield(llvm::ArrayRef<size_t> input_layout,
+        llvm::ArrayRef<size_t> output_layout) = 0;
+  static std::unique_ptr<WhereConstantCondConstantTensorYKernelGenerator>
+  Make(Tensor &&cond, Tensor &&y);
+
+protected:
+  WhereConstantCondConstantTensorYKernelGenerator() = default;
+  WhereConstantCondConstantTensorYKernelGenerator(
+      const WhereConstantCondConstantTensorYKernelGenerator &) = delete;
+  WhereConstantCondConstantTensorYKernelGenerator(
+      WhereConstantCondConstantTensorYKernelGenerator &&) = default;
 };
 
 } // namespace kernel

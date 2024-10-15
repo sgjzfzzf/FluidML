@@ -9,7 +9,7 @@ namespace kernel {
 
 class TransposeKernel : public SingleInputWithoutBufferKernel {
 public:
-  TransposeKernel(std::vector<int64_t> perms);
+  TransposeKernel(std::vector<int64_t> &&perms);
   TransposeKernel(const TransposeKernel &) = delete;
   TransposeKernel(TransposeKernel &&) = default;
   virtual ~TransposeKernel() = default;
@@ -19,7 +19,23 @@ public:
 
 private:
   static constexpr char kKernelName[] = "TransposeKernel";
-  std::vector<int64_t> perms_;
+  const std::vector<int64_t> perms_;
+};
+
+class TransposeKernelGenerator
+    : public SingleInputWithoutBufferKernelGenerator {
+public:
+  virtual ~TransposeKernelGenerator() = default;
+  virtual std::shared_ptr<TransposeKernel>
+  Yield(llvm::ArrayRef<size_t> input_layout,
+        llvm::ArrayRef<size_t> output_layout) = 0;
+  static std::unique_ptr<TransposeKernelGenerator>
+  Make(std::vector<int64_t> perms);
+
+protected:
+  TransposeKernelGenerator() = default;
+  TransposeKernelGenerator(const TransposeKernelGenerator &) = delete;
+  TransposeKernelGenerator(TransposeKernelGenerator &&) = default;
 };
 
 } // namespace kernel

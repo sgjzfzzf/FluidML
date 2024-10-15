@@ -27,9 +27,32 @@ public:
 private:
   static constexpr char kKernelName[] =
       "GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel";
-  Tensor data_;
-  Tensor add0_weight_;
-  Tensor add1_weight_;
+  const Tensor data_;
+  const Tensor add0_weight_;
+  const Tensor add1_weight_;
+};
+
+class GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGenerator
+    : public SingleInputWithoutBufferKernelGenerator {
+public:
+  virtual ~GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGenerator() =
+      default;
+  virtual std::shared_ptr<
+      GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel>
+  Yield(llvm::ArrayRef<size_t> input_layout,
+        llvm::ArrayRef<size_t> output_layout) = 0;
+  static std::unique_ptr<
+      GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGenerator>
+  Make(Tensor &&data, Tensor &&add0_weight, Tensor &&add1_weight);
+
+protected:
+  GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGenerator() = default;
+  GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGenerator(
+      const GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGenerator
+          &generator) = delete;
+  GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGenerator(
+      GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGenerator
+          &&generator) = default;
 };
 
 } // namespace kernel

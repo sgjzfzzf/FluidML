@@ -20,8 +20,22 @@ public:
 
 private:
   static constexpr char kKernelName[] = "PowKernel";
-  Type type_;
-  float64_t exp_;
+  const Type type_;
+  const float64_t exp_;
+};
+
+class PowKernelGenerator : public SingleInputWithoutBufferKernelGenerator {
+public:
+  virtual ~PowKernelGenerator() = default;
+  virtual std::shared_ptr<PowKernel>
+  Yield(llvm::ArrayRef<size_t> input_layout,
+        llvm::ArrayRef<size_t> output_layout) = 0;
+  static std::unique_ptr<PowKernelGenerator> Make(Type type, float64_t exp);
+
+protected:
+  PowKernelGenerator() = default;
+  PowKernelGenerator(const PowKernelGenerator &generator) = delete;
+  PowKernelGenerator(PowKernelGenerator &&generator) = default;
 };
 
 } // namespace kernel

@@ -20,6 +20,20 @@ private:
   static constexpr char kKernelName[] = "TanhKernel";
 };
 
+class TanhKernelGenerator : public SingleInputWithoutBufferKernelGenerator {
+public:
+  virtual ~TanhKernelGenerator() = default;
+  virtual std::shared_ptr<TanhKernel>
+  Yield(llvm::ArrayRef<size_t> input_layout,
+        llvm::ArrayRef<size_t> output_layout) = 0;
+  static std::unique_ptr<TanhKernelGenerator> Make();
+
+protected:
+  TanhKernelGenerator() = default;
+  TanhKernelGenerator(const TanhKernelGenerator &) = delete;
+  TanhKernelGenerator(TanhKernelGenerator &&) = default;
+};
+
 } // namespace kernel
 } // namespace cpu_transformers
 

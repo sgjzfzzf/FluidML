@@ -29,8 +29,8 @@ public:
            mlir::Value &output) const override;
 
 private:
-  Type type_;
-  float64_t constant_;
+  const Type type_;
+  const float64_t constant_;
   static constexpr char kKernelName[] = "AddConstantKernel";
 };
 
@@ -46,6 +46,38 @@ public:
 
 private:
   static constexpr char kKernelName[] = "AddCommonKernel";
+};
+
+class AddConstantKernelGenerator
+    : public SingleInputWithoutBufferKernelGenerator {
+public:
+  virtual ~AddConstantKernelGenerator() = default;
+  virtual std::shared_ptr<AddConstantKernel>
+  Yield(llvm::ArrayRef<size_t> input_layout,
+        llvm::ArrayRef<size_t> output_layout) = 0;
+  static std::unique_ptr<AddConstantKernelGenerator> Make(Type type,
+                                                          float64_t constant);
+
+protected:
+  AddConstantKernelGenerator() = default;
+  AddConstantKernelGenerator(const AddConstantKernelGenerator &generator) =
+      delete;
+  AddConstantKernelGenerator(AddConstantKernelGenerator &&generator) = default;
+};
+
+class AddCommonKernelGenerator
+    : public DoubleInputsWithoutBufferKernelGenerator {
+public:
+  virtual ~AddCommonKernelGenerator() = default;
+  virtual std::shared_ptr<AddCommonKernel>
+  Yield(llvm::ArrayRef<size_t> lhs_layout, llvm::ArrayRef<size_t> rhs_layout,
+        llvm::ArrayRef<size_t> output_layout) = 0;
+  static std::unique_ptr<AddCommonKernelGenerator> Make();
+
+protected:
+  AddCommonKernelGenerator() = default;
+  AddCommonKernelGenerator(const AddCommonKernelGenerator &generator) = delete;
+  AddCommonKernelGenerator(AddCommonKernelGenerator &&generator) = default;
 };
 
 } // namespace kernel

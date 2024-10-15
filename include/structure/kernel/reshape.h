@@ -20,6 +20,20 @@ private:
   static constexpr char kKernelName[] = "ReshapeKernel";
 };
 
+class ReshapeKernelGenerator : public SingleInputWithoutBufferKernelGenerator {
+public:
+  virtual ~ReshapeKernelGenerator() = default;
+  virtual std::shared_ptr<ReshapeKernel>
+  Yield(llvm::ArrayRef<size_t> input_layout,
+        llvm::ArrayRef<size_t> output_layout) = 0;
+  static std::unique_ptr<ReshapeKernelGenerator> Make();
+
+protected:
+  ReshapeKernelGenerator() = default;
+  ReshapeKernelGenerator(const ReshapeKernelGenerator &) = delete;
+  ReshapeKernelGenerator(ReshapeKernelGenerator &&) = default;
+};
+
 } // namespace kernel
 } // namespace cpu_transformers
 

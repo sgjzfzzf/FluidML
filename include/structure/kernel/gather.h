@@ -21,8 +21,8 @@ public:
 
 private:
   static constexpr char kKernelName[] = "GatherConstantIndexScalarKernel";
-  int64_t axis_;
-  int64_t index_;
+  const int64_t axis_;
+  const int64_t index_;
 };
 
 class GatherConstantDataTensorKernel : public SingleInputWithoutBufferKernel {
@@ -39,7 +39,43 @@ public:
 
 private:
   static constexpr char kKernelName[] = "GatherConstantDataTensorKernel";
-  Tensor data_;
+  const Tensor data_;
+};
+
+class GatherConstantIndexScalarKernelGenerator
+    : public SingleInputWithoutBufferKernelGenerator {
+public:
+  virtual ~GatherConstantIndexScalarKernelGenerator() override = default;
+  virtual std::shared_ptr<GatherConstantIndexScalarKernel>
+  Yield(llvm::ArrayRef<size_t> input_layout,
+        llvm::ArrayRef<size_t> output_layout) = 0;
+  static std::unique_ptr<GatherConstantIndexScalarKernelGenerator>
+  Make(int64_t axis, int64_t index);
+
+protected:
+  GatherConstantIndexScalarKernelGenerator() = default;
+  GatherConstantIndexScalarKernelGenerator(
+      const GatherConstantIndexScalarKernelGenerator &generator) = delete;
+  GatherConstantIndexScalarKernelGenerator(
+      GatherConstantIndexScalarKernelGenerator &&generator) = default;
+};
+
+class GatherConstantDataTensorKernelGenerator
+    : public SingleInputWithoutBufferKernelGenerator {
+public:
+  virtual ~GatherConstantDataTensorKernelGenerator() override = default;
+  virtual std::shared_ptr<GatherConstantDataTensorKernel>
+  Yield(llvm::ArrayRef<size_t> input_layout,
+        llvm::ArrayRef<size_t> output_layout) = 0;
+  static std::unique_ptr<GatherConstantDataTensorKernelGenerator>
+  Make(Tensor &&data);
+
+protected:
+  GatherConstantDataTensorKernelGenerator() = default;
+  GatherConstantDataTensorKernelGenerator(
+      const GatherConstantDataTensorKernelGenerator &generator) = delete;
+  GatherConstantDataTensorKernelGenerator(
+      GatherConstantDataTensorKernelGenerator &&generator) = default;
 };
 
 } // namespace kernel

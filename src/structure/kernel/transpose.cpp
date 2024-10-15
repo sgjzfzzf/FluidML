@@ -11,7 +11,28 @@
 namespace cpu_transformers {
 namespace kernel {
 
-TransposeKernel::TransposeKernel(std::vector<int64_t> perms) : perms_(perms) {}
+class TransposeKernelGeneratorImpl : public TransposeKernelGenerator {
+public:
+  TransposeKernelGeneratorImpl(std::vector<int64_t> &&perms);
+  TransposeKernelGeneratorImpl(const TransposeKernelGeneratorImpl &generator) =
+      delete;
+  TransposeKernelGeneratorImpl(TransposeKernelGeneratorImpl &&generator) =
+      default;
+  virtual ~TransposeKernelGeneratorImpl() = default;
+  std::shared_ptr<SingleInputWithoutBufferKernel>
+  YieldSingleInputWithoutBufferKernel(
+      llvm::ArrayRef<size_t> input_layout,
+      llvm::ArrayRef<size_t> output_layout) override;
+  std::shared_ptr<TransposeKernel>
+  Yield(llvm::ArrayRef<size_t> input_layout,
+        llvm::ArrayRef<size_t> output_layout) override;
+
+private:
+  const std::vector<int64_t> perms_;
+};
+
+TransposeKernel::TransposeKernel(std::vector<int64_t> &&perms)
+    : perms_(std::move(perms)) {}
 
 std::string TransposeKernel::GetKernelName() const { return kKernelName; }
 
@@ -44,6 +65,28 @@ void TransposeKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
         mlir::Value input = inputs[0];
         b.create<mlir::linalg::YieldOp>(loc, input);
       });
+}
+
+std::unique_ptr<TransposeKernelGenerator>
+TransposeKernelGenerator::Make(std::vector<int64_t> perms) {
+  return std::make_unique<TransposeKernelGeneratorImpl>(std::move(perms));
+}
+
+TransposeKernelGeneratorImpl::TransposeKernelGeneratorImpl(
+    std::vector<int64_t> &&perms)
+    : perms_(std::move(perms)) {}
+
+std::shared_ptr<SingleInputWithoutBufferKernel>
+TransposeKernelGeneratorImpl::YieldSingleInputWithoutBufferKernel(
+    llvm::ArrayRef<size_t> input_layout, llvm::ArrayRef<size_t> output_layout) {
+  return Yield(input_layout, output_layout);
+}
+
+std::shared_ptr<TransposeKernel>
+TransposeKernelGeneratorImpl::Yield(llvm::ArrayRef<size_t> input_layout,
+                                    llvm::ArrayRef<size_t> output_layout) {
+  std::vector<int64_t> perms = perms_;
+  return std::make_shared<TransposeKernel>(std::move(perms));
 }
 
 } // namespace kernel

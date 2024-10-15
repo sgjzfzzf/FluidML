@@ -24,6 +24,20 @@ private:
   const int64_t axis_;
 };
 
+class SoftmaxKernelGenerator : public SingleInputWithBufferKernelGenerator {
+public:
+  virtual ~SoftmaxKernelGenerator() = default;
+  virtual std::shared_ptr<SoftmaxKernel>
+  Yield(llvm::ArrayRef<size_t> input_layout,
+        llvm::ArrayRef<size_t> output_layout) = 0;
+  static std::unique_ptr<SoftmaxKernelGenerator> Make(int64_t axis);
+
+protected:
+  SoftmaxKernelGenerator() = default;
+  SoftmaxKernelGenerator(const SoftmaxKernelGenerator &) = delete;
+  SoftmaxKernelGenerator(SoftmaxKernelGenerator &&) = default;
+};
+
 } // namespace kernel
 } // namespace cpu_transformers
 

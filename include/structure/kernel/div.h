@@ -20,8 +20,26 @@ public:
 
 private:
   static constexpr char kKernelName[] = "DivConstantRhsKernel";
-  Type type_;
-  float64_t constant_;
+  const Type type_;
+  const float64_t constant_;
+};
+
+class DivConstantRhsKernelGenerator
+    : public SingleInputWithoutBufferKernelGenerator {
+public:
+  virtual ~DivConstantRhsKernelGenerator() = default;
+  virtual std::shared_ptr<DivConstantRhsKernel>
+  Yield(llvm::ArrayRef<size_t> input_layout,
+        llvm::ArrayRef<size_t> output_layout) = 0;
+  static std::unique_ptr<SingleInputWithoutBufferKernelGenerator>
+  Make(Type type, float64_t constant);
+
+protected:
+  DivConstantRhsKernelGenerator() = default;
+  DivConstantRhsKernelGenerator(
+      const DivConstantRhsKernelGenerator &generator) = delete;
+  DivConstantRhsKernelGenerator(DivConstantRhsKernelGenerator &&generator) =
+      default;
 };
 
 } // namespace kernel
