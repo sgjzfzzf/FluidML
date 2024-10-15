@@ -12,7 +12,7 @@
 #include "structure/context/attr.h"
 #include "structure/flow/node.h"
 #include "structure/flow/region.h"
-#include "structure/kernel/kernel.h"
+#include "structure/kernel/kernel/kernel.h"
 #include "utils/float.h"
 #include "utils/isa.hpp"
 #include "utils/type.h"

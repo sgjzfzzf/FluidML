@@ -1,0 +1,31 @@
+#ifndef CPU_TRANSFORMERS_STRUCTURE_KERNEL_GENERATOR_SUB_H_
+#define CPU_TRANSFORMERS_STRUCTURE_KERNEL_GENERATOR_SUB_H_
+
+#include "structure/kernel/generator/generator.h"
+#include "structure/kernel/kernel/sub.h"
+
+namespace cpu_transformers {
+namespace kernel {
+
+class SubConstantLhsKernelGenerator
+    : public SingleInputWithoutBufferKernelGenerator {
+public:
+  virtual ~SubConstantLhsKernelGenerator() = default;
+  virtual std::shared_ptr<SubConstantLhsKernel>
+  Yield(llvm::ArrayRef<size_t> input_layout,
+        llvm::ArrayRef<size_t> output_layout) = 0;
+  static std::unique_ptr<SubConstantLhsKernelGenerator> Make(Type type,
+                                                             float64_t value);
+
+protected:
+  SubConstantLhsKernelGenerator() = default;
+  SubConstantLhsKernelGenerator(
+      const SubConstantLhsKernelGenerator &generator) = delete;
+  SubConstantLhsKernelGenerator(SubConstantLhsKernelGenerator &&generator) =
+      default;
+};
+
+} // namespace kernel
+} // namespace cpu_transformers
+
+#endif

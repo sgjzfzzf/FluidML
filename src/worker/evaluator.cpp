@@ -1,7 +1,7 @@
 #include "worker/evaluator.h"
 #include "evaluation/eval.h"
 #include "nlohmann/json.hpp"
-#include "structure/kernel/kernel.h"
+#include "structure/kernel/kernel/kernel.h"
 #include <cassert>
 #include <memory>
 #include <unordered_set>

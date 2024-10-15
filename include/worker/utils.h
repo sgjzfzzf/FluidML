@@ -2,7 +2,7 @@
 #define CPU_TRANSFORMERS_WORKER_UTILS_H_
 
 #include "structure/flow/node.h"
-#include "structure/kernel/kernel.h"
+#include "structure/kernel/kernel/kernel.h"
 #include <memory>
 
 namespace cpu_transformers {

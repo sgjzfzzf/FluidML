@@ -3,7 +3,7 @@
 
 #include "evaluation/fwd.h"
 #include "nlohmann/json_fwd.hpp"
-#include "structure/kernel/kernel.h"
+#include "structure/kernel/kernel/kernel.h"
 #include "structure/tensor/meta.h"
 #include "worker/fwd.h"
 #include <cstddef>

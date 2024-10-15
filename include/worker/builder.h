@@ -3,7 +3,7 @@
 
 #include "structure/context/context.h"
 #include "structure/flow/sequence.h"
-#include "structure/kernel/kernel.h"
+#include "structure/kernel/kernel/kernel.h"
 #include "structure/memory/index.h"
 #include "structure/tensor/meta.h"
 #include "worker/fwd.h"

@@ -1,7 +1,7 @@
 #include "evaluation/eval.h"
 #include "fmt/ranges.h"
 #include "nlohmann/json.hpp"
-#include "structure/kernel/kernel.h"
+#include "structure/kernel/kernel/kernel.h"
 #include "utils/utils.h"
 #include "worker/builder.h"
 #ifndef DP_DEBUG

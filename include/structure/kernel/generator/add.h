@@ -1,0 +1,45 @@
+#ifndef CPU_TRANSFORMERS_STRUCTURE_KERNEL_GENERATOR_ADD_H_
+#define CPU_TRANSFORMERS_STRUCTURE_KERNEL_GENERATOR_ADD_H_
+
+#include "structure/kernel/generator/generator.h"
+#include "structure/kernel/kernel/add.h"
+
+namespace cpu_transformers {
+namespace kernel {
+
+class AddConstantKernelGenerator
+    : public SingleInputWithoutBufferKernelGenerator {
+public:
+  virtual ~AddConstantKernelGenerator() = default;
+  virtual std::shared_ptr<AddConstantKernel>
+  Yield(llvm::ArrayRef<size_t> input_layout,
+        llvm::ArrayRef<size_t> output_layout) = 0;
+  static std::unique_ptr<AddConstantKernelGenerator> Make(Type type,
+                                                          float64_t constant);
+
+protected:
+  AddConstantKernelGenerator() = default;
+  AddConstantKernelGenerator(const AddConstantKernelGenerator &generator) =
+      delete;
+  AddConstantKernelGenerator(AddConstantKernelGenerator &&generator) = default;
+};
+
+class AddCommonKernelGenerator
+    : public DoubleInputsWithoutBufferKernelGenerator {
+public:
+  virtual ~AddCommonKernelGenerator() = default;
+  virtual std::shared_ptr<AddCommonKernel>
+  Yield(llvm::ArrayRef<size_t> lhs_layout, llvm::ArrayRef<size_t> rhs_layout,
+        llvm::ArrayRef<size_t> output_layout) = 0;
+  static std::unique_ptr<AddCommonKernelGenerator> Make();
+
+protected:
+  AddCommonKernelGenerator() = default;
+  AddCommonKernelGenerator(const AddCommonKernelGenerator &generator) = delete;
+  AddCommonKernelGenerator(AddCommonKernelGenerator &&generator) = default;
+};
+
+} // namespace kernel
+} // namespace cpu_transformers
+
+#endif

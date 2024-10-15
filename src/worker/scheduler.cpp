@@ -1,7 +1,7 @@
 #include "worker/scheduler.h"
 #include "mlir/IR/Builders.h"
 #include "structure/flow/node.h"
-#include "structure/kernel/kernel.h"
+#include "structure/kernel/kernel/kernel.h"
 #include "worker/utils.h"
 #include <memory>
 #include <string>
