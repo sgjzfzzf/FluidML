@@ -6,17 +6,13 @@
 namespace cpu_transformers {
 namespace kernel {
 
-SubConstantScalarLhsKernel::SubConstantScalarLhsKernel(Type type,
-                                                       float64_t value)
+SubConstantLhsKernel::SubConstantLhsKernel(Type type, float64_t value)
     : type_(type), value_(value) {}
 
-std::string SubConstantScalarLhsKernel::GetKernelName() const {
-  return kKernelName;
-}
+std::string SubConstantLhsKernel::GetKernelName() const { return kKernelName; }
 
-void SubConstantScalarLhsKernel::Run(mlir::OpBuilder &builder,
-                                     mlir::Value &input,
-                                     mlir::Value &output) const {
+void SubConstantLhsKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
+                               mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::Value value;
   if (type_ == Type::kFloat32) {

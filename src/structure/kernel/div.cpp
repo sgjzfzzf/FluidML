@@ -8,12 +8,12 @@
 namespace cpu_transformers {
 namespace kernel {
 
-DivConstScalarKernel::DivConstScalarKernel(Type type, float64_t constant)
+DivConstantRhsKernel::DivConstantRhsKernel(Type type, float64_t constant)
     : type_(type), constant_(constant) {}
 
-std::string DivConstScalarKernel::GetKernelName() const { return kKernelName; }
+std::string DivConstantRhsKernel::GetKernelName() const { return kKernelName; }
 
-void DivConstScalarKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
+void DivConstantRhsKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                                mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::Value constant;

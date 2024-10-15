@@ -51,7 +51,7 @@ std::shared_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
                  dynamic_cast<const flow::DivConstantScalarNode *>(node)) {
     Type type = ptr->GetType();
     float64_t constant = ptr->GetValue();
-    kernel = std::make_shared<kernel::DivConstScalarKernel>(type, constant);
+    kernel = std::make_shared<kernel::DivConstantRhsKernel>(type, constant);
   } else if (const flow::ErfNode *ptr =
                  dynamic_cast<const flow::ErfNode *>(node)) {
     kernel = std::make_shared<kernel::ErfKernel>();
@@ -138,7 +138,7 @@ std::shared_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
                  dynamic_cast<const flow::SubConstantScalarLhsNode *>(node)) {
     Type type = ptr->GetType();
     const float64_t value = ptr->GetValue();
-    kernel = std::make_shared<kernel::SubConstantScalarLhsKernel>(type, value);
+    kernel = std::make_shared<kernel::SubConstantLhsKernel>(type, value);
   } else if (const flow::TanhNode *ptr =
                  dynamic_cast<const flow::TanhNode *>(node)) {
     kernel = std::make_shared<kernel::TanhKernel>();
