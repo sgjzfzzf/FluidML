@@ -2,6 +2,7 @@
 #define CPU_TRANSFORMERS_EVALUATION_DP_H_
 
 #include "nlohmann/json_fwd.hpp"
+#include "structure/context/context.h"
 #include "structure/flow/flow.h"
 #include <ostream>
 #include <string>
@@ -34,8 +35,9 @@ private:
 
 class DynamicProgrammingTable {
 public:
-  virtual DynamicProgrammingPlan Run() = 0;
-  static std::shared_ptr<DynamicProgrammingTable> Make(const flow::Flow &flow);
+  virtual DynamicProgrammingPlan Run(const flow::Flow &flow) = 0;
+  static std::shared_ptr<DynamicProgrammingTable>
+  Make(context::Context &&context);
 
 protected:
   DynamicProgrammingTable() = default;

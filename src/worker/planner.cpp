@@ -139,9 +139,10 @@ flow::Sequence PlainPlanner::FlowToSequence(const flow::Flow &flow) const {
 flow::Sequence
 DynamicProgrammingPlanner::FlowToSequence(const flow::Flow &flow) const {
   flow::Sequence sequence = topologicalSort(flow);
+  context::Context context = context_;
   std::shared_ptr<evaluation::DynamicProgrammingTable> dp_table =
-      evaluation::DynamicProgrammingTable::Make(flow);
-  evaluation::DynamicProgrammingPlan plan = dp_table->Run();
+      evaluation::DynamicProgrammingTable::Make(std::move(context));
+  evaluation::DynamicProgrammingPlan plan = dp_table->Run(flow);
   std::vector<std::shared_ptr<flow::Region>> regions = sequence.GetRegions();
   for (std::shared_ptr<flow::Region> region : regions) {
     const std::string &name = region->GetName();

@@ -25,30 +25,27 @@ namespace evaluation {
 
 class SubFlowsBuilder {
 public:
-  SubFlowsBuilder(const flow::Flow &flow);
-  SubFlowsBuilder(const SubFlowsBuilder &dp) = delete;
-  SubFlowsBuilder(SubFlowsBuilder &&dp) = default;
-  std::vector<flow::Flow> Run();
-
-private:
   struct Information {
     size_t distance;
     std::shared_ptr<flow::Edge> prev;
   };
-  size_t findLongestPathTo(std::shared_ptr<flow::Edge> edge);
-  const flow::Flow &flow_;
-  std::unordered_map<std::string, Information> djikstra_table_;
+  SubFlowsBuilder() = default;
+  SubFlowsBuilder(const SubFlowsBuilder &dp) = delete;
+  SubFlowsBuilder(SubFlowsBuilder &&dp) = default;
+  std::vector<flow::Flow> Run(const flow::Flow &flow);
+  std::vector<flow::Flow>
+  Run(const flow::Flow &flow,
+      std::unordered_map<std::string, Information> &djikstra_table);
+
+private:
+  size_t findLongestPathTo(
+      const flow::Flow &flow,
+      std::unordered_map<std::string, Information> &djikstra_table,
+      std::shared_ptr<flow::Edge> edge);
 };
 
 class DPOnNoOverlapFlowWoker {
 public:
-  DPOnNoOverlapFlowWoker(const flow::Flow &flow,
-                         std::shared_ptr<worker::Evaluator> &&evaluator);
-  DPOnNoOverlapFlowWoker(const DPOnNoOverlapFlowWoker &runner) = delete;
-  DPOnNoOverlapFlowWoker(DPOnNoOverlapFlowWoker &&runner) = default;
-  DynamicProgrammingPlan Run();
-
-private:
   struct EdgeLayout {
     std::shared_ptr<flow::Edge> edge;
     std::vector<size_t> layout;
@@ -60,40 +57,56 @@ private:
     static constexpr size_t kHashSeed = 0x9e3779b9;
     size_t operator()(const EdgeLayout &edge) const;
   };
-  size_t runOn(std::shared_ptr<flow::Edge> edge,
+  DPOnNoOverlapFlowWoker(std::shared_ptr<worker::Evaluator> &&evaluator);
+  DPOnNoOverlapFlowWoker(const DPOnNoOverlapFlowWoker &runner) = delete;
+  DPOnNoOverlapFlowWoker(DPOnNoOverlapFlowWoker &&runner) = default;
+  DynamicProgrammingPlan Run(const flow::Flow &flow);
+  DynamicProgrammingPlan
+  Run(const flow::Flow &flow,
+      std::unordered_map<EdgeLayout,
+                         std::tuple<size_t, std::vector<EdgeLayout>>,
+                         EdgeLayoutHash, EdgeLayoutEqual> &dp_table);
+
+private:
+  size_t runOn(const flow::Flow &flow,
+               std::unordered_map<EdgeLayout,
+                                  std::tuple<size_t, std::vector<EdgeLayout>>,
+                                  EdgeLayoutHash, EdgeLayoutEqual> &dp_table,
+               std::shared_ptr<flow::Edge> edge,
                const std::vector<size_t> &layout);
-  const flow::Flow &flow_;
   std::shared_ptr<worker::Evaluator> evaluator_;
-  std::unordered_map<EdgeLayout, std::tuple<size_t, std::vector<EdgeLayout>>,
-                     EdgeLayoutHash, EdgeLayoutEqual>
-      dp_table_;
 };
 
 class DynamicProgrammingTableImpl : public DynamicProgrammingTable {
 public:
-  DynamicProgrammingTableImpl(const flow::Flow &flow);
+  DynamicProgrammingTableImpl(context::Context &&context);
   DynamicProgrammingTableImpl(const DynamicProgrammingTableImpl &table) =
       delete;
   DynamicProgrammingTableImpl(DynamicProgrammingTableImpl &&table) = default;
   virtual ~DynamicProgrammingTableImpl() = default;
-  DynamicProgrammingPlan Run() override;
+  DynamicProgrammingPlan Run(const flow::Flow &flow) override;
 
 private:
-  std::shared_ptr<worker::Evaluator> getEvaluator();
-  const flow::Flow &flow_;
+  std::shared_ptr<worker::Evaluator> getEvaluator(const flow::Flow &flow);
+  context::Context context_;
   std::shared_ptr<worker::Evaluator> evaluator_;
 };
 
 std::shared_ptr<DynamicProgrammingTable>
-DynamicProgrammingTable::Make(const flow::Flow &flow) {
-  return std::make_shared<DynamicProgrammingTableImpl>(flow);
+DynamicProgrammingTable::Make(context::Context &&context) {
+  return std::make_shared<DynamicProgrammingTableImpl>(std::move(context));
 }
 
-SubFlowsBuilder::SubFlowsBuilder(const flow::Flow &flow) : flow_(flow) {}
+std::vector<flow::Flow> SubFlowsBuilder::Run(const flow::Flow &flow) {
+  std::unordered_map<std::string, Information> djikstra_table;
+  return Run(flow, djikstra_table);
+}
 
-std::vector<flow::Flow> SubFlowsBuilder::Run() {
-  std::vector<std::shared_ptr<flow::Edge>> edges = flow_.GetEdges();
-  std::vector<std::shared_ptr<flow::Node>> nodes = flow_.GetNodes();
+std::vector<flow::Flow> SubFlowsBuilder::Run(
+    const flow::Flow &flow,
+    std::unordered_map<std::string, Information> &djikstra_table) {
+  std::vector<std::shared_ptr<flow::Edge>> edges = flow.GetEdges();
+  std::vector<std::shared_ptr<flow::Node>> nodes = flow.GetNodes();
   size_t farthest_distance = 0;
   std::shared_ptr<flow::Edge> farthest_edge = nullptr;
   std::vector<flow::Flow> subflows;
@@ -101,7 +114,7 @@ std::vector<flow::Flow> SubFlowsBuilder::Run() {
 #ifdef DEBUG
     assert(edge != nullptr);
 #endif
-    size_t distance = findLongestPathTo(edge);
+    size_t distance = findLongestPathTo(flow, djikstra_table, edge);
     if (distance > farthest_distance) {
       farthest_distance = distance;
       farthest_edge = edge;
@@ -113,7 +126,7 @@ std::vector<flow::Flow> SubFlowsBuilder::Run() {
 #endif
   std::unordered_set<std::shared_ptr<flow::Edge>> path;
   for (std::shared_ptr<flow::Edge> edge = farthest_edge; edge != nullptr;
-       edge = djikstra_table_[edge->GetName()].prev) {
+       edge = djikstra_table[edge->GetName()].prev) {
     path.insert(edge);
   }
   flow::Flow main_subflow;
@@ -143,13 +156,13 @@ std::vector<flow::Flow> SubFlowsBuilder::Run() {
         const std::string &lhs_name = double_inputs_node->GetLhsAsString(),
                           &rhs_name = double_inputs_node->GetRhsAsString();
         std::vector<std::shared_ptr<flow::Edge>> lhs_edges =
-                                                     flow_.GetEdges(lhs_name),
+                                                     flow.GetEdges(lhs_name),
                                                  rhs_edges =
-                                                     flow_.GetEdges(rhs_name);
+                                                     flow.GetEdges(rhs_name);
         std::shared_ptr<flow::Edge> lhs_edge =
-                                        flow_.GetLhsEdge(*double_inputs_node),
+                                        flow.GetLhsEdge(*double_inputs_node),
                                     rhs_edge =
-                                        flow_.GetRhsEdge(*double_inputs_node),
+                                        flow.GetRhsEdge(*double_inputs_node),
                                     extra_edge = nullptr;
 #ifdef DEBUG
         assert(lhs_edge != nullptr);
@@ -215,9 +228,9 @@ std::vector<flow::Flow> SubFlowsBuilder::Run() {
       if (std::shared_ptr<flow::SingleInputNode> single_input_node =
               std::dynamic_pointer_cast<flow::SingleInputNode>(node)) {
         std::shared_ptr<flow::Edge> input_edge =
-                                        flow_.GetInputEdge(*single_input_node),
+                                        flow.GetInputEdge(*single_input_node),
                                     output_edge =
-                                        flow_.GetOutputEdge(*single_input_node);
+                                        flow.GetOutputEdge(*single_input_node);
 #ifdef DEBUG
         assert(input_edge != nullptr);
         assert(output_edge != nullptr);
@@ -241,11 +254,11 @@ std::vector<flow::Flow> SubFlowsBuilder::Run() {
       } else if (std::shared_ptr<flow::DoubleInputsNode> double_inputs_node =
                      std::dynamic_pointer_cast<flow::DoubleInputsNode>(node)) {
         std::shared_ptr<flow::Edge> lhs_edge =
-                                        flow_.GetLhsEdge(*double_inputs_node),
+                                        flow.GetLhsEdge(*double_inputs_node),
                                     rhs_edge =
-                                        flow_.GetRhsEdge(*double_inputs_node),
-                                    output_edge = flow_.GetOutputEdge(
-                                        *double_inputs_node);
+                                        flow.GetRhsEdge(*double_inputs_node),
+                                    output_edge =
+                                        flow.GetOutputEdge(*double_inputs_node);
 #ifdef DEBUG
         assert(lhs_edge != nullptr);
         assert(rhs_edge != nullptr);
@@ -293,9 +306,9 @@ std::vector<flow::Flow> SubFlowsBuilder::Run() {
       if (std::shared_ptr<flow::SingleInputNode> single_input_node =
               std::dynamic_pointer_cast<flow::SingleInputNode>(node)) {
         std::shared_ptr<flow::OwnToEdge> input_edge =
-            flow_.GetInputEdge(*single_input_node);
+            flow.GetInputEdge(*single_input_node);
         std::shared_ptr<flow::OwnFromEdge> output_edge =
-            flow_.GetOutputEdge(*single_input_node);
+            flow.GetOutputEdge(*single_input_node);
 #ifdef DEBUG
         assert(input_edge != nullptr);
         assert(output_edge != nullptr);
@@ -382,12 +395,12 @@ std::vector<flow::Flow> SubFlowsBuilder::Run() {
         }
       } else if (std::shared_ptr<flow::DoubleInputsNode> double_inputs_node =
                      std::dynamic_pointer_cast<flow::DoubleInputsNode>(node)) {
-        std::shared_ptr<flow::OwnToEdge> lhs_edge = flow_.GetLhsEdge(
+        std::shared_ptr<flow::OwnToEdge> lhs_edge = flow.GetLhsEdge(
                                              *double_inputs_node),
-                                         rhs_edge = flow_.GetRhsEdge(
+                                         rhs_edge = flow.GetRhsEdge(
                                              *double_inputs_node);
         std::shared_ptr<flow::OwnFromEdge> output_edge =
-            flow_.GetOutputEdge(*double_inputs_node);
+            flow.GetOutputEdge(*double_inputs_node);
 #ifdef DEBUG
         assert(lhs_edge != nullptr);
         assert(rhs_edge != nullptr);
@@ -507,8 +520,8 @@ std::vector<flow::Flow> SubFlowsBuilder::Run() {
 #ifdef DEBUG
     assert(branch_subflow.Check());
 #endif
-    SubFlowsBuilder builder(branch_subflow);
-    std::vector<flow::Flow> flows = builder.Run();
+    SubFlowsBuilder builder;
+    std::vector<flow::Flow> flows = builder.Run(branch_subflow);
     for (flow::Flow &flow : flows) {
       subflows.push_back(std::move(flow));
     }
@@ -522,9 +535,12 @@ std::vector<flow::Flow> SubFlowsBuilder::Run() {
   return subflows;
 }
 
-size_t SubFlowsBuilder::findLongestPathTo(std::shared_ptr<flow::Edge> edge) {
-  auto it = djikstra_table_.find(edge->GetName());
-  if (it != djikstra_table_.end()) {
+size_t SubFlowsBuilder::findLongestPathTo(
+    const flow::Flow &flow,
+    std::unordered_map<std::string, Information> &djikstra_table,
+    std::shared_ptr<flow::Edge> edge) {
+  auto it = djikstra_table.find(edge->GetName());
+  if (it != djikstra_table.end()) {
     auto [distance, _] = it->second;
     return distance;
   }
@@ -539,7 +555,7 @@ size_t SubFlowsBuilder::findLongestPathTo(std::shared_ptr<flow::Edge> edge) {
             std::dynamic_pointer_cast<flow::SingleInputNode>(from)) {
       const std::string &input_name = single_input_node->GetInputAsString();
       std::vector<std::shared_ptr<flow::Edge>> edges =
-          flow_.GetEdges(input_name);
+          flow.GetEdges(input_name);
       std::shared_ptr<flow::Edge> input = nullptr;
       for (std::shared_ptr<flow::Edge> edge : edges) {
         if (std::shared_ptr<flow::OwnToEdge> own_to_edge =
@@ -554,18 +570,16 @@ size_t SubFlowsBuilder::findLongestPathTo(std::shared_ptr<flow::Edge> edge) {
       assert(input != nullptr);
 #endif
       // TODO: for a more precise result, replace `+1` with our estimation
-      distance = findLongestPathTo(input) + 1;
+      distance = findLongestPathTo(flow, djikstra_table, input) + 1;
       prev = std::move(input);
     } else if (std::shared_ptr<flow::DoubleInputsNode> double_inputs_node =
                    std::dynamic_pointer_cast<flow::DoubleInputsNode>(from)) {
       const std::string &lhs_name = double_inputs_node->GetLhsAsString(),
                         &rhs_name = double_inputs_node->GetRhsAsString();
-      const std::vector<std::shared_ptr<flow::Edge>> &lhs_edges =
-                                                         flow_.GetEdges(
-                                                             lhs_name),
-                                                     &rhs_edges =
-                                                         flow_.GetEdges(
-                                                             rhs_name);
+      const std::vector<std::shared_ptr<flow::Edge>> &lhs_edges = flow.GetEdges(
+                                                         lhs_name),
+                                                     &rhs_edges = flow.GetEdges(
+                                                         rhs_name);
       std::shared_ptr<flow::Edge> lhs = nullptr, rhs = nullptr;
       for (std::shared_ptr<flow::Edge> edge : lhs_edges) {
         if (std::shared_ptr<flow::OwnToEdge> own_to_edge =
@@ -589,8 +603,8 @@ size_t SubFlowsBuilder::findLongestPathTo(std::shared_ptr<flow::Edge> edge) {
       assert(lhs != nullptr);
       assert(rhs != nullptr);
 #endif
-      const size_t lhs_distance = findLongestPathTo(lhs),
-                   rhs_distance = findLongestPathTo(rhs);
+      const size_t lhs_distance = findLongestPathTo(flow, djikstra_table, lhs),
+                   rhs_distance = findLongestPathTo(flow, djikstra_table, rhs);
       if (lhs_distance > rhs_distance) {
         distance = lhs_distance + 1;
         prev = std::move(lhs);
@@ -618,32 +632,42 @@ size_t SubFlowsBuilder::findLongestPathTo(std::shared_ptr<flow::Edge> edge) {
 #ifdef DEBUG
   assert(distance != -1);
 #endif
-  djikstra_table_.insert({edge->GetName(), {distance, prev}});
+  djikstra_table.insert({edge->GetName(), {distance, prev}});
   return distance;
 }
 
 DPOnNoOverlapFlowWoker::DPOnNoOverlapFlowWoker(
-    const flow::Flow &flow, std::shared_ptr<worker::Evaluator> &&evaluator)
-    : flow_(flow), evaluator_(std::move(evaluator)) {}
+    std::shared_ptr<worker::Evaluator> &&evaluator)
+    : evaluator_(std::move(evaluator)) {}
 
-DynamicProgrammingPlan DPOnNoOverlapFlowWoker::Run() {
-  std::vector<std::shared_ptr<flow::Edge>> edges = flow_.GetEdges();
+DynamicProgrammingPlan DPOnNoOverlapFlowWoker::Run(const flow::Flow &flow) {
+  std::unordered_map<EdgeLayout, std::tuple<size_t, std::vector<EdgeLayout>>,
+                     EdgeLayoutHash, EdgeLayoutEqual>
+      dp_table;
+  return Run(flow, dp_table);
+}
+
+DynamicProgrammingPlan DPOnNoOverlapFlowWoker::Run(
+    const flow::Flow &flow,
+    std::unordered_map<EdgeLayout, std::tuple<size_t, std::vector<EdgeLayout>>,
+                       EdgeLayoutHash, EdgeLayoutEqual> &dp_table) {
+  std::vector<std::shared_ptr<flow::Edge>> edges = flow.GetEdges();
   std::unordered_map<std::string, std::vector<size_t>> layout_table;
   for (std::shared_ptr<flow::Edge> edge : edges) {
     if (isa<flow::OutputEdge>(edge)) {
       const std::string &name = edge->GetName();
       const Meta &meta = edge->GetMeta();
       const std::vector<size_t> &layout = edge->GetLayout();
-      runOn(edge, layout);
+      runOn(flow, dp_table, edge, layout);
       std::list<std::tuple<std::shared_ptr<flow::Edge>, std::vector<size_t>>>
           queue = {{edge, layout}};
       layout_table.insert({name, layout});
       while (!queue.empty()) {
         auto [edge, layout] = std::move(queue.front());
         queue.pop_front();
-        auto it = dp_table_.find({edge, layout});
+        auto it = dp_table.find({edge, layout});
 #ifdef DEBUG
-        assert(it != dp_table_.end());
+        assert(it != dp_table.end());
 #endif
         auto [_, deps] = it->second;
         for (const EdgeLayout &dep : deps) {
@@ -652,8 +676,8 @@ DynamicProgrammingPlan DPOnNoOverlapFlowWoker::Run() {
 #endif
           const std::string &name = dep.edge->GetName();
 #ifdef DEBUG
-          auto cannot_exist_it = dp_table_.find(dep);
-          assert(cannot_exist_it != dp_table_.end());
+          auto cannot_exist_it = dp_table.find(dep);
+          assert(cannot_exist_it != dp_table.end());
 #endif
           layout_table.insert({name, dep.layout});
           queue.push_back({dep.edge, dep.layout});
@@ -681,17 +705,20 @@ size_t DPOnNoOverlapFlowWoker::EdgeLayoutHash::operator()(
   return hash;
 }
 
-size_t DPOnNoOverlapFlowWoker::runOn(std::shared_ptr<flow::Edge> edge,
-                                     const std::vector<size_t> &layout) {
-  auto it = dp_table_.find({edge, layout});
-  if (it != dp_table_.end()) {
+size_t DPOnNoOverlapFlowWoker::runOn(
+    const flow::Flow &flow,
+    std::unordered_map<EdgeLayout, std::tuple<size_t, std::vector<EdgeLayout>>,
+                       EdgeLayoutHash, EdgeLayoutEqual> &dp_table,
+    std::shared_ptr<flow::Edge> edge, const std::vector<size_t> &layout) {
+  auto it = dp_table.find({edge, layout});
+  if (it != dp_table.end()) {
     return std::get<0>(it->second);
   }
   if (isa<flow::InputEdge>(edge) || isa<flow::ConstantEdge>(edge)) {
     constexpr size_t kInputEdgeTimeCost = 0;
     std::tuple<size_t, std::vector<EdgeLayout>> result = {kInputEdgeTimeCost,
                                                           {}};
-    dp_table_.insert({{edge, layout}, result});
+    dp_table.insert({{edge, layout}, result});
     return kInputEdgeTimeCost;
   } else if (std::shared_ptr<flow::OwnFromEdge> own_from_edge =
                  std::dynamic_pointer_cast<flow::OwnFromEdge>(edge)) {
@@ -700,7 +727,7 @@ size_t DPOnNoOverlapFlowWoker::runOn(std::shared_ptr<flow::Edge> edge,
     if (std::shared_ptr<flow::SingleInputNode> single_input_node =
             std::dynamic_pointer_cast<flow::SingleInputNode>(node)) {
       std::shared_ptr<flow::OwnToEdge> input_edge =
-          flow_.GetInputEdge(*single_input_node);
+          flow.GetInputEdge(*single_input_node);
       const Meta &meta = input_edge->GetMeta();
       const std::vector<int64_t> &shape = meta.GetShape();
       const size_t shape_len = shape.size();
@@ -712,20 +739,20 @@ size_t DPOnNoOverlapFlowWoker::runOn(std::shared_ptr<flow::Edge> edge,
         evaluation::SingleInputKernelEval &eval =
             evaluator_->GetSingleInputEval(node_name);
         const size_t time_cost = eval.GetTimeCost(prev_layout, layout) +
-                                 runOn(input_edge, prev_layout);
+                                 runOn(flow, dp_table, input_edge, prev_layout);
         if (min_time_cost > time_cost) {
           min_time_cost = time_cost;
           deps = {{input_edge, prev_layout}};
         }
       }
-      dp_table_.insert({{edge, layout}, {min_time_cost, std::move(deps)}});
+      dp_table.insert({{edge, layout}, {min_time_cost, std::move(deps)}});
       return min_time_cost;
     } else if (std::shared_ptr<flow::DoubleInputsNode> double_inputs_node =
                    std::dynamic_pointer_cast<flow::DoubleInputsNode>(node)) {
-      std::shared_ptr<flow::OwnToEdge> lhs_edge = flow_.GetLhsEdge(
-                                           *double_inputs_node),
-                                       rhs_edge = flow_.GetRhsEdge(
-                                           *double_inputs_node);
+      std::shared_ptr<flow::OwnToEdge> lhs_edge =
+                                           flow.GetLhsEdge(*double_inputs_node),
+                                       rhs_edge =
+                                           flow.GetRhsEdge(*double_inputs_node);
       const Meta &lhs_meta = lhs_edge->GetMeta(),
                  &rhs_meta = rhs_edge->GetMeta();
       const std::vector<int64_t> &lhs_shape = lhs_meta.GetShape(),
@@ -744,14 +771,15 @@ size_t DPOnNoOverlapFlowWoker::runOn(std::shared_ptr<flow::Edge> edge,
               evaluator_->GetDoubleInputsEval(node_name);
           const size_t time_cost =
               eval.GetTimeCost(lhs_layout, rhs_layout, layout) +
-              runOn(lhs_edge, lhs_layout) + runOn(rhs_edge, rhs_layout);
+              runOn(flow, dp_table, lhs_edge, lhs_layout) +
+              runOn(flow, dp_table, rhs_edge, rhs_layout);
           if (min_time_cost > time_cost) {
             min_time_cost = time_cost;
             deps = {{lhs_edge, lhs_layout}, {rhs_edge, rhs_layout}};
           }
         }
       }
-      dp_table_.insert({{edge, layout}, {min_time_cost, std::move(deps)}});
+      dp_table.insert({{edge, layout}, {min_time_cost, std::move(deps)}});
       return min_time_cost;
     } else {
 #ifdef DEBUG
@@ -811,30 +839,33 @@ std::ostream &operator<<(std::ostream &os, const DynamicProgrammingPlan &plan) {
   return os;
 }
 
-DynamicProgrammingTableImpl::DynamicProgrammingTableImpl(const flow::Flow &flow)
-    : flow_(flow) {}
+DynamicProgrammingTableImpl::DynamicProgrammingTableImpl(
+    context::Context &&context)
+    : context_(std::move(context)) {}
 
-DynamicProgrammingPlan DynamicProgrammingTableImpl::Run() {
-  SubFlowsBuilder builder(flow_);
-  std::vector<flow::Flow> subflows = builder.Run();
+DynamicProgrammingPlan
+DynamicProgrammingTableImpl::Run(const flow::Flow &flow) {
+  SubFlowsBuilder builder;
+  std::vector<flow::Flow> subflows = builder.Run(flow);
   DynamicProgrammingPlan plan;
   for (const flow::Flow &subflow : subflows) {
 #ifdef DEBUG
     assert(subflow.IsNoOverlapFlow());
 #endif
-    std::shared_ptr<worker::Evaluator> evaluator = getEvaluator();
-    DPOnNoOverlapFlowWoker worker(subflow, std::move(evaluator));
-    plan = Merge(plan, worker.Run());
+    std::shared_ptr<worker::Evaluator> evaluator = getEvaluator(flow);
+    DPOnNoOverlapFlowWoker worker(std::move(evaluator));
+    plan = Merge(plan, worker.Run(subflow));
   }
   return plan;
 }
 
-std::shared_ptr<worker::Evaluator> DynamicProgrammingTableImpl::getEvaluator() {
+std::shared_ptr<worker::Evaluator>
+DynamicProgrammingTableImpl::getEvaluator(const flow::Flow &flow) {
   if (evaluator_ != nullptr) {
     return evaluator_;
   }
   evaluator_ = worker::Evaluator::Make();
-  const std::vector<std::shared_ptr<flow::Node>> &nodes = flow_.GetNodes();
+  const std::vector<std::shared_ptr<flow::Node>> &nodes = flow.GetNodes();
   for (std::shared_ptr<flow::Node> node : nodes) {
     std::shared_ptr<kernel::Kernel> k = worker::SelectKernel(node.get());
     size_t time_cost = 0;

@@ -44,10 +44,10 @@ static void BM_RunBertModel(benchmark::State &state) {
         plain_greedy_planner = context.MakePlainGreedyPlanner();
     std::unique_ptr<cpu_transformers::worker::DPGreedyPlanner>
         dp_greedy_planner = context.MakeDPGreedyPlanner();
-    cpu_transformers::flow::Sequence sequence =
-        plain_greedy_planner->FlowToSequence(flow);
     // cpu_transformers::flow::Sequence sequence =
-    // dp_greedy_planner->FlowToSequence(flow);
+    //     plain_greedy_planner->FlowToSequence(flow);
+    cpu_transformers::flow::Sequence sequence =
+        dp_greedy_planner->FlowToSequence(flow);
     cpu_transformers::memory::Index greedy_index =
         plain_greedy_planner->Run(sequence);
     builder->Run(sequence, greedy_index);
