@@ -10,6 +10,7 @@ namespace kernel {
 
 class SubConstantLhsKernel : public SingleInputWithoutBufferKernel {
 public:
+  static constexpr char kKernelName[] = "SubConstantLhsKernel";
   SubConstantLhsKernel(Type type, float64_t value);
   SubConstantLhsKernel(const SubConstantLhsKernel &sub_kernel) = delete;
   SubConstantLhsKernel(SubConstantLhsKernel &&sub_kernel) = default;
@@ -18,8 +19,7 @@ public:
   void Run(mlir::OpBuilder &builder, mlir::Value &input,
            mlir::Value &output) const override;
 
-protected:
-  static constexpr char kKernelName[] = "SubConstantLhsKernel";
+private:
   const Type type_;
   const float64_t value_;
 };

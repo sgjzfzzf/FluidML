@@ -19,6 +19,7 @@ public:
   std::shared_ptr<GatherConstantIndexScalarKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  std::string GetKernelName() const override;
 
 private:
   const int64_t axis_;
@@ -41,6 +42,7 @@ public:
   std::shared_ptr<GatherConstantDataTensorKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  std::string GetKernelName() const override;
 
 private:
   const Tensor data_;
@@ -75,6 +77,11 @@ GatherConstantIndexScalarKernelGeneratorImpl::Yield(
   return std::make_shared<GatherConstantIndexScalarKernel>(axis_, index_);
 }
 
+std::string
+GatherConstantIndexScalarKernelGeneratorImpl::GetKernelName() const {
+  return GatherConstantIndexScalarKernel::kKernelName;
+}
+
 GatherConstantDataTensorKernelGeneratorImpl::
     GatherConstantDataTensorKernelGeneratorImpl(Tensor &&data)
     : data_(std::move(data)) {}
@@ -91,6 +98,10 @@ GatherConstantDataTensorKernelGeneratorImpl::Yield(
     llvm::ArrayRef<size_t> input_layout, llvm::ArrayRef<size_t> output_layout) {
   Tensor data = data_;
   return std::make_shared<GatherConstantDataTensorKernel>(std::move(data));
+}
+
+std::string GatherConstantDataTensorKernelGeneratorImpl::GetKernelName() const {
+  return GatherConstantDataTensorKernel::kKernelName;
 }
 
 } // namespace kernel

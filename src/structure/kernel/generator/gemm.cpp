@@ -21,6 +21,7 @@ public:
   std::shared_ptr<GemmConstantWeightsBiasKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  std::string GetKernelName() const override;
 
 private:
   const float64_t alpha_;
@@ -58,6 +59,10 @@ GemmConstantWeightsBiasKernelGeneratorImpl::Yield(
   Tensor weights = weights_, bias = bias_;
   return std::make_shared<GemmConstantWeightsBiasKernel>(
       alpha_, beta_, transA_, transB_, std::move(weights), std::move(bias));
+}
+
+std::string GemmConstantWeightsBiasKernelGeneratorImpl::GetKernelName() const {
+  return GemmConstantWeightsBiasKernel::kKernelName;
 }
 
 } // namespace kernel

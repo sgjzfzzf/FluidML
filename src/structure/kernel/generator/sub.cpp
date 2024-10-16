@@ -18,6 +18,7 @@ public:
   std::shared_ptr<SubConstantLhsKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  std::string GetKernelName() const override;
 
 private:
   const Type type_;
@@ -43,6 +44,10 @@ std::shared_ptr<SubConstantLhsKernel>
 SubConstantLhsKernelGeneratorImpl::Yield(llvm::ArrayRef<size_t> input_layout,
                                          llvm::ArrayRef<size_t> output_layout) {
   return std::make_shared<SubConstantLhsKernel>(type_, value_);
+}
+
+std::string SubConstantLhsKernelGeneratorImpl::GetKernelName() const {
+  return SubConstantLhsKernel::kKernelName;
 }
 
 } // namespace kernel

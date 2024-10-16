@@ -8,6 +8,7 @@ namespace kernel {
 
 class ReshapeKernel : public SingleInputWithoutBufferKernel {
 public:
+  static constexpr char kKernelName[] = "ReshapeKernel";
   ReshapeKernel() = default;
   ReshapeKernel(const ReshapeKernel &) = delete;
   ReshapeKernel(ReshapeKernel &&) = default;
@@ -15,9 +16,6 @@ public:
   std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,
            mlir::Value &output) const override;
-
-private:
-  static constexpr char kKernelName[] = "ReshapeKernel";
 };
 
 } // namespace kernel

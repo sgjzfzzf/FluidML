@@ -10,6 +10,7 @@ namespace kernel {
 class KernelGenerator {
 public:
   virtual ~KernelGenerator() = default;
+  virtual std::string GetKernelName() const = 0;
 
 protected:
   KernelGenerator() = default;

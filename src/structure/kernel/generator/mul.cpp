@@ -18,6 +18,7 @@ public:
   std::shared_ptr<MulConstantKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  std::string GetKernelName() const override;
 
 private:
   const Type type_;
@@ -39,6 +40,7 @@ public:
   std::shared_ptr<MulCommonKernel>
   Yield(llvm::ArrayRef<size_t> lhs_layout, llvm::ArrayRef<size_t> rhs_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  std::string GetKernelName() const override;
 };
 
 std::unique_ptr<MulConstantKernelGenerator>
@@ -66,6 +68,10 @@ MulConstantKernelGeneratorImpl::Yield(llvm::ArrayRef<size_t> input_layout,
   return std::make_shared<MulConstantKernel>(type_, constant_);
 }
 
+std::string MulConstantKernelGeneratorImpl::GetKernelName() const {
+  return MulConstantKernel::kKernelName;
+}
+
 std::shared_ptr<DoubleInputsWithoutBufferKernel>
 MulCommonKernelGeneratorImpl::YieldDoubleInputsWithoutBufferKernel(
     llvm::ArrayRef<size_t> lhs_layout, llvm::ArrayRef<size_t> rhs_layout,
@@ -78,6 +84,10 @@ MulCommonKernelGeneratorImpl::Yield(llvm::ArrayRef<size_t> lhs_layout,
                                     llvm::ArrayRef<size_t> rhs_layout,
                                     llvm::ArrayRef<size_t> output_layout) {
   return std::make_shared<MulCommonKernel>();
+}
+
+std::string MulCommonKernelGeneratorImpl::GetKernelName() const {
+  return MulCommonKernel::kKernelName;
 }
 
 } // namespace kernel

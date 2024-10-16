@@ -11,6 +11,8 @@ namespace kernel {
 class UnsqueezeSubLhsScalarMulRhsScalarKernel
     : public SingleInputWithoutBufferKernel {
 public:
+  static constexpr char kKernelName[] =
+      "UnsqueezeSubLhsScalarMulRhsScalarKernel";
   UnsqueezeSubLhsScalarMulRhsScalarKernel(std::vector<int64_t> &&unsqueeze_axes,
                                           const Type &sub_type,
                                           float64_t sub_val,
@@ -26,8 +28,6 @@ public:
            mlir::Value &output) const override;
 
 private:
-  static constexpr char kKernelName[] =
-      "UnsqueezeSubLhsScalarMulRhsScalarKernel";
   std::vector<int64_t> unsqueeze_axes_;
   const Type sub_type_;
   const float64_t sub_val_;

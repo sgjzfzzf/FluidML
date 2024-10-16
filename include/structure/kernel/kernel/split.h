@@ -9,6 +9,7 @@ namespace kernel {
 // TODO: need further implementation for split
 class SplitKernel : public Kernel {
 public:
+  static constexpr char kKernelName[] = "SplitKernel";
   SplitKernel(int64_t axis);
   SplitKernel(const SplitKernel &other) = delete;
   SplitKernel(SplitKernel &&other) = default;
@@ -18,7 +19,6 @@ public:
            mlir::ValueRange outputs);
 
 private:
-  static constexpr char kKernelName[] = "SplitKernel";
   int64_t axis_;
 };
 

@@ -8,6 +8,7 @@ namespace kernel {
 
 class ErfKernel : public SingleInputWithoutBufferKernel {
 public:
+  static constexpr char kKernelName[] = "ErfKernel";
   ErfKernel() = default;
   ErfKernel(const ErfKernel &erf_kernel) = delete;
   ErfKernel(ErfKernel &&erf_kernel) = default;
@@ -15,9 +16,6 @@ public:
   std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,
            mlir::Value &output) const override;
-
-private:
-  static constexpr char kKernelName[] = "ErfKernel";
 };
 
 } // namespace kernel

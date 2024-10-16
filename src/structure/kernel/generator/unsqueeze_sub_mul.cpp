@@ -23,6 +23,7 @@ public:
   std::shared_ptr<UnsqueezeSubLhsScalarMulRhsScalarKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  std::string GetKernelName() const override;
 
 private:
   const std::vector<int64_t> unsqueeze_axes_;
@@ -60,6 +61,11 @@ UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl::Yield(
   std::vector<int64_t> unsqueeze_axes = unsqueeze_axes_;
   return std::make_shared<UnsqueezeSubLhsScalarMulRhsScalarKernel>(
       std::move(unsqueeze_axes), sub_type_, sub_val_, mul_type_, mul_val_);
+}
+
+std::string
+UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl::GetKernelName() const {
+  return UnsqueezeSubLhsScalarMulRhsScalarKernel::kKernelName;
 }
 
 } // namespace kernel

@@ -9,6 +9,7 @@ namespace kernel {
 
 class GatherConstantIndexScalarKernel : public SingleInputWithoutBufferKernel {
 public:
+  static constexpr char kKernelName[] = "GatherConstantIndexScalarKernel";
   GatherConstantIndexScalarKernel(int64_t axis, int64_t index);
   GatherConstantIndexScalarKernel(
       const GatherConstantIndexScalarKernel &gather_kernel) = delete;
@@ -20,13 +21,13 @@ public:
            mlir::Value &output) const override;
 
 private:
-  static constexpr char kKernelName[] = "GatherConstantIndexScalarKernel";
   const int64_t axis_;
   const int64_t index_;
 };
 
 class GatherConstantDataTensorKernel : public SingleInputWithoutBufferKernel {
 public:
+  static constexpr char kKernelName[] = "GatherConstantDataTensorKernel";
   GatherConstantDataTensorKernel(Tensor &&data);
   GatherConstantDataTensorKernel(
       const GatherConstantDataTensorKernel &gather_kernel) = delete;
@@ -38,7 +39,6 @@ public:
            mlir::Value &output) const override;
 
 private:
-  static constexpr char kKernelName[] = "GatherConstantDataTensorKernel";
   const Tensor data_;
 };
 

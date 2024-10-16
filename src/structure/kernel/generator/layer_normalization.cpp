@@ -23,6 +23,7 @@ public:
   std::shared_ptr<LayerNormalizationConstantScaleBiasKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  std::string GetKernelName() const override;
 
 private:
   const int64_t axis_;
@@ -62,6 +63,11 @@ LayerNormalizationConstantScaleBiasKernelGeneratorImpl::Yield(
   Tensor scale = scale_, bias = bias_;
   return std::make_shared<LayerNormalizationConstantScaleBiasKernel>(
       axis_, epsilon_, std::move(scale), std::move(bias));
+}
+
+std::string
+LayerNormalizationConstantScaleBiasKernelGeneratorImpl::GetKernelName() const {
+  return LayerNormalizationConstantScaleBiasKernel::kKernelName;
 }
 
 } // namespace kernel

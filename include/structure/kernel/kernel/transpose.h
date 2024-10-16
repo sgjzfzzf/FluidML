@@ -9,6 +9,7 @@ namespace kernel {
 
 class TransposeKernel : public SingleInputWithoutBufferKernel {
 public:
+  static constexpr char kKernelName[] = "TransposeKernel";
   TransposeKernel(std::vector<int64_t> &&perms);
   TransposeKernel(const TransposeKernel &) = delete;
   TransposeKernel(TransposeKernel &&) = default;
@@ -18,7 +19,6 @@ public:
            mlir::Value &output) const override;
 
 private:
-  static constexpr char kKernelName[] = "TransposeKernel";
   const std::vector<int64_t> perms_;
 };
 

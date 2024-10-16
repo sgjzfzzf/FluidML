@@ -8,6 +8,7 @@ namespace kernel {
 
 class UnSqueezeKernel : public SingleInputWithoutBufferKernel {
 public:
+  static constexpr char kKernelName[] = "UnSqueezeKernel";
   UnSqueezeKernel(std::vector<int64_t> &&axes);
   UnSqueezeKernel(const UnSqueezeKernel &other) = delete;
   UnSqueezeKernel(UnSqueezeKernel &&other) = default;
@@ -17,7 +18,6 @@ public:
            mlir::Value &output) const override;
 
 private:
-  static constexpr char kKernelName[] = "UnSqueezeKernel";
   const std::vector<int64_t> axes_;
 };
 

@@ -10,6 +10,7 @@ namespace kernel {
 
 class DivConstantRhsKernel : public SingleInputWithoutBufferKernel {
 public:
+  static constexpr char kKernelName[] = "DivConstantRhsKernel";
   DivConstantRhsKernel(Type type, float64_t constant);
   DivConstantRhsKernel(const DivConstantRhsKernel &div_kernel) = delete;
   DivConstantRhsKernel(DivConstantRhsKernel &&div_kernel) = default;
@@ -19,7 +20,6 @@ public:
            mlir::Value &output) const override;
 
 private:
-  static constexpr char kKernelName[] = "DivConstantRhsKernel";
   const Type type_;
   const float64_t constant_;
 };

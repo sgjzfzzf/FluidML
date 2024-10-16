@@ -9,6 +9,7 @@ namespace kernel {
 
 class GemmConstantWeightsBiasKernel : public SingleInputWithoutBufferKernel {
 public:
+  static constexpr char kKernelName[] = "GemmConstantWeightsBiasKernel";
   GemmConstantWeightsBiasKernel(float64_t alpha, float64_t beta, bool transA,
                                 bool transB, Tensor &&weights, Tensor &&bias);
   GemmConstantWeightsBiasKernel(const GemmConstantWeightsBiasKernel &other) =
@@ -21,7 +22,6 @@ public:
            mlir::Value &output) const override;
 
 private:
-  static constexpr char kKernelName[] = "GemmConstantWeightsBiasKernel";
   const float64_t alpha_;
   const float64_t beta_;
   const bool transA_;

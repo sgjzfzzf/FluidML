@@ -11,6 +11,8 @@ namespace kernel {
 class LayerNormalizationConstantScaleBiasKernel
     : public SingleInputWithBufferKernel {
 public:
+  static constexpr char kKernelName[] =
+      "LayerNormalizationConstantScaleBiasKernel";
   LayerNormalizationConstantScaleBiasKernel(int64_t axis, float64_t epsilon,
                                             Tensor &&scale, Tensor &&bias);
   LayerNormalizationConstantScaleBiasKernel(
@@ -23,8 +25,6 @@ public:
            mlir::Value &buffer) const override;
 
 private:
-  static constexpr char kKernelName[] =
-      "LayerNormalizationConstantScaleBiasKernel";
   const int64_t axis_;
   const float64_t epsilon_;
   const Tensor scale_;

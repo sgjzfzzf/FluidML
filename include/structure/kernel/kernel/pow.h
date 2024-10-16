@@ -10,6 +10,7 @@ namespace kernel {
 
 class PowKernel : public SingleInputWithoutBufferKernel {
 public:
+  static constexpr char kKernelName[] = "PowKernel";
   PowKernel(Type type, float64_t exp);
   PowKernel(const PowKernel &other) = delete;
   PowKernel(PowKernel &&other) = default;
@@ -19,7 +20,6 @@ public:
            mlir::Value &output) const override;
 
 private:
-  static constexpr char kKernelName[] = "PowKernel";
   const Type type_;
   const float64_t exp_;
 };

@@ -18,6 +18,7 @@ public:
   std::shared_ptr<AddConstantKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  std::string GetKernelName() const override;
 
 private:
   const Type type_;
@@ -39,6 +40,7 @@ public:
   std::shared_ptr<AddCommonKernel>
   Yield(llvm::ArrayRef<size_t> lhs_layout, llvm::ArrayRef<size_t> rhs_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  std::string GetKernelName() const override;
 };
 
 std::unique_ptr<AddConstantKernelGenerator>
@@ -66,6 +68,10 @@ AddConstantKernelGeneratorImpl::Yield(llvm::ArrayRef<size_t> input_layout,
   return std::make_shared<AddConstantKernel>(type_, constant_);
 }
 
+std::string AddConstantKernelGeneratorImpl::GetKernelName() const {
+  return AddConstantKernel::kKernelName;
+}
+
 std::shared_ptr<DoubleInputsWithoutBufferKernel>
 AddCommonKernelGeneratorImpl::YieldDoubleInputsWithoutBufferKernel(
     llvm::ArrayRef<size_t> lhs_layout, llvm::ArrayRef<size_t> rhs_layout,
@@ -78,6 +84,10 @@ AddCommonKernelGeneratorImpl::Yield(llvm::ArrayRef<size_t> lhs_layout,
                                     llvm::ArrayRef<size_t> rhs_layout,
                                     llvm::ArrayRef<size_t> output_layout) {
   return std::make_shared<AddCommonKernel>();
+}
+
+std::string AddCommonKernelGeneratorImpl::GetKernelName() const {
+  return AddCommonKernel::kKernelName;
 }
 
 } // namespace kernel

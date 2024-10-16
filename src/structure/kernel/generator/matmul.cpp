@@ -17,6 +17,7 @@ public:
   std::shared_ptr<MatMulKernel>
   Yield(llvm::ArrayRef<size_t> lhs_layout, llvm::ArrayRef<size_t> rhs_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  std::string GetKernelName() const override;
 };
 
 std::unique_ptr<MatMulKernelGenerator> MatMulKernelGenerator::Make() {
@@ -35,6 +36,10 @@ MatMulKernelGeneratorImpl::Yield(llvm::ArrayRef<size_t> lhs_layout,
                                  llvm::ArrayRef<size_t> rhs_layout,
                                  llvm::ArrayRef<size_t> output_layout) {
   return std::make_shared<MatMulKernel>();
+}
+
+std::string MatMulKernelGeneratorImpl::GetKernelName() const {
+  return MatMulKernel::kKernelName;
 }
 
 } // namespace kernel

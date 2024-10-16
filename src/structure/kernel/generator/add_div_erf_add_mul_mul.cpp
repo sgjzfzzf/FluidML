@@ -21,6 +21,7 @@ public:
   std::shared_ptr<AddDivErfAddMulMulKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  std::string GetKernelName() const override;
 
 private:
   const Tensor add0_weight_;
@@ -62,6 +63,10 @@ AddDivErfAddMulMulKernelGeneratorImpl::Yield(
   return std::make_shared<AddDivErfAddMulMulKernel>(
       std::move(add0_weight), div_type_, div_weight_, add1_type_, add1_weight_,
       mul1_type_, mul1_weight_);
+}
+
+std::string AddDivErfAddMulMulKernelGeneratorImpl::GetKernelName() const {
+  return AddDivErfAddMulMulKernel::kKernelName;
 }
 
 } // namespace kernel

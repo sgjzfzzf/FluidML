@@ -9,6 +9,7 @@ namespace kernel {
 
 class AddDivErfAddMulMulKernel : public SingleInputWithoutBufferKernel {
 public:
+  static constexpr char kKernelName[] = "AddDivErfAddMulMulKernel";
   AddDivErfAddMulMulKernel(Tensor &&add0_weight, Type div_type,
                            float64_t div_weight, Type add1_type,
                            float64_t add1_weight, Type mul1_type,
@@ -23,7 +24,6 @@ public:
            mlir::Value &output) const override;
 
 private:
-  static constexpr char kKernelName[] = "AddDivErfAddMulMulKernel";
   const Tensor add0_weight_;
   const Type div_type_;
   const float64_t div_weight_;

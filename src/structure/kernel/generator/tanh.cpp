@@ -16,6 +16,7 @@ public:
   std::shared_ptr<TanhKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  std::string GetKernelName() const override;
 };
 
 std::unique_ptr<TanhKernelGenerator> TanhKernelGenerator::Make() {
@@ -32,6 +33,10 @@ std::shared_ptr<TanhKernel>
 TanhKernelGeneratorImpl::Yield(llvm::ArrayRef<size_t> input_layout,
                                llvm::ArrayRef<size_t> output_layout) {
   return std::make_shared<TanhKernel>();
+}
+
+std::string TanhKernelGeneratorImpl::GetKernelName() const {
+  return TanhKernel::kKernelName;
 }
 
 } // namespace kernel

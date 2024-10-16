@@ -22,6 +22,7 @@ public:
   std::shared_ptr<WhereConstantCondConstantScalarYKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  std::string GetKernelName() const override;
 
 private:
   const Tensor cond_;
@@ -48,6 +49,7 @@ public:
   std::shared_ptr<WhereConstantCondConstantTensorYKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  std::string GetKernelName() const override;
 
 private:
   const Tensor cond_;
@@ -80,6 +82,11 @@ WhereConstantCondConstantScalarYKernelGeneratorImpl::
   return Yield(input_layout, output_layout);
 }
 
+std::string
+WhereConstantCondConstantScalarYKernelGeneratorImpl::GetKernelName() const {
+  return WhereConstantCondConstantScalarYKernel::kKernelName;
+}
+
 std::shared_ptr<WhereConstantCondConstantScalarYKernel>
 WhereConstantCondConstantScalarYKernelGeneratorImpl::Yield(
     llvm::ArrayRef<size_t> input_layout, llvm::ArrayRef<size_t> output_layout) {
@@ -106,6 +113,11 @@ WhereConstantCondConstantTensorYKernelGeneratorImpl::Yield(
   Tensor cond = cond_, y = y_;
   return std::make_shared<WhereConstantCondConstantTensorYKernel>(
       std::move(cond), std::move(y));
+}
+
+std::string
+WhereConstantCondConstantTensorYKernelGeneratorImpl::GetKernelName() const {
+  return WhereConstantCondConstantTensorYKernel::kKernelName;
 }
 
 } // namespace kernel

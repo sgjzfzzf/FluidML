@@ -20,6 +20,7 @@ public:
 class AddConstantKernel : public AddKernel,
                           public SingleInputWithoutBufferKernel {
 public:
+  static constexpr char kKernelName[] = "AddConstantKernel";
   AddConstantKernel(Type type, float64_t constant);
   AddConstantKernel(const AddConstantKernel &add_kernel) = delete;
   AddConstantKernel(AddConstantKernel &&add_kernel) = default;
@@ -31,11 +32,11 @@ public:
 private:
   const Type type_;
   const float64_t constant_;
-  static constexpr char kKernelName[] = "AddConstantKernel";
 };
 
 class AddCommonKernel : public DoubleInputsWithoutBufferKernel {
 public:
+  static constexpr char kKernelName[] = "AddCommonKernel";
   AddCommonKernel() = default;
   AddCommonKernel(const AddCommonKernel &add_kernel) = delete;
   AddCommonKernel(AddCommonKernel &&add_kernel) = default;
@@ -43,9 +44,6 @@ public:
   std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &lhs, mlir::Value &rhs,
            mlir::Value &output) const override;
-
-private:
-  static constexpr char kKernelName[] = "AddCommonKernel";
 };
 
 } // namespace kernel

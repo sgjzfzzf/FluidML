@@ -24,6 +24,7 @@ public:
   std::shared_ptr<GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  std::string GetKernelName() const override;
 
 private:
   const Tensor data_;
@@ -59,6 +60,12 @@ GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl::Yield(
   return std::make_shared<
       GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel>(
       std::move(data), std::move(add0_weight), std::move(add1_weight));
+}
+
+std::string
+GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl::
+    GetKernelName() const {
+  return GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel::kKernelName;
 }
 
 } // namespace kernel

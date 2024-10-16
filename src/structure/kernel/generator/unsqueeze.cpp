@@ -18,6 +18,7 @@ public:
   std::shared_ptr<UnSqueezeKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  std::string GetKernelName() const override;
 
 private:
   const std::vector<int64_t> axes_;
@@ -43,6 +44,10 @@ UnSqueezeKernelGeneratorImpl::Yield(llvm::ArrayRef<size_t> input_layout,
                                     llvm::ArrayRef<size_t> output_layout) {
   std::vector<int64_t> axes = axes_;
   return std::make_shared<UnSqueezeKernel>(std::move(axes));
+}
+
+std::string UnSqueezeKernelGeneratorImpl::GetKernelName() const {
+  return UnSqueezeKernel::kKernelName;
 }
 
 } // namespace kernel

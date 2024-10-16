@@ -10,6 +10,8 @@ namespace kernel {
 class WhereConstantCondConstantScalarYKernel
     : public SingleInputWithoutBufferKernel {
 public:
+  static constexpr char kKernelName[] =
+      "WhereConstantCondConstantScalarYKernel";
   WhereConstantCondConstantScalarYKernel(Tensor &&cond, Type type, float64_t y);
   WhereConstantCondConstantScalarYKernel(
       const WhereConstantCondConstantScalarYKernel &) = delete;
@@ -21,8 +23,6 @@ public:
            mlir::Value &output) const override;
 
 private:
-  static constexpr char kKernelName[] =
-      "WhereConstantCondConstantScalarYKernel";
   const Tensor cond_;
   const Type type_;
   const float64_t y_;
@@ -31,6 +31,8 @@ private:
 class WhereConstantCondConstantTensorYKernel
     : public SingleInputWithoutBufferKernel {
 public:
+  static constexpr char kKernelName[] =
+      "WhereConstantCondConstantTensorYKernel";
   WhereConstantCondConstantTensorYKernel(Tensor &&cond, Tensor &&y);
   WhereConstantCondConstantTensorYKernel(
       const WhereConstantCondConstantTensorYKernel &) = delete;
@@ -42,8 +44,6 @@ public:
            mlir::Value &output) const override;
 
 private:
-  static constexpr char kKernelName[] =
-      "WhereConstantCondConstantTensorYKernel";
   const Tensor cond_;
   const Tensor y_;
 };

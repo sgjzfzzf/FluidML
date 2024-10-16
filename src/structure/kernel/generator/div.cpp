@@ -18,6 +18,7 @@ public:
   std::shared_ptr<DivConstantRhsKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  std::string GetKernelName() const override;
 
 private:
   const Type type_;
@@ -43,6 +44,10 @@ std::shared_ptr<DivConstantRhsKernel>
 DivConstantRhsKernelGeneratorImpl::Yield(llvm::ArrayRef<size_t> input_layout,
                                          llvm::ArrayRef<size_t> output_layout) {
   return std::make_shared<DivConstantRhsKernel>(type_, constant_);
+}
+
+std::string DivConstantRhsKernelGeneratorImpl::GetKernelName() const {
+  return DivConstantRhsKernel::kKernelName;
 }
 
 } // namespace kernel

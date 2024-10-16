@@ -17,6 +17,7 @@ public:
   std::shared_ptr<ReshapeKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  std::string GetKernelName() const override;
 };
 
 std::unique_ptr<ReshapeKernelGenerator> ReshapeKernelGenerator::Make() {
@@ -33,6 +34,10 @@ std::shared_ptr<ReshapeKernel>
 ReshapeKernelGeneratorImpl::Yield(llvm::ArrayRef<size_t> input_layout,
                                   llvm::ArrayRef<size_t> output_layout) {
   return std::make_shared<ReshapeKernel>();
+}
+
+std::string ReshapeKernelGeneratorImpl::GetKernelName() const {
+  return ReshapeKernel::kKernelName;
 }
 
 } // namespace kernel

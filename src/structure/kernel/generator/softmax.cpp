@@ -16,6 +16,7 @@ public:
   std::shared_ptr<SoftmaxKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  std::string GetKernelName() const override;
 
 private:
   const int64_t axis_;
@@ -39,6 +40,10 @@ std::shared_ptr<SoftmaxKernel>
 SoftmaxKernelGeneratorImpl::Yield(llvm::ArrayRef<size_t> input_layout,
                                   llvm::ArrayRef<size_t> output_layout) {
   return std::make_shared<SoftmaxKernel>(axis_);
+}
+
+std::string SoftmaxKernelGeneratorImpl::GetKernelName() const {
+  return SoftmaxKernel::kKernelName;
 }
 
 } // namespace kernel

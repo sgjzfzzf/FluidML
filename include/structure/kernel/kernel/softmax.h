@@ -11,6 +11,7 @@ namespace kernel {
 
 class SoftmaxKernel : public SingleInputWithBufferKernel {
 public:
+  static constexpr char kKernelName[] = "SoftmaxKernel";
   SoftmaxKernel(int64_t axis);
   SoftmaxKernel(const SoftmaxKernel &) = delete;
   SoftmaxKernel(SoftmaxKernel &&) = default;
@@ -20,7 +21,6 @@ public:
            mlir::Value &buffer) const override;
 
 private:
-  static constexpr char kKernelName[] = "SoftmaxKernel";
   const int64_t axis_;
 };
 

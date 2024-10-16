@@ -16,6 +16,7 @@ public:
   std::shared_ptr<PowKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  std::string GetKernelName() const override;
 
 private:
   const Type type_;
@@ -40,6 +41,10 @@ std::shared_ptr<PowKernel>
 PowKernelGeneratorImpl::Yield(llvm::ArrayRef<size_t> input_layout,
                               llvm::ArrayRef<size_t> output_layout) {
   return std::make_shared<PowKernel>(type_, exp_);
+}
+
+std::string PowKernelGeneratorImpl::GetKernelName() const {
+  return PowKernel::kKernelName;
 }
 
 } // namespace kernel
