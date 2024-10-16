@@ -7,6 +7,7 @@ class UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl
     : public UnsqueezeSubLhsScalarMulRhsScalarKernelGenerator {
 public:
   UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl(
+      Meta &&input_meta, Meta &&output_meta,
       std::vector<int64_t> &&unsqueeze_axes, const Type &sub_type,
       float64_t sub_val, const Type &mul_type, float64_t mul_val);
   UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl(
@@ -23,9 +24,13 @@ public:
   std::shared_ptr<UnsqueezeSubLhsScalarMulRhsScalarKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  const Meta &GetInputMeta() const override;
+  const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
 
 private:
+  const Meta input_meta_;
+  const Meta output_meta_;
   const std::vector<int64_t> unsqueeze_axes_;
   const Type sub_type_;
   const float64_t sub_val_;
@@ -35,17 +40,21 @@ private:
 
 std::unique_ptr<UnsqueezeSubLhsScalarMulRhsScalarKernelGenerator>
 UnsqueezeSubLhsScalarMulRhsScalarKernelGenerator::Make(
+    Meta &&input_meta, Meta &&output_meta,
     std::vector<int64_t> &&unsqueeze_axes, const Type &sub_type,
     float64_t sub_val, const Type &mul_type, float64_t mul_val) {
   return std::make_unique<UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl>(
-      std::move(unsqueeze_axes), sub_type, sub_val, mul_type, mul_val);
+      std::move(input_meta), std::move(output_meta), std::move(unsqueeze_axes),
+      sub_type, sub_val, mul_type, mul_val);
 }
 
 UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl::
     UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl(
+        Meta &&input_meta, Meta &&output_meta,
         std::vector<int64_t> &&unsqueeze_axes, const Type &sub_type,
         float64_t sub_val, const Type &mul_type, float64_t mul_val)
-    : unsqueeze_axes_(std::move(unsqueeze_axes)), sub_type_(sub_type),
+    : input_meta_(std::move(input_meta)), output_meta_(std::move(output_meta)),
+      unsqueeze_axes_(std::move(unsqueeze_axes)), sub_type_(sub_type),
       sub_val_(sub_val), mul_type_(mul_type), mul_val_(mul_val) {}
 
 std::shared_ptr<SingleInputWithoutBufferKernel>
@@ -61,6 +70,16 @@ UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl::Yield(
   std::vector<int64_t> unsqueeze_axes = unsqueeze_axes_;
   return std::make_shared<UnsqueezeSubLhsScalarMulRhsScalarKernel>(
       std::move(unsqueeze_axes), sub_type_, sub_val_, mul_type_, mul_val_);
+}
+
+const Meta &
+UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl::GetInputMeta() const {
+  return input_meta_;
+}
+
+const Meta &
+UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl::GetOutputMeta() const {
+  return output_meta_;
 }
 
 std::string

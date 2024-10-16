@@ -3,6 +3,7 @@
 
 #include "structure/kernel/generator/generator.h"
 #include "structure/kernel/kernel/pow.h"
+#include "structure/tensor/meta.h"
 
 namespace cpu_transformers {
 namespace kernel {
@@ -13,7 +14,8 @@ public:
   virtual std::shared_ptr<PowKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) = 0;
-  static std::unique_ptr<PowKernelGenerator> Make(Type type, float64_t exp);
+  static std::unique_ptr<PowKernelGenerator>
+  Make(Meta &&input_meta, Meta &&output_meta, Type type, float64_t exp);
 
 protected:
   PowKernelGenerator() = default;

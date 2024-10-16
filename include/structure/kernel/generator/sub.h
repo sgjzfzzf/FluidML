@@ -3,6 +3,7 @@
 
 #include "structure/kernel/generator/generator.h"
 #include "structure/kernel/kernel/sub.h"
+#include "structure/tensor/meta.h"
 
 namespace cpu_transformers {
 namespace kernel {
@@ -14,8 +15,8 @@ public:
   virtual std::shared_ptr<SubConstantLhsKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) = 0;
-  static std::unique_ptr<SubConstantLhsKernelGenerator> Make(Type type,
-                                                             float64_t value);
+  static std::unique_ptr<SubConstantLhsKernelGenerator>
+  Make(Meta &&input_meta, Meta &&output_meta, Type type, float64_t value);
 
 protected:
   SubConstantLhsKernelGenerator() = default;

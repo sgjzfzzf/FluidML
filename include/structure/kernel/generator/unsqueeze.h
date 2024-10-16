@@ -3,6 +3,7 @@
 
 #include "structure/kernel/generator/generator.h"
 #include "structure/kernel/kernel/unsqueeze.h"
+#include "structure/tensor/meta.h"
 
 namespace cpu_transformers {
 namespace kernel {
@@ -15,7 +16,7 @@ public:
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) = 0;
   static std::unique_ptr<UnSqueezeKernelGenerator>
-  Make(std::vector<int64_t> axes);
+  Make(Meta &&input_meta, Meta &&output_meta, std::vector<int64_t> &&axes);
 
 protected:
   UnSqueezeKernelGenerator() = default;

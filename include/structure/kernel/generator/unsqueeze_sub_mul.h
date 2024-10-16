@@ -3,6 +3,7 @@
 
 #include "structure/kernel/generator/generator.h"
 #include "structure/kernel/kernel/unsqueeze_sub_mul.h"
+#include "structure/tensor/meta.h"
 
 namespace cpu_transformers {
 namespace kernel {
@@ -15,7 +16,8 @@ public:
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) = 0;
   static std::unique_ptr<UnsqueezeSubLhsScalarMulRhsScalarKernelGenerator>
-  Make(std::vector<int64_t> &&unsqueeze_axes, const Type &sub_type,
+  Make(Meta &&input_meta, Meta &&output_meta,
+       std::vector<int64_t> &&unsqueeze_axes, const Type &sub_type,
        float64_t sub_val, const Type &mul_type, float64_t mul_val);
 
 protected:

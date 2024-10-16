@@ -3,6 +3,7 @@
 
 #include "structure/kernel/generator/generator.h"
 #include "structure/kernel/kernel/softmax.h"
+#include "structure/tensor/meta.h"
 
 namespace cpu_transformers {
 namespace kernel {
@@ -13,7 +14,8 @@ public:
   virtual std::shared_ptr<SoftmaxKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) = 0;
-  static std::unique_ptr<SoftmaxKernelGenerator> Make(int64_t axis);
+  static std::unique_ptr<SoftmaxKernelGenerator>
+  Make(Meta &&input_meta, Meta &&output_meta, int64_t axis);
 
 protected:
   SoftmaxKernelGenerator() = default;

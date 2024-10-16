@@ -3,6 +3,7 @@
 
 #include "structure/kernel/generator/generator.h"
 #include "structure/kernel/kernel/tanh.h"
+#include "structure/tensor/meta.h"
 
 namespace cpu_transformers {
 namespace kernel {
@@ -13,7 +14,8 @@ public:
   virtual std::shared_ptr<TanhKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) = 0;
-  static std::unique_ptr<TanhKernelGenerator> Make();
+  static std::unique_ptr<TanhKernelGenerator> Make(Meta &&input_meta,
+                                                   Meta &&output_meta);
 
 protected:
   TanhKernelGenerator() = default;

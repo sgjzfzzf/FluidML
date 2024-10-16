@@ -18,7 +18,8 @@ public:
         llvm::ArrayRef<size_t> output_layout) = 0;
   static std::unique_ptr<
       GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGenerator>
-  Make(Tensor &&data, Tensor &&add0_weight, Tensor &&add1_weight);
+  Make(Meta &&input_meta, Meta &&output_meta, Tensor &&data,
+       Tensor &&add0_weight, Tensor &&add1_weight);
 
 protected:
   GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGenerator() = default;

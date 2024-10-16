@@ -6,7 +6,9 @@ namespace kernel {
 class WhereConstantCondConstantScalarYKernelGeneratorImpl
     : public WhereConstantCondConstantScalarYKernelGenerator {
 public:
-  WhereConstantCondConstantScalarYKernelGeneratorImpl(Tensor &&cond, Type type,
+  WhereConstantCondConstantScalarYKernelGeneratorImpl(Meta &&input_meta,
+                                                      Meta &&output_meta,
+                                                      Tensor &&cond, Type type,
                                                       float64_t y);
   WhereConstantCondConstantScalarYKernelGeneratorImpl(
       const WhereConstantCondConstantScalarYKernelGeneratorImpl &generator) =
@@ -22,9 +24,13 @@ public:
   std::shared_ptr<WhereConstantCondConstantScalarYKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  const Meta &GetInputMeta() const override;
+  const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
 
 private:
+  const Meta input_meta_;
+  const Meta output_meta_;
   const Tensor cond_;
   const Type type_;
   const float64_t y_;
@@ -33,7 +39,9 @@ private:
 class WhereConstantCondConstantTensorYKernelGeneratorImpl
     : public WhereConstantCondConstantTensorYKernelGenerator {
 public:
-  WhereConstantCondConstantTensorYKernelGeneratorImpl(Tensor &&cond,
+  WhereConstantCondConstantTensorYKernelGeneratorImpl(Meta &&input_meta,
+                                                      Meta &&output_meta,
+                                                      Tensor &&cond,
                                                       Tensor &&y);
   WhereConstantCondConstantTensorYKernelGeneratorImpl(
       const WhereConstantCondConstantTensorYKernelGeneratorImpl &generator) =
@@ -49,37 +57,59 @@ public:
   std::shared_ptr<WhereConstantCondConstantTensorYKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  const Meta &GetInputMeta() const override;
+  const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
 
 private:
+  const Meta input_meta_;
+  const Meta output_meta_;
   const Tensor cond_;
   const Tensor y_;
 };
 
 std::unique_ptr<WhereConstantCondConstantScalarYKernelGenerator>
-WhereConstantCondConstantScalarYKernelGenerator::Make(Tensor &&cond, Type type,
+WhereConstantCondConstantScalarYKernelGenerator::Make(Meta &&input_meta,
+                                                      Meta &&output_meta,
+                                                      Tensor &&cond, Type type,
                                                       float64_t y) {
   return std::make_unique<WhereConstantCondConstantScalarYKernelGeneratorImpl>(
-      std::move(cond), type, y);
+      std::move(input_meta), std::move(output_meta), std::move(cond), type, y);
 }
 
 std::unique_ptr<WhereConstantCondConstantTensorYKernelGenerator>
-WhereConstantCondConstantTensorYKernelGenerator::Make(Tensor &&cond,
+WhereConstantCondConstantTensorYKernelGenerator::Make(Meta &&input_meta,
+                                                      Meta &&output_meta,
+                                                      Tensor &&cond,
                                                       Tensor &&y) {
   return std::make_unique<WhereConstantCondConstantTensorYKernelGeneratorImpl>(
-      std::move(cond), std::move(y));
+      std::move(input_meta), std::move(output_meta), std::move(cond),
+      std::move(y));
 }
 
 WhereConstantCondConstantScalarYKernelGeneratorImpl::
-    WhereConstantCondConstantScalarYKernelGeneratorImpl(Tensor &&cond,
+    WhereConstantCondConstantScalarYKernelGeneratorImpl(Meta &&input_meta,
+                                                        Meta &&output_meta,
+                                                        Tensor &&cond,
                                                         Type type, float64_t y)
-    : cond_(std::move(cond)), type_(type), y_(y) {}
+    : input_meta_(std::move(input_meta)), output_meta_(std::move(output_meta)),
+      cond_(std::move(cond)), type_(type), y_(y) {}
 
 std::shared_ptr<SingleInputWithoutBufferKernel>
 WhereConstantCondConstantScalarYKernelGeneratorImpl::
     YieldSingleInputWithoutBufferKernel(llvm::ArrayRef<size_t> input_layout,
                                         llvm::ArrayRef<size_t> output_layout) {
   return Yield(input_layout, output_layout);
+}
+
+const Meta &
+WhereConstantCondConstantScalarYKernelGeneratorImpl::GetInputMeta() const {
+  return input_meta_;
+}
+
+const Meta &
+WhereConstantCondConstantScalarYKernelGeneratorImpl::GetOutputMeta() const {
+  return output_meta_;
 }
 
 std::string
@@ -96,9 +126,12 @@ WhereConstantCondConstantScalarYKernelGeneratorImpl::Yield(
 }
 
 WhereConstantCondConstantTensorYKernelGeneratorImpl::
-    WhereConstantCondConstantTensorYKernelGeneratorImpl(Tensor &&cond,
+    WhereConstantCondConstantTensorYKernelGeneratorImpl(Meta &&input_meta,
+                                                        Meta &&output_meta,
+                                                        Tensor &&cond,
                                                         Tensor &&y)
-    : cond_(std::move(cond)), y_(std::move(y)) {}
+    : input_meta_(std::move(input_meta)), output_meta_(std::move(output_meta)),
+      cond_(std::move(cond)), y_(std::move(y)) {}
 
 std::shared_ptr<SingleInputWithoutBufferKernel>
 WhereConstantCondConstantTensorYKernelGeneratorImpl::
@@ -113,6 +146,16 @@ WhereConstantCondConstantTensorYKernelGeneratorImpl::Yield(
   Tensor cond = cond_, y = y_;
   return std::make_shared<WhereConstantCondConstantTensorYKernel>(
       std::move(cond), std::move(y));
+}
+
+const Meta &
+WhereConstantCondConstantTensorYKernelGeneratorImpl::GetInputMeta() const {
+  return input_meta_;
+}
+
+const Meta &
+WhereConstantCondConstantTensorYKernelGeneratorImpl::GetOutputMeta() const {
+  return output_meta_;
 }
 
 std::string

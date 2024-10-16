@@ -15,7 +15,7 @@ public:
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) = 0;
   static std::unique_ptr<GatherConstantIndexScalarKernelGenerator>
-  Make(int64_t axis, int64_t index);
+  Make(Meta &&input_meta, Meta &&output_meta, int64_t axis, int64_t index);
 
 protected:
   GatherConstantIndexScalarKernelGenerator() = default;
@@ -33,7 +33,7 @@ public:
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) = 0;
   static std::unique_ptr<GatherConstantDataTensorKernelGenerator>
-  Make(Tensor &&data);
+  Make(Meta &&input_meta, Meta &&output_meta, Tensor &&data);
 
 protected:
   GatherConstantDataTensorKernelGenerator() = default;

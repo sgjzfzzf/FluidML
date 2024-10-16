@@ -15,8 +15,8 @@ public:
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) = 0;
   static std::unique_ptr<GemmConstantWeightsBiasKernelGenerator>
-  Make(float64_t alpha, float64_t beta, bool transA, bool transB,
-       Tensor &&weights, Tensor &&bias);
+  Make(Meta &&input_meta, Meta &&output_meta, float64_t alpha, float64_t beta,
+       bool transA, bool transB, Tensor &&weights, Tensor &&bias);
 
 protected:
   GemmConstantWeightsBiasKernelGenerator() = default;

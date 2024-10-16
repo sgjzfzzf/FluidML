@@ -13,7 +13,8 @@ public:
   virtual std::shared_ptr<MatMulKernel>
   Yield(llvm::ArrayRef<size_t> lhs_layout, llvm::ArrayRef<size_t> rhs_layout,
         llvm::ArrayRef<size_t> output_layout) = 0;
-  static std::unique_ptr<MatMulKernelGenerator> Make();
+  static std::unique_ptr<MatMulKernelGenerator>
+  Make(Meta &&lhs_meta, Meta &&rhs_meta, Meta &&output_meta);
 
 protected:
   MatMulKernelGenerator() = default;

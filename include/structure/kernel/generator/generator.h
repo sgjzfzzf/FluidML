@@ -2,6 +2,7 @@
 #define CPU_TRANSFORMERS_STRUCTURE_KERNEL_GENERATOR_GENERATOR_H_
 
 #include "structure/kernel/kernel/kernel.h"
+#include "structure/tensor/meta.h"
 #include <memory>
 
 namespace cpu_transformers {
@@ -24,6 +25,8 @@ public:
   virtual std::shared_ptr<SingleInputKernel>
   YieldSingleInputKernel(llvm::ArrayRef<size_t> input_layout,
                          llvm::ArrayRef<size_t> output_layout) = 0;
+  virtual const Meta &GetInputMeta() const = 0;
+  virtual const Meta &GetOutputMeta() const = 0;
 
 protected:
   SingleInputKernelGenerator() = default;
@@ -39,6 +42,9 @@ public:
   YieldDoubleInputsKernel(llvm::ArrayRef<size_t> lhs_layout,
                           llvm::ArrayRef<size_t> rhs_layout,
                           llvm::ArrayRef<size_t> output_layout) = 0;
+  virtual const Meta &GetLhsMeta() const = 0;
+  virtual const Meta &GetRhsMeta() const = 0;
+  virtual const Meta &GetOutputMeta() const = 0;
 
 protected:
   DoubleInputsKernelGenerator() = default;

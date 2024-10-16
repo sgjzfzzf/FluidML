@@ -6,7 +6,9 @@ namespace kernel {
 class GatherConstantIndexScalarKernelGeneratorImpl
     : public GatherConstantIndexScalarKernelGenerator {
 public:
-  GatherConstantIndexScalarKernelGeneratorImpl(int64_t axis, int64_t index);
+  GatherConstantIndexScalarKernelGeneratorImpl(Meta &&input_meta,
+                                               Meta &&output_meta, int64_t axis,
+                                               int64_t index);
   GatherConstantIndexScalarKernelGeneratorImpl(
       const GatherConstantIndexScalarKernelGeneratorImpl &generator) = delete;
   GatherConstantIndexScalarKernelGeneratorImpl(
@@ -19,9 +21,13 @@ public:
   std::shared_ptr<GatherConstantIndexScalarKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  const Meta &GetInputMeta() const override;
+  const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
 
 private:
+  const Meta input_meta_;
+  const Meta output_meta_;
   const int64_t axis_;
   const int64_t index_;
 };
@@ -29,7 +35,9 @@ private:
 class GatherConstantDataTensorKernelGeneratorImpl
     : public GatherConstantDataTensorKernelGenerator {
 public:
-  GatherConstantDataTensorKernelGeneratorImpl(Tensor &&data);
+  GatherConstantDataTensorKernelGeneratorImpl(Meta &&input_meta,
+                                              Meta &&output_meta,
+                                              Tensor &&data);
   GatherConstantDataTensorKernelGeneratorImpl(
       const GatherConstantDataTensorKernelGeneratorImpl &generator) = delete;
   GatherConstantDataTensorKernelGeneratorImpl(
@@ -42,27 +50,38 @@ public:
   std::shared_ptr<GatherConstantDataTensorKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  const Meta &GetInputMeta() const override;
+  const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
 
 private:
+  const Meta input_meta_;
+  const Meta output_meta_;
   const Tensor data_;
 };
 
 std::unique_ptr<GatherConstantIndexScalarKernelGenerator>
-GatherConstantIndexScalarKernelGenerator::Make(int64_t axis, int64_t index) {
-  return std::make_unique<GatherConstantIndexScalarKernelGeneratorImpl>(axis,
-                                                                        index);
+GatherConstantIndexScalarKernelGenerator::Make(Meta &&input_meta,
+                                               Meta &&output_meta, int64_t axis,
+                                               int64_t index) {
+  return std::make_unique<GatherConstantIndexScalarKernelGeneratorImpl>(
+      std::move(input_meta), std::move(output_meta), axis, index);
 }
 
 std::unique_ptr<GatherConstantDataTensorKernelGenerator>
-GatherConstantDataTensorKernelGenerator::Make(Tensor &&data) {
+GatherConstantDataTensorKernelGenerator::Make(Meta &&input_meta,
+                                              Meta &&output_meta,
+                                              Tensor &&data) {
   return std::make_unique<GatherConstantDataTensorKernelGeneratorImpl>(
-      std::move(data));
+      std::move(input_meta), std::move(output_meta), std::move(data));
 }
 
 GatherConstantIndexScalarKernelGeneratorImpl::
-    GatherConstantIndexScalarKernelGeneratorImpl(int64_t axis, int64_t index)
-    : axis_(axis), index_(index) {}
+    GatherConstantIndexScalarKernelGeneratorImpl(Meta &&input_meta,
+                                                 Meta &&output_meta,
+                                                 int64_t axis, int64_t index)
+    : input_meta_(std::move(input_meta)), output_meta_(std::move(output_meta)),
+      axis_(axis), index_(index) {}
 
 std::shared_ptr<SingleInputWithoutBufferKernel>
 GatherConstantIndexScalarKernelGeneratorImpl::
@@ -77,14 +96,26 @@ GatherConstantIndexScalarKernelGeneratorImpl::Yield(
   return std::make_shared<GatherConstantIndexScalarKernel>(axis_, index_);
 }
 
+const Meta &GatherConstantIndexScalarKernelGeneratorImpl::GetInputMeta() const {
+  return input_meta_;
+}
+
+const Meta &
+GatherConstantIndexScalarKernelGeneratorImpl::GetOutputMeta() const {
+  return output_meta_;
+}
+
 std::string
 GatherConstantIndexScalarKernelGeneratorImpl::GetKernelName() const {
   return GatherConstantIndexScalarKernel::kKernelName;
 }
 
 GatherConstantDataTensorKernelGeneratorImpl::
-    GatherConstantDataTensorKernelGeneratorImpl(Tensor &&data)
-    : data_(std::move(data)) {}
+    GatherConstantDataTensorKernelGeneratorImpl(Meta &&input_meta,
+                                                Meta &&output_meta,
+                                                Tensor &&data)
+    : input_meta_(std::move(input_meta)), output_meta_(std::move(output_meta)),
+      data_(std::move(data)) {}
 
 std::shared_ptr<SingleInputWithoutBufferKernel>
 GatherConstantDataTensorKernelGeneratorImpl::
@@ -98,6 +129,14 @@ GatherConstantDataTensorKernelGeneratorImpl::Yield(
     llvm::ArrayRef<size_t> input_layout, llvm::ArrayRef<size_t> output_layout) {
   Tensor data = data_;
   return std::make_shared<GatherConstantDataTensorKernel>(std::move(data));
+}
+
+const Meta &GatherConstantDataTensorKernelGeneratorImpl::GetInputMeta() const {
+  return input_meta_;
+}
+
+const Meta &GatherConstantDataTensorKernelGeneratorImpl::GetOutputMeta() const {
+  return output_meta_;
 }
 
 std::string GatherConstantDataTensorKernelGeneratorImpl::GetKernelName() const {

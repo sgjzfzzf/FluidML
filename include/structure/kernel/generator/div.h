@@ -3,6 +3,7 @@
 
 #include "structure/kernel/generator/generator.h"
 #include "structure/kernel/kernel/div.h"
+#include "structure/tensor/meta.h"
 
 namespace cpu_transformers {
 namespace kernel {
@@ -15,7 +16,7 @@ public:
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) = 0;
   static std::unique_ptr<SingleInputWithoutBufferKernelGenerator>
-  Make(Type type, float64_t constant);
+  Make(Meta &&input_meta, Meta &&output_meta, Type type, float64_t constant);
 
 protected:
   DivConstantRhsKernelGenerator() = default;

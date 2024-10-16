@@ -15,7 +15,8 @@ public:
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) = 0;
   static std::unique_ptr<WhereConstantCondConstantScalarYKernelGenerator>
-  Make(Tensor &&cond, Type type, float64_t y);
+  Make(Meta &&input_meta, Meta &&output_meta, Tensor &&cond, Type type,
+       float64_t y);
 
 protected:
   WhereConstantCondConstantScalarYKernelGenerator() = default;
@@ -33,7 +34,7 @@ public:
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) = 0;
   static std::unique_ptr<WhereConstantCondConstantTensorYKernelGenerator>
-  Make(Tensor &&cond, Tensor &&y);
+  Make(Meta &&input_meta, Meta &&output_meta, Tensor &&cond, Tensor &&y);
 
 protected:
   WhereConstantCondConstantTensorYKernelGenerator() = default;

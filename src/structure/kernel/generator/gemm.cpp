@@ -6,7 +6,9 @@ namespace kernel {
 class GemmConstantWeightsBiasKernelGeneratorImpl
     : public GemmConstantWeightsBiasKernelGenerator {
 public:
-  GemmConstantWeightsBiasKernelGeneratorImpl(float64_t alpha, float64_t beta,
+  GemmConstantWeightsBiasKernelGeneratorImpl(Meta &&input_meta,
+                                             Meta &&output_meta,
+                                             float64_t alpha, float64_t beta,
                                              bool transA, bool transB,
                                              Tensor &&weights, Tensor &&bias);
   GemmConstantWeightsBiasKernelGeneratorImpl(
@@ -21,9 +23,13 @@ public:
   std::shared_ptr<GemmConstantWeightsBiasKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  const Meta &GetInputMeta() const override;
+  const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
 
 private:
+  const Meta input_meta_;
+  const Meta output_meta_;
   const float64_t alpha_;
   const float64_t beta_;
   const bool transA_;
@@ -33,18 +39,24 @@ private:
 };
 
 std::unique_ptr<GemmConstantWeightsBiasKernelGenerator>
-GemmConstantWeightsBiasKernelGenerator::Make(float64_t alpha, float64_t beta,
+GemmConstantWeightsBiasKernelGenerator::Make(Meta &&input_meta,
+                                             Meta &&output_meta,
+                                             float64_t alpha, float64_t beta,
                                              bool transA, bool transB,
                                              Tensor &&weights, Tensor &&bias) {
   return std::make_unique<GemmConstantWeightsBiasKernelGeneratorImpl>(
-      alpha, beta, transA, transB, std::move(weights), std::move(bias));
+      std::move(input_meta), std::move(output_meta), alpha, beta, transA,
+      transB, std::move(weights), std::move(bias));
 }
 
 GemmConstantWeightsBiasKernelGeneratorImpl::
-    GemmConstantWeightsBiasKernelGeneratorImpl(float64_t alpha, float64_t beta,
+    GemmConstantWeightsBiasKernelGeneratorImpl(Meta &&input_meta,
+                                               Meta &&output_meta,
+                                               float64_t alpha, float64_t beta,
                                                bool transA, bool transB,
                                                Tensor &&weights, Tensor &&bias)
-    : alpha_(alpha), beta_(beta), transA_(transA), transB_(transB),
+    : input_meta_(std::move(input_meta)), output_meta_(std::move(output_meta)),
+      alpha_(alpha), beta_(beta), transA_(transA), transB_(transB),
       weights_(weights), bias_(bias) {}
 
 std::shared_ptr<SingleInputWithoutBufferKernel>
@@ -59,6 +71,14 @@ GemmConstantWeightsBiasKernelGeneratorImpl::Yield(
   Tensor weights = weights_, bias = bias_;
   return std::make_shared<GemmConstantWeightsBiasKernel>(
       alpha_, beta_, transA_, transB_, std::move(weights), std::move(bias));
+}
+
+const Meta &GemmConstantWeightsBiasKernelGeneratorImpl::GetInputMeta() const {
+  return input_meta_;
+}
+
+const Meta &GemmConstantWeightsBiasKernelGeneratorImpl::GetOutputMeta() const {
+  return output_meta_;
 }
 
 std::string GemmConstantWeightsBiasKernelGeneratorImpl::GetKernelName() const {

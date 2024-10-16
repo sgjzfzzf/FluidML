@@ -15,7 +15,8 @@ public:
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) = 0;
   static std::unique_ptr<LayerNormalizationConstantScaleBiasKernelGenerator>
-  Make(int64_t axis, float64_t epsilon, Tensor &&scale, Tensor &&bias);
+  Make(Meta &&input_meta, Meta &&output_meta, int64_t axis, float64_t epsilon,
+       Tensor &&scale, Tensor &&bias);
 
 protected:
   LayerNormalizationConstantScaleBiasKernelGenerator() = default;

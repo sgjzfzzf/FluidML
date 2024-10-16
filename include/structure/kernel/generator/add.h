@@ -3,6 +3,7 @@
 
 #include "structure/kernel/generator/generator.h"
 #include "structure/kernel/kernel/add.h"
+#include "structure/tensor/meta.h"
 
 namespace cpu_transformers {
 namespace kernel {
@@ -14,8 +15,8 @@ public:
   virtual std::shared_ptr<AddConstantKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) = 0;
-  static std::unique_ptr<AddConstantKernelGenerator> Make(Type type,
-                                                          float64_t constant);
+  static std::unique_ptr<AddConstantKernelGenerator>
+  Make(Meta &&input_meta, Meta &&output_meta, Type type, float64_t constant);
 
 protected:
   AddConstantKernelGenerator() = default;
@@ -31,7 +32,8 @@ public:
   virtual std::shared_ptr<AddCommonKernel>
   Yield(llvm::ArrayRef<size_t> lhs_layout, llvm::ArrayRef<size_t> rhs_layout,
         llvm::ArrayRef<size_t> output_layout) = 0;
-  static std::unique_ptr<AddCommonKernelGenerator> Make();
+  static std::unique_ptr<AddCommonKernelGenerator>
+  Make(Meta &&lhs_meta, Meta &&rhs_meta, Meta &&output_meta);
 
 protected:
   AddCommonKernelGenerator() = default;

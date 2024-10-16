@@ -5,7 +5,8 @@ namespace kernel {
 
 class MulConstantKernelGeneratorImpl : public MulConstantKernelGenerator {
 public:
-  MulConstantKernelGeneratorImpl(Type type, float64_t constant);
+  MulConstantKernelGeneratorImpl(Meta &&input_meta, Meta &&output_meta,
+                                 Type type, float64_t constant);
   MulConstantKernelGeneratorImpl(
       const MulConstantKernelGeneratorImpl &generator) = delete;
   MulConstantKernelGeneratorImpl(MulConstantKernelGeneratorImpl &&generator) =
@@ -18,16 +19,21 @@ public:
   std::shared_ptr<MulConstantKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  const Meta &GetInputMeta() const override;
+  const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
 
 private:
+  const Meta input_meta_;
+  const Meta output_meta_;
   const Type type_;
   const float64_t constant_;
 };
 
 class MulCommonKernelGeneratorImpl : public MulCommonKernelGenerator {
 public:
-  MulCommonKernelGeneratorImpl() = default;
+  MulCommonKernelGeneratorImpl(Meta &&lhs_meta, Meta &&rhs_meta,
+                               Meta &&output_meta);
   MulCommonKernelGeneratorImpl(const MulCommonKernelGeneratorImpl &generator) =
       delete;
   MulCommonKernelGeneratorImpl(MulCommonKernelGeneratorImpl &&generator) =
@@ -40,21 +46,35 @@ public:
   std::shared_ptr<MulCommonKernel>
   Yield(llvm::ArrayRef<size_t> lhs_layout, llvm::ArrayRef<size_t> rhs_layout,
         llvm::ArrayRef<size_t> output_layout) override;
+  const Meta &GetLhsMeta() const override;
+  const Meta &GetRhsMeta() const override;
+  const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
+
+private:
+  const Meta lhs_meta_;
+  const Meta rhs_meta_;
+  const Meta output_meta_;
 };
 
 std::unique_ptr<MulConstantKernelGenerator>
-MulConstantKernelGenerator::Make(Type type, float64_t constant) {
-  return std::make_unique<MulConstantKernelGeneratorImpl>(type, constant);
+MulConstantKernelGenerator::Make(Meta &&input_meta, Meta &&output_meta,
+                                 Type type, float64_t constant) {
+  return std::make_unique<MulConstantKernelGeneratorImpl>(
+      std::move(input_meta), std::move(output_meta), type, constant);
 }
 
-std::unique_ptr<MulCommonKernelGenerator> MulCommonKernelGenerator::Make() {
-  return std::make_unique<MulCommonKernelGeneratorImpl>();
+std::unique_ptr<MulCommonKernelGenerator>
+MulCommonKernelGenerator::Make(Meta &&lhs_meta, Meta &&rhs_meta,
+                               Meta &&output_meta) {
+  return std::make_unique<MulCommonKernelGeneratorImpl>(
+      std::move(lhs_meta), std::move(rhs_meta), std::move(output_meta));
 }
 
 MulConstantKernelGeneratorImpl::MulConstantKernelGeneratorImpl(
-    Type type, float64_t constant)
-    : type_(type), constant_(constant) {}
+    Meta &&input_meta, Meta &&output_meta, Type type, float64_t constant)
+    : input_meta_(std::move(input_meta)), output_meta_(std::move(output_meta)),
+      type_(type), constant_(constant) {}
 
 std::shared_ptr<SingleInputWithoutBufferKernel>
 MulConstantKernelGeneratorImpl::YieldSingleInputWithoutBufferKernel(
@@ -68,9 +88,23 @@ MulConstantKernelGeneratorImpl::Yield(llvm::ArrayRef<size_t> input_layout,
   return std::make_shared<MulConstantKernel>(type_, constant_);
 }
 
+const Meta &MulConstantKernelGeneratorImpl::GetInputMeta() const {
+  return input_meta_;
+}
+
+const Meta &MulConstantKernelGeneratorImpl::GetOutputMeta() const {
+  return output_meta_;
+}
+
 std::string MulConstantKernelGeneratorImpl::GetKernelName() const {
   return MulConstantKernel::kKernelName;
 }
+
+MulCommonKernelGeneratorImpl::MulCommonKernelGeneratorImpl(Meta &&lhs_meta,
+                                                           Meta &&rhs_meta,
+                                                           Meta &&output_meta)
+    : lhs_meta_(std::move(lhs_meta)), rhs_meta_(std::move(rhs_meta)),
+      output_meta_(std::move(output_meta)) {}
 
 std::shared_ptr<DoubleInputsWithoutBufferKernel>
 MulCommonKernelGeneratorImpl::YieldDoubleInputsWithoutBufferKernel(
@@ -84,6 +118,18 @@ MulCommonKernelGeneratorImpl::Yield(llvm::ArrayRef<size_t> lhs_layout,
                                     llvm::ArrayRef<size_t> rhs_layout,
                                     llvm::ArrayRef<size_t> output_layout) {
   return std::make_shared<MulCommonKernel>();
+}
+
+const Meta &MulCommonKernelGeneratorImpl::GetLhsMeta() const {
+  return lhs_meta_;
+}
+
+const Meta &MulCommonKernelGeneratorImpl::GetRhsMeta() const {
+  return rhs_meta_;
+}
+
+const Meta &MulCommonKernelGeneratorImpl::GetOutputMeta() const {
+  return output_meta_;
 }
 
 std::string MulCommonKernelGeneratorImpl::GetKernelName() const {
