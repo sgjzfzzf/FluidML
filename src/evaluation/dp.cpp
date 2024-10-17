@@ -71,12 +71,17 @@ public:
 
   class Value {
   public:
+    Value(size_t distance, const std::vector<Key> &prevs);
     Value(size_t distance, std::vector<Key> &&prevs);
     Value(const Value &value) = default;
     Value(Value &&value) = default;
     Value &operator=(const Value &value) = default;
     Value &operator=(Value &&value) = default;
     friend class DPOnNoOverlapFlowWoker;
+
+  private:
+    size_t distance;
+    std::vector<Key> prevs;
   };
 
   struct KeyEqual {
@@ -93,13 +98,11 @@ public:
   DynamicProgrammingPlan Run(const flow::Flow &flow);
   DynamicProgrammingPlan
   Run(const flow::Flow &flow,
-      std::unordered_map<Key, std::tuple<size_t, std::vector<Key>>, KeyHash,
-                         KeyEqual> &dp_table);
+      std::unordered_map<Key, Value, KeyHash, KeyEqual> &dp_table);
 
 private:
   size_t runOn(const flow::Flow &flow,
-               std::unordered_map<Key, std::tuple<size_t, std::vector<Key>>,
-                                  KeyHash, KeyEqual> &dp_table,
+               std::unordered_map<Key, Value, KeyHash, KeyEqual> &dp_table,
                std::shared_ptr<flow::Edge> edge,
                const std::vector<size_t> &layout);
   std::shared_ptr<worker::Evaluator> evaluator_;
@@ -672,21 +675,25 @@ DPOnNoOverlapFlowWoker::Key::Key(std::shared_ptr<flow::Edge> &&edge,
                                  std::vector<size_t> &&layout)
     : edge(std::move(edge)), layout(std::move(layout)) {}
 
+DPOnNoOverlapFlowWoker::Value::Value(size_t distance,
+                                     const std::vector<Key> &prevs)
+    : distance(distance), prevs(prevs) {}
+
+DPOnNoOverlapFlowWoker::Value::Value(size_t distance, std::vector<Key> &&prevs)
+    : distance(distance), prevs(std::move(prevs)) {}
+
 DPOnNoOverlapFlowWoker::DPOnNoOverlapFlowWoker(
     std::shared_ptr<worker::Evaluator> &&evaluator)
     : evaluator_(std::move(evaluator)) {}
 
 DynamicProgrammingPlan DPOnNoOverlapFlowWoker::Run(const flow::Flow &flow) {
-  std::unordered_map<Key, std::tuple<size_t, std::vector<Key>>, KeyHash,
-                     KeyEqual>
-      dp_table;
+  std::unordered_map<Key, Value, KeyHash, KeyEqual> dp_table;
   return Run(flow, dp_table);
 }
 
 DynamicProgrammingPlan DPOnNoOverlapFlowWoker::Run(
     const flow::Flow &flow,
-    std::unordered_map<Key, std::tuple<size_t, std::vector<Key>>, KeyHash,
-                       KeyEqual> &dp_table) {
+    std::unordered_map<Key, Value, KeyHash, KeyEqual> &dp_table) {
   std::vector<std::shared_ptr<flow::Edge>> edges = flow.GetEdges();
   std::unordered_map<std::string, std::vector<size_t>> layout_table;
   for (std::shared_ptr<flow::Edge> edge : edges) {
@@ -742,16 +749,15 @@ size_t DPOnNoOverlapFlowWoker::KeyHash::operator()(const Key &edge) const {
 
 size_t DPOnNoOverlapFlowWoker::runOn(
     const flow::Flow &flow,
-    std::unordered_map<Key, std::tuple<size_t, std::vector<Key>>, KeyHash,
-                       KeyEqual> &dp_table,
+    std::unordered_map<Key, Value, KeyHash, KeyEqual> &dp_table,
     std::shared_ptr<flow::Edge> edge, const std::vector<size_t> &layout) {
   auto it = dp_table.find({edge, layout});
   if (it != dp_table.end()) {
-    return std::get<0>(it->second);
+    return it->second.distance;
   }
   if (isa<flow::InputEdge>(edge) || isa<flow::ConstantEdge>(edge)) {
     constexpr size_t kInputEdgeTimeCost = 0;
-    std::tuple<size_t, std::vector<Key>> result = {kInputEdgeTimeCost, {}};
+    Value result = {kInputEdgeTimeCost, {}};
     dp_table.insert({{edge, layout}, result});
     return kInputEdgeTimeCost;
   } else if (std::shared_ptr<flow::OwnFromEdge> own_from_edge =
