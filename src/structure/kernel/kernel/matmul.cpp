@@ -16,6 +16,9 @@
 namespace cpu_transformers {
 namespace kernel {
 
+MatMulKernel::MatMulKernel(llvm::SmallVector<Axis, 3> &&axes)
+    : axes_(std::move(axes)) {}
+
 std::string MatMulKernel::GetKernelName() const { return kKernelName; }
 
 void MatMulKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
@@ -24,15 +27,18 @@ void MatMulKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
   mlir::MemRefType lhs_type = mlir::cast<mlir::MemRefType>(lhs.getType());
   mlir::MemRefType rhs_type = mlir::cast<mlir::MemRefType>(rhs.getType());
   mlir::MemRefType output_type = mlir::cast<mlir::MemRefType>(output.getType());
-  llvm::SmallVector<mlir::AffineMap> maps =
-      GetBroadcastMatMulAffineMaps(context, lhs_type, rhs_type, output_type);
+  llvm::SmallVector<mlir::AffineMap> maps = GetBroadcastMatMulAffineMaps(
+      context, lhs_type, rhs_type, output_type, axes_);
   const int64_t rank = output_type.getRank();
 #ifdef DEBUG
   assert(rank >= 2);
 #endif
   llvm::SmallVector<mlir::utils::IteratorType> iterator_types(
       rank + 1, mlir::utils::IteratorType::parallel);
-  iterator_types[rank - 1] = mlir::utils::IteratorType::reduction;
+  size_t k_index =
+      std::find(axes_.begin(), axes_.end(), Axis::k) - axes_.begin();
+  std::vector<int64_t> a(axes_.begin(), axes_.end());
+  iterator_types[rank - 2 + k_index] = mlir::utils::IteratorType::reduction;
   mlir::Value c0f = builder.create<mlir::arith::ConstantOp>(
       builder.getUnknownLoc(),
       builder.getFloatAttr(output_type.getElementType(), 0.0));

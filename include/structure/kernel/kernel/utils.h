@@ -8,6 +8,10 @@
 namespace cpu_transformers {
 namespace kernel {
 
+enum Axis : size_t { i, j, k };
+
+llvm::SmallVector<llvm::SmallVector<Axis, 3>> GetAxesInAllOrders();
+
 llvm::SmallVector<mlir::AffineMap>
 GetBroadcastAffineMaps(mlir::Builder &builder,
                        llvm::ArrayRef<mlir::MemRefType> input_types,
@@ -16,6 +20,11 @@ GetBroadcastAffineMaps(mlir::Builder &builder,
 llvm::SmallVector<mlir::AffineMap> GetBroadcastMatMulAffineMaps(
     mlir::MLIRContext *context, const mlir::MemRefType &lhs_type,
     const mlir::MemRefType &rhs_type, const mlir::MemRefType &output_type);
+
+llvm::SmallVector<mlir::AffineMap> GetBroadcastMatMulAffineMaps(
+    mlir::MLIRContext *context, const mlir::MemRefType &lhs_type,
+    const mlir::MemRefType &rhs_type, const mlir::MemRefType &output_type,
+    llvm::ArrayRef<Axis> axes);
 
 } // namespace kernel
 } // namespace cpu_transformers

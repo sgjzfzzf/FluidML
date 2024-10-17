@@ -10,6 +10,8 @@ class FuncAttr;
 class Context;
 class ContextImpl;
 
+class Factory;
+
 } // namespace context
 } // namespace cpu_transformers
 

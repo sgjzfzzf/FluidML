@@ -2,15 +2,16 @@
 #include "evaluation/eval.h"
 #include "nlohmann/json.hpp"
 #include "nlohmann/json_fwd.hpp"
+#include "structure/context/factory.h"
 #include "structure/flow/edge.h"
 #include "structure/flow/flow.h"
 #include "structure/flow/node.h"
 #include "structure/flow/region.h"
+#include "structure/kernel/kernel/kernel.h"
 #include "utils/hash.h"
 #include "utils/isa.hpp"
 #include "utils/utils.h"
 #include "worker/evaluator.h"
-#include "worker/utils.h"
 #include <limits>
 #include <list>
 #include <memory>
@@ -47,31 +48,58 @@ private:
 
 class DPOnNoOverlapFlowWoker {
 public:
-  struct EdgeLayout {
+  class KeyEqual;
+  class KeyHash;
+
+  class Key {
+  public:
+    Key(const std::shared_ptr<flow::Edge> &edge,
+        const std::vector<size_t> &layout);
+    Key(std::shared_ptr<flow::Edge> &&edge, std::vector<size_t> &&layout);
+    Key(const Key &key) = default;
+    Key(Key &&key) = default;
+    Key &operator=(const Key &key) = default;
+    Key &operator=(Key &&key) = default;
+    friend class DPOnNoOverlapFlowWoker;
+    friend struct KeyEqual;
+    friend struct KeyHash;
+
+  private:
     std::shared_ptr<flow::Edge> edge;
     std::vector<size_t> layout;
   };
-  struct EdgeLayoutEqual {
-    bool operator()(const EdgeLayout &lhs, const EdgeLayout &rhs) const;
+
+  class Value {
+  public:
+    Value(size_t distance, std::vector<Key> &&prevs);
+    Value(const Value &value) = default;
+    Value(Value &&value) = default;
+    Value &operator=(const Value &value) = default;
+    Value &operator=(Value &&value) = default;
+    friend class DPOnNoOverlapFlowWoker;
   };
-  struct EdgeLayoutHash {
-    size_t operator()(const EdgeLayout &edge) const;
+
+  struct KeyEqual {
+    bool operator()(const Key &lhs, const Key &rhs) const;
   };
+
+  struct KeyHash {
+    size_t operator()(const Key &edge) const;
+  };
+
   DPOnNoOverlapFlowWoker(std::shared_ptr<worker::Evaluator> &&evaluator);
   DPOnNoOverlapFlowWoker(const DPOnNoOverlapFlowWoker &runner) = delete;
   DPOnNoOverlapFlowWoker(DPOnNoOverlapFlowWoker &&runner) = default;
   DynamicProgrammingPlan Run(const flow::Flow &flow);
   DynamicProgrammingPlan
   Run(const flow::Flow &flow,
-      std::unordered_map<EdgeLayout,
-                         std::tuple<size_t, std::vector<EdgeLayout>>,
-                         EdgeLayoutHash, EdgeLayoutEqual> &dp_table);
+      std::unordered_map<Key, std::tuple<size_t, std::vector<Key>>, KeyHash,
+                         KeyEqual> &dp_table);
 
 private:
   size_t runOn(const flow::Flow &flow,
-               std::unordered_map<EdgeLayout,
-                                  std::tuple<size_t, std::vector<EdgeLayout>>,
-                                  EdgeLayoutHash, EdgeLayoutEqual> &dp_table,
+               std::unordered_map<Key, std::tuple<size_t, std::vector<Key>>,
+                                  KeyHash, KeyEqual> &dp_table,
                std::shared_ptr<flow::Edge> edge,
                const std::vector<size_t> &layout);
   std::shared_ptr<worker::Evaluator> evaluator_;
@@ -636,21 +664,29 @@ size_t SubFlowsBuilder::findLongestPathTo(
   return distance;
 }
 
+DPOnNoOverlapFlowWoker::Key::Key(const std::shared_ptr<flow::Edge> &edge,
+                                 const std::vector<size_t> &layout)
+    : edge(edge), layout(layout) {}
+
+DPOnNoOverlapFlowWoker::Key::Key(std::shared_ptr<flow::Edge> &&edge,
+                                 std::vector<size_t> &&layout)
+    : edge(std::move(edge)), layout(std::move(layout)) {}
+
 DPOnNoOverlapFlowWoker::DPOnNoOverlapFlowWoker(
     std::shared_ptr<worker::Evaluator> &&evaluator)
     : evaluator_(std::move(evaluator)) {}
 
 DynamicProgrammingPlan DPOnNoOverlapFlowWoker::Run(const flow::Flow &flow) {
-  std::unordered_map<EdgeLayout, std::tuple<size_t, std::vector<EdgeLayout>>,
-                     EdgeLayoutHash, EdgeLayoutEqual>
+  std::unordered_map<Key, std::tuple<size_t, std::vector<Key>>, KeyHash,
+                     KeyEqual>
       dp_table;
   return Run(flow, dp_table);
 }
 
 DynamicProgrammingPlan DPOnNoOverlapFlowWoker::Run(
     const flow::Flow &flow,
-    std::unordered_map<EdgeLayout, std::tuple<size_t, std::vector<EdgeLayout>>,
-                       EdgeLayoutHash, EdgeLayoutEqual> &dp_table) {
+    std::unordered_map<Key, std::tuple<size_t, std::vector<Key>>, KeyHash,
+                       KeyEqual> &dp_table) {
   std::vector<std::shared_ptr<flow::Edge>> edges = flow.GetEdges();
   std::unordered_map<std::string, std::vector<size_t>> layout_table;
   for (std::shared_ptr<flow::Edge> edge : edges) {
@@ -670,7 +706,7 @@ DynamicProgrammingPlan DPOnNoOverlapFlowWoker::Run(
         assert(it != dp_table.end());
 #endif
         auto [_, deps] = it->second;
-        for (const EdgeLayout &dep : deps) {
+        for (const Key &dep : deps) {
 #ifdef DEBUG
           assert(dep.edge != nullptr);
 #endif
@@ -688,13 +724,12 @@ DynamicProgrammingPlan DPOnNoOverlapFlowWoker::Run(
   return DynamicProgrammingPlan(std::move(layout_table));
 }
 
-bool DPOnNoOverlapFlowWoker::EdgeLayoutEqual::operator()(
-    const EdgeLayout &lhs, const EdgeLayout &rhs) const {
+bool DPOnNoOverlapFlowWoker::KeyEqual::operator()(const Key &lhs,
+                                                  const Key &rhs) const {
   return lhs.edge == rhs.edge && lhs.layout == rhs.layout;
 }
 
-size_t DPOnNoOverlapFlowWoker::EdgeLayoutHash::operator()(
-    const EdgeLayout &edge) const {
+size_t DPOnNoOverlapFlowWoker::KeyHash::operator()(const Key &edge) const {
   size_t hash = 0;
   std::hash<std::shared_ptr<flow::Edge>> edge_hash;
   std::hash<int64_t> layout_hash;
@@ -707,8 +742,8 @@ size_t DPOnNoOverlapFlowWoker::EdgeLayoutHash::operator()(
 
 size_t DPOnNoOverlapFlowWoker::runOn(
     const flow::Flow &flow,
-    std::unordered_map<EdgeLayout, std::tuple<size_t, std::vector<EdgeLayout>>,
-                       EdgeLayoutHash, EdgeLayoutEqual> &dp_table,
+    std::unordered_map<Key, std::tuple<size_t, std::vector<Key>>, KeyHash,
+                       KeyEqual> &dp_table,
     std::shared_ptr<flow::Edge> edge, const std::vector<size_t> &layout) {
   auto it = dp_table.find({edge, layout});
   if (it != dp_table.end()) {
@@ -716,8 +751,7 @@ size_t DPOnNoOverlapFlowWoker::runOn(
   }
   if (isa<flow::InputEdge>(edge) || isa<flow::ConstantEdge>(edge)) {
     constexpr size_t kInputEdgeTimeCost = 0;
-    std::tuple<size_t, std::vector<EdgeLayout>> result = {kInputEdgeTimeCost,
-                                                          {}};
+    std::tuple<size_t, std::vector<Key>> result = {kInputEdgeTimeCost, {}};
     dp_table.insert({{edge, layout}, result});
     return kInputEdgeTimeCost;
   } else if (std::shared_ptr<flow::OwnFromEdge> own_from_edge =
@@ -734,15 +768,16 @@ size_t DPOnNoOverlapFlowWoker::runOn(
       std::vector<std::vector<size_t>> input_layouts =
           utils::GenAllOrders(shape_len);
       size_t min_time_cost = std::numeric_limits<size_t>::max();
-      std::vector<EdgeLayout> deps;
-      for (const std::vector<size_t> &prev_layout : input_layouts) {
+      std::vector<Key> deps;
+      for (const std::vector<size_t> &input_layout : input_layouts) {
         evaluation::SingleInputKernelEval &eval =
             evaluator_->GetSingleInputEval(node_name);
-        const size_t time_cost = eval.GetTimeCost(prev_layout, layout) +
-                                 runOn(flow, dp_table, input_edge, prev_layout);
+        const size_t time_cost =
+            eval.GetTimeCost(input_layout, layout) +
+            runOn(flow, dp_table, input_edge, input_layout);
         if (min_time_cost > time_cost) {
           min_time_cost = time_cost;
-          deps = {{input_edge, prev_layout}};
+          deps = {{input_edge, input_layout}};
         }
       }
       dp_table.insert({{edge, layout}, {min_time_cost, std::move(deps)}});
@@ -764,7 +799,7 @@ size_t DPOnNoOverlapFlowWoker::runOn(
                                        rhs_layouts =
                                            utils::GenAllOrders(rhs_shape_len);
       size_t min_time_cost = std::numeric_limits<size_t>::max();
-      std::vector<EdgeLayout> deps;
+      std::vector<Key> deps;
       for (const std::vector<size_t> &lhs_layout : lhs_layouts) {
         for (const std::vector<size_t> &rhs_layout : rhs_layouts) {
           evaluation::DoubleInputsKernelEval &eval =
@@ -865,13 +900,15 @@ DynamicProgrammingTableImpl::getEvaluator(const flow::Flow &flow) {
     return evaluator_;
   }
   evaluator_ = worker::Evaluator::Make();
+  context::Factory &factory = context_->GetFactory();
   const std::vector<std::shared_ptr<flow::Node>> &nodes = flow.GetNodes();
   for (std::shared_ptr<flow::Node> node : nodes) {
-    std::shared_ptr<kernel::Kernel> k = worker::SelectKernel(node.get());
+    std::shared_ptr<kernel::KernelGenerator> kgenerator =
+        factory.MakeKernelGenerator(*node);
     size_t time_cost = 0;
-    if (std::shared_ptr<kernel::SingleInputWithoutBufferKernel> kernel =
-            std::dynamic_pointer_cast<kernel::SingleInputWithoutBufferKernel>(
-                k)) {
+    if (std::shared_ptr<kernel::SingleInputWithoutBufferKernelGenerator>
+            generator = std::dynamic_pointer_cast<
+                kernel::SingleInputWithoutBufferKernelGenerator>(kgenerator)) {
       std::shared_ptr<flow::SingleInputWithoutBufferNode> ptr =
           std::dynamic_pointer_cast<flow::SingleInputWithoutBufferNode>(node);
 #ifdef DEBUG
@@ -883,16 +920,15 @@ DynamicProgrammingTableImpl::getEvaluator(const flow::Flow &flow) {
       assert(input != nullptr);
       assert(output != nullptr);
 #endif
-      Meta input_meta = input->GetMeta();
-      Meta output_meta = output->GetMeta();
       std::shared_ptr<evaluation::SingleInputWithoutBufferKernelEval> eval =
           std::make_shared<evaluation::SingleInputWithoutBufferKernelEval>(
-              std::move(kernel), std::move(input_meta), std::move(output_meta));
+              std::move(generator));
       std::string name = ptr->GetName();
       evaluator_->RegisterEval(std::move(name), std::move(eval));
-    } else if (std::shared_ptr<kernel::SingleInputWithBufferKernel> kernel =
-                   std::dynamic_pointer_cast<
-                       kernel::SingleInputWithBufferKernel>(k)) {
+    } else if (std::shared_ptr<kernel::SingleInputWithBufferKernelGenerator>
+                   generator = std::dynamic_pointer_cast<
+                       kernel::SingleInputWithBufferKernelGenerator>(
+                       kgenerator)) {
       std::shared_ptr<flow::SingleInputWithBufferNode> ptr =
           std::dynamic_pointer_cast<flow::SingleInputWithBufferNode>(node);
 #ifdef DEBUG
@@ -904,18 +940,16 @@ DynamicProgrammingTableImpl::getEvaluator(const flow::Flow &flow) {
       assert(input != nullptr);
       assert(output != nullptr);
 #endif
-      Meta input_meta = input->GetMeta();
-      Meta output_meta = output->GetMeta();
       const size_t buffer_size = ptr->GetBufferSize();
       std::shared_ptr<evaluation::SingleInputWithBufferKernelEval> eval =
           std::make_shared<evaluation::SingleInputWithBufferKernelEval>(
-              std::move(kernel), std::move(input_meta), std::move(output_meta),
-              buffer_size);
+              std::move(generator), buffer_size);
       std::string name = ptr->GetName();
       evaluator_->RegisterEval(std::move(name), std::move(eval));
-    } else if (std::shared_ptr<kernel::DoubleInputsWithoutBufferKernel> kernel =
-                   std::dynamic_pointer_cast<
-                       kernel::DoubleInputsWithoutBufferKernel>(k)) {
+    } else if (std::shared_ptr<kernel::DoubleInputsWithoutBufferKernelGenerator>
+                   generator = std::dynamic_pointer_cast<
+                       kernel::DoubleInputsWithoutBufferKernelGenerator>(
+                       kgenerator)) {
       std::shared_ptr<flow::DoubleInputsWithoutBufferNode> ptr =
           std::dynamic_pointer_cast<flow::DoubleInputsWithoutBufferNode>(node);
 #ifdef DEBUG
@@ -929,18 +963,14 @@ DynamicProgrammingTableImpl::getEvaluator(const flow::Flow &flow) {
       assert(rhs != nullptr);
       assert(output != nullptr);
 #endif
-      Meta lhs_meta = lhs->GetMeta();
-      Meta rhs_meta = rhs->GetMeta();
-      Meta output_meta = output->GetMeta();
       std::shared_ptr<evaluation::DoubleInputsWithoutBufferKernelEval> eval =
           std::make_shared<evaluation::DoubleInputsWithoutBufferKernelEval>(
-              std::move(kernel), std::move(lhs_meta), std::move(rhs_meta),
-              std::move(output_meta));
+              std::move(generator));
       std::string name = ptr->GetName();
       evaluator_->RegisterEval(std::move(name), std::move(eval));
     } else if (std::shared_ptr<kernel::DoubleInputsWithBufferKernel> kernel =
                    std::dynamic_pointer_cast<
-                       kernel::DoubleInputsWithBufferKernel>(k)) {
+                       kernel::DoubleInputsWithBufferKernel>(kgenerator)) {
 #ifdef DEBUG
       assert(false && "unimplemented");
 #else

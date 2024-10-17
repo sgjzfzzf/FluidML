@@ -5,6 +5,12 @@
 namespace cpu_transformers {
 namespace kernel {
 
+llvm::SmallVector<llvm::SmallVector<Axis, 3>> GetAxesInAllOrders() {
+  return {
+      {i, j, k}, {i, k, j}, {j, i, k}, {j, k, i}, {k, i, j}, {k, j, i},
+  };
+}
+
 llvm::SmallVector<mlir::AffineMap>
 GetBroadcastAffineMaps(mlir::Builder &builder,
                        llvm::ArrayRef<mlir::MemRefType> input_types,
@@ -46,6 +52,20 @@ GetBroadcastAffineMaps(mlir::Builder &builder,
 llvm::SmallVector<mlir::AffineMap> GetBroadcastMatMulAffineMaps(
     mlir::MLIRContext *context, const mlir::MemRefType &lhs_type,
     const mlir::MemRefType &rhs_type, const mlir::MemRefType &output_type) {
+  return GetBroadcastMatMulAffineMaps(context, lhs_type, rhs_type, output_type,
+                                      {Axis::i, Axis::j, Axis::k});
+}
+
+llvm::SmallVector<mlir::AffineMap> GetBroadcastMatMulAffineMaps(
+    mlir::MLIRContext *context, const mlir::MemRefType &lhs_type,
+    const mlir::MemRefType &rhs_type, const mlir::MemRefType &output_type,
+    llvm::ArrayRef<Axis> axes) {
+#ifdef DEBUG
+  assert(axes.size() == 3);
+  assert(std::find(axes.begin(), axes.end(), Axis::i) != axes.end());
+  assert(std::find(axes.begin(), axes.end(), Axis::j) != axes.end());
+  assert(std::find(axes.begin(), axes.end(), Axis::k) != axes.end());
+#endif
   llvm::ArrayRef<int64_t> lhs_shape = lhs_type.getShape(),
                           rhs_shape = rhs_type.getShape(),
                           output_shape = output_type.getShape();
@@ -93,13 +113,18 @@ llvm::SmallVector<mlir::AffineMap> GetBroadcastMatMulAffineMaps(
     }
     output_exprs.push_back(mlir::getAffineDimExpr(output_index, context));
   }
-  // the order of axes is m, k, n
-  lhs_exprs.push_back(mlir::getAffineDimExpr(output_rank - 2, context));
-  lhs_exprs.push_back(mlir::getAffineDimExpr(output_rank - 1, context));
-  rhs_exprs.push_back(mlir::getAffineDimExpr(output_rank - 1, context));
-  rhs_exprs.push_back(mlir::getAffineDimExpr(output_rank, context));
-  output_exprs.push_back(mlir::getAffineDimExpr(output_rank - 2, context));
-  output_exprs.push_back(mlir::getAffineDimExpr(output_rank, context));
+  lhs_exprs.push_back(
+      mlir::getAffineDimExpr(output_rank - 2 + axes[0], context));
+  lhs_exprs.push_back(
+      mlir::getAffineDimExpr(output_rank - 2 + axes[2], context));
+  rhs_exprs.push_back(
+      mlir::getAffineDimExpr(output_rank - 2 + axes[2], context));
+  rhs_exprs.push_back(
+      mlir::getAffineDimExpr(output_rank - 2 + axes[1], context));
+  output_exprs.push_back(
+      mlir::getAffineDimExpr(output_rank - 2 + axes[0], context));
+  output_exprs.push_back(
+      mlir::getAffineDimExpr(output_rank - 2 + axes[1], context));
   mlir::AffineMap lhs_map = mlir::AffineMap::get(output_rank + 1, 0, lhs_exprs,
                                                  context),
                   rhs_map = mlir::AffineMap::get(output_rank + 1, 0, rhs_exprs,

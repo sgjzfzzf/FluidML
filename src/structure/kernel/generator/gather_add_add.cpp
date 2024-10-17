@@ -98,7 +98,10 @@ GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl::
 
 size_t GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl::
     GetHashCode() const {
-  size_t hash = typeid(GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl).hash_code();
+  size_t hash =
+      typeid(
+          GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl)
+          .hash_code();
   hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= data_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);

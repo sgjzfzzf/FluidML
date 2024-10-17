@@ -14,6 +14,8 @@ class SingleInputWithBufferKernelEval;
 class DoubleInputsKernelEval;
 class DoubleInputsWithoutBufferKernelEval;
 
+class Factory;
+
 } // namespace evaluation
 } // namespace cpu_transformers
 

@@ -1,5 +1,10 @@
 #include "structure/kernel/generator/matmul.h"
+#include "structure/kernel/kernel/matmul.h"
 #include "utils/hash.h"
+#include "utils/utils.h"
+#include "worker/builder.h"
+#include "worker/lower.h"
+#include "worker/runner.h"
 
 namespace cpu_transformers {
 namespace kernel {
@@ -28,6 +33,34 @@ public:
   bool Equals(const MatMulKernelGeneratorImpl &other) const;
 
 private:
+  struct KeyHash;
+  struct KeyEqual;
+
+  class Key {
+  public:
+    Key(llvm::ArrayRef<size_t> lhs_layout, llvm::ArrayRef<size_t> rhs_layout,
+        llvm::ArrayRef<size_t> output_layout);
+    Key(const Key &key) = default;
+    Key(Key &&key) = default;
+    ~Key() = default;
+    friend struct KeyHash;
+    friend struct KeyEqual;
+
+  private:
+    llvm::SmallVector<size_t> lhs_layout;
+    llvm::SmallVector<size_t> rhs_layout;
+    llvm::SmallVector<size_t> output_layout;
+  };
+
+  struct KeyHash {
+    size_t operator()(const Key &key) const;
+  };
+  struct KeyEqual {
+    bool operator()(const Key &lhs, const Key &rhs) const;
+  };
+
+  std::unordered_map<Key, std::shared_ptr<MatMulKernel>, KeyHash, KeyEqual>
+      kernels_;
   const Meta lhs_meta_;
   const Meta rhs_meta_;
   const Meta output_meta_;
@@ -38,7 +71,7 @@ MatMulKernelGenerator::Make(Meta &&lhs_meta, Meta &&rhs_meta,
                             Meta &&output_meta) {
   return std::make_unique<MatMulKernelGeneratorImpl>(
       std::move(lhs_meta), std::move(rhs_meta), std::move(output_meta));
-}
+};
 
 MatMulKernelGeneratorImpl::MatMulKernelGeneratorImpl(Meta &&lhs_meta,
                                                      Meta &&rhs_meta,
@@ -57,7 +90,48 @@ std::shared_ptr<MatMulKernel>
 MatMulKernelGeneratorImpl::Yield(llvm::ArrayRef<size_t> lhs_layout,
                                  llvm::ArrayRef<size_t> rhs_layout,
                                  llvm::ArrayRef<size_t> output_layout) {
-  return std::make_shared<MatMulKernel>();
+  const Meta &lhs_meta = GetLhsMeta(), rhs_meta = GetRhsMeta(),
+             output_meta = GetOutputMeta();
+  // std::shared_ptr<MatMulKernel> kernel = std::make_shared<MatMulKernel>(
+  //     llvm::SmallVector<Axis, 3>{Axis::i, Axis::j, Axis::k});
+  // return kernel;
+  auto it = kernels_.find({lhs_layout, rhs_layout, output_layout});
+  if (it != kernels_.end()) {
+    return it->second;
+  }
+  size_t min_time_cost = std::numeric_limits<size_t>::max();
+  std::shared_ptr<MatMulKernel> min_kernel = nullptr;
+  for (llvm::SmallVector<Axis, 3> axes : GetAxesInAllOrders()) {
+    std::shared_ptr<MatMulKernel> kernel =
+        std::make_shared<MatMulKernel>(std::move(axes));
+    std::string kernel_name = kernel->GetKernelName();
+    context::Context context;
+    std::unique_ptr<worker::KernelBuilder> builder =
+        context.MakeKernelBuilder(std::move(kernel_name));
+    std::unique_ptr<worker::Lower> lower = context.MakeLower();
+    std::unique_ptr<worker::Runner> runner = context.MakeRunner();
+    builder->RunOnDoubleInputsWithoutBuffer(*kernel, lhs_meta, rhs_meta,
+                                            output_meta);
+    lower->Run();
+    std::vector<uint8_t> lhs = utils::FillBuffer(lhs_meta),
+                         rhs = utils::FillBuffer(rhs_meta),
+                         output = utils::FillBuffer(output_meta);
+    const size_t time_cost = runner->Run({
+        {worker::KernelBuilder::kLhsKey, lhs.data()},
+        {worker::KernelBuilder::kRhsKey, rhs.data()},
+        {worker::KernelBuilder::kOutputKey, output.data()},
+    });
+    if (time_cost < min_time_cost) {
+      min_time_cost = time_cost;
+      min_kernel = kernel;
+    }
+  }
+  kernels_.insert_or_assign({lhs_layout, rhs_layout, output_layout},
+                            min_kernel);
+#ifdef DEBUG
+  assert(min_kernel != nullptr);
+#endif
+  return min_kernel;
 }
 
 const Meta &MatMulKernelGeneratorImpl::GetLhsMeta() const { return lhs_meta_; }
@@ -93,6 +167,36 @@ bool MatMulKernelGeneratorImpl::Equals(
     const MatMulKernelGeneratorImpl &other) const {
   return lhs_meta_ == other.lhs_meta_ && rhs_meta_ == other.rhs_meta_ &&
          output_meta_ == other.output_meta_;
+}
+
+MatMulKernelGeneratorImpl::Key::Key(llvm::ArrayRef<size_t> lhs_layout,
+                                    llvm::ArrayRef<size_t> rhs_layout,
+                                    llvm::ArrayRef<size_t> output_layout)
+    : lhs_layout(lhs_layout), rhs_layout(rhs_layout),
+      output_layout(output_layout) {}
+
+size_t MatMulKernelGeneratorImpl::KeyHash::operator()(
+    const MatMulKernelGeneratorImpl::Key &key) const {
+  size_t hash = 0;
+  std::hash<size_t> hasher;
+  for (size_t i = 0; i < key.lhs_layout.size(); ++i) {
+    hash ^= hasher(key.lhs_layout[i]) + kHashSeed + (hash << 6) + (hash >> 2);
+  }
+  for (size_t i = 0; i < key.rhs_layout.size(); ++i) {
+    hash ^= hasher(key.rhs_layout[i]) + kHashSeed + (hash << 6) + (hash >> 2);
+  }
+  for (size_t i = 0; i < key.output_layout.size(); ++i) {
+    hash ^=
+        hasher(key.output_layout[i]) + kHashSeed + (hash << 6) + (hash >> 2);
+  }
+  return hash;
+}
+
+bool MatMulKernelGeneratorImpl::KeyEqual::operator()(
+    const MatMulKernelGeneratorImpl::Key &lhs,
+    const MatMulKernelGeneratorImpl::Key &rhs) const {
+  return lhs.lhs_layout == rhs.lhs_layout && lhs.rhs_layout == rhs.rhs_layout &&
+         lhs.output_layout == rhs.output_layout;
 }
 
 } // namespace kernel

@@ -1,6 +1,7 @@
 #include "evaluation/eval.h"
 #include "fmt/ranges.h"
 #include "nlohmann/json.hpp"
+#include "structure/kernel/generator/generator.h"
 #include "structure/kernel/kernel/kernel.h"
 #include "utils/hash.h"
 #include "utils/utils.h"
@@ -57,27 +58,22 @@ size_t SingleInputKernelEval::KeyHash::operator()(const Key &key) const {
   return hash;
 };
 
-SingleInputKernelEval::SingleInputKernelEval(Meta &&input_meta,
-                                             Meta &&output_meta)
-    : input_meta_(std::move(input_meta)), output_meta_(std::move(output_meta)) {
-}
-
 size_t
 SingleInputKernelEval::GetTimeCost(const std::vector<size_t> &input_layout,
                                    const std::vector<size_t> &output_layout) {
-  size_t time_cost;
-  const kernel::Kernel &kernel = GetKernel();
-  std::string kernel_name = kernel.GetKernelName();
-#ifdef DP_DEBUG
-  // TODO: this return statement is a placeholder, to accelerate the execution
-  // during development
-  time_cost = 1;
-#else
   // Add a cache to save time on evaluate the same kernel.
   auto it = time_costs_.find({input_layout, output_layout});
   if (it != time_costs_.end()) {
     return it->second;
   }
+  size_t time_cost;
+#ifdef DP_DEBUG
+  // TODO: this return statement is a placeholder, to accelerate the execution
+  // during development
+  time_cost = 1;
+#else
+  kernel::SingleInputKernelGenerator &generator = GetKernelGenerator();
+  std::string kernel_name = generator.GetKernelName();
   mlir::MLIRContext mlir_context;
   mlir::OwningOpRef<mlir::ModuleOp> module =
       mlir::ModuleOp::create(mlir::UnknownLoc::get(&mlir_context));
@@ -85,13 +81,13 @@ SingleInputKernelEval::GetTimeCost(const std::vector<size_t> &input_layout,
   context->SetModule(std::move(module));
   std::unique_ptr<worker::KernelBuilder> builder =
       context.MakeKernelBuilder(kernel_name.c_str());
-  kernel_name = kernel.GetKernelName();
   runKernel(*builder, input_layout, output_layout);
   std::unique_ptr<worker::Lower> lower = context.MakeLower();
   lower->Run();
   std::unique_ptr<worker::Runner> runner = context.MakeRunner();
-  std::vector<uint8_t> input_buffer = utils::FillBuffer(input_meta_),
-                       output_buffer = utils::FillBuffer(output_meta_);
+  const Meta &input_meta = GetInputMeta(), output_meta = GetOutputMeta();
+  std::vector<uint8_t> input_buffer = utils::FillBuffer(input_meta),
+                       output_buffer = utils::FillBuffer(output_meta);
   time_cost =
       runner->Run({{worker::KernelBuilder::kInputKey, input_buffer.data()},
                    {worker::KernelBuilder::kOutputKey, output_buffer.data()}});
@@ -102,8 +98,9 @@ SingleInputKernelEval::GetTimeCost(const std::vector<size_t> &input_layout,
 
 size_t SingleInputKernelEval::GetShortestTimeCost() {
   size_t shortest_time_cost = std::numeric_limits<size_t>::max();
-  const std::vector<int64_t> &input_shape = input_meta_.GetShape(),
-                             &output_shape = output_meta_.GetShape();
+  const Meta &input_meta = GetInputMeta(), output_meta = GetOutputMeta();
+  const std::vector<int64_t> &input_shape = input_meta.GetShape(),
+                             &output_shape = output_meta.GetShape();
   const size_t input_shape_len = input_shape.size(),
                output_shape_len = output_shape.size();
   std::vector<std::vector<size_t>> input_layouts =
@@ -121,10 +118,16 @@ size_t SingleInputKernelEval::GetShortestTimeCost() {
   return shortest_time_cost;
 }
 
-const Meta &SingleInputKernelEval::GetInputMeta() const { return input_meta_; }
+const Meta &SingleInputKernelEval::GetInputMeta() const {
+  const kernel::SingleInputKernelGenerator &generator = GetKernelGenerator();
+  const Meta &input_meta = generator.GetInputMeta();
+  return input_meta;
+}
 
 const Meta &SingleInputKernelEval::GetOutputMeta() const {
-  return output_meta_;
+  const kernel::SingleInputKernelGenerator &generator = GetKernelGenerator();
+  const Meta &output_meta = generator.GetOutputMeta();
+  return output_meta;
 }
 
 nlohmann::json SingleInputKernelEval::ToJson() const {
@@ -141,45 +144,66 @@ nlohmann::json SingleInputKernelEval::ToJson() const {
 }
 
 SingleInputWithoutBufferKernelEval::SingleInputWithoutBufferKernelEval(
-    std::shared_ptr<kernel::SingleInputWithoutBufferKernel> &&kernel,
-    Meta &&input_meta, Meta &&output_meta)
-    : SingleInputKernelEval(std::move(input_meta), std::move(output_meta)),
-      kernel_(std::move(kernel)) {}
+    std::shared_ptr<kernel::SingleInputWithoutBufferKernelGenerator>
+        &&generator)
+    : generator_(std::move(generator)) {}
 
-kernel::SingleInputWithoutBufferKernel &
-SingleInputWithoutBufferKernelEval::GetKernel() {
-#ifdef DP_DEBUG
-  assert(kernel_ != nullptr);
+const kernel::SingleInputWithoutBufferKernelGenerator &
+SingleInputWithoutBufferKernelEval::GetKernelGenerator() const {
+#ifdef DEBUG
+  assert(generator_ != nullptr);
 #endif
-  return *kernel_;
+  return *generator_;
+}
+
+kernel::SingleInputWithoutBufferKernelGenerator &
+SingleInputWithoutBufferKernelEval::GetKernelGenerator() {
+#ifdef DEBUG
+  assert(generator_ != nullptr);
+#endif
+  return *generator_;
 }
 
 void SingleInputWithoutBufferKernelEval::runKernel(
     worker::KernelBuilder &builer, const std::vector<size_t> &input_layout,
     const std::vector<size_t> &output_layout) const {
-  builer.RunOnSingleInputWithoutBuffer(*kernel_, input_meta_, input_layout,
-                                       output_meta_, output_layout);
+  std::shared_ptr<kernel::SingleInputWithoutBufferKernel> kernel =
+      generator_->YieldSingleInputWithoutBufferKernel(input_layout,
+                                                      output_layout);
+  const Meta &input_meta = GetInputMeta(), output_meta = GetOutputMeta();
+  builer.RunOnSingleInputWithoutBuffer(*kernel, input_meta, input_layout,
+                                       output_meta, output_layout);
 }
 
 SingleInputWithBufferKernelEval::SingleInputWithBufferKernelEval(
-    std::shared_ptr<kernel::SingleInputWithBufferKernel> &&kernel,
-    Meta &&input_meta, Meta &&output_meta, size_t buffer_size)
-    : SingleInputKernelEval(std::move(input_meta), std::move(output_meta)),
-      kernel_(std::move(kernel)), buffer_size_(buffer_size) {}
+    std::shared_ptr<kernel::SingleInputWithBufferKernelGenerator> &&generator,
+    size_t buffer_size)
+    : generator_(std::move(generator)), buffer_size_(buffer_size) {}
 
-const kernel::SingleInputWithBufferKernel &
-SingleInputWithBufferKernelEval::GetKernel() {
+const kernel::SingleInputWithBufferKernelGenerator &
+SingleInputWithBufferKernelEval::GetKernelGenerator() const {
 #ifdef DEBUG
-  assert(kernel_ != nullptr);
+  assert(generator_ != nullptr);
 #endif
-  return *kernel_;
+  return *generator_;
+}
+
+kernel::SingleInputWithBufferKernelGenerator &
+SingleInputWithBufferKernelEval::GetKernelGenerator() {
+#ifdef DEBUG
+  assert(generator_ != nullptr);
+#endif
+  return *generator_;
 }
 
 void SingleInputWithBufferKernelEval::runKernel(
     worker::KernelBuilder &builer, const std::vector<size_t> &input_layout,
     const std::vector<size_t> &output_layout) const {
-  builer.RunOnSingleInputWithBuffer(*kernel_, input_meta_, input_layout,
-                                    output_meta_, output_layout, buffer_size_);
+  std::shared_ptr<kernel::SingleInputWithBufferKernel> kernel =
+      generator_->YieldSingleInputWithBufferKernel(input_layout, output_layout);
+  const Meta &input_meta = GetInputMeta(), output_meta = GetOutputMeta();
+  builer.RunOnSingleInputWithBuffer(*kernel, input_meta, input_layout,
+                                    output_meta, output_layout, buffer_size_);
 }
 
 DoubleInputsKernelEval::Key::Key(const std::vector<size_t> &lhs_shape,
@@ -221,18 +245,13 @@ size_t DoubleInputsKernelEval::KeyHash::operator()(const Key &key) const {
   return hash;
 };
 
-DoubleInputsKernelEval::DoubleInputsKernelEval(Meta &&lhs_meta, Meta &&rhs_meta,
-                                               Meta &&output_meta)
-    : lhs_meta_(std::move(lhs_meta)), rhs_meta_(std::move(rhs_meta)),
-      output_meta_(std::move(output_meta)) {}
-
 size_t
 DoubleInputsKernelEval::GetTimeCost(const std::vector<size_t> &lhs_layout,
                                     const std::vector<size_t> &rhs_layout,
                                     const std::vector<size_t> &output_layout) {
   size_t time_cost;
-  const kernel::Kernel &kernel = GetKernel();
-  std::string kernel_name = kernel.GetKernelName();
+  kernel::DoubleInputsKernelGenerator &generator = GetKernelGenerator();
+  std::string kernel_name = generator.GetKernelName();
 #ifdef DP_DEBUG
   // TODO: this return statement is a placeholder, to accelerate the execution
   // during development
@@ -250,14 +269,15 @@ DoubleInputsKernelEval::GetTimeCost(const std::vector<size_t> &lhs_layout,
   context->SetModule(std::move(module));
   std::unique_ptr<worker::KernelBuilder> builder =
       context.MakeKernelBuilder(kernel_name.c_str());
-  kernel_name = kernel.GetKernelName();
   runKernel(*builder, lhs_layout, rhs_layout, output_layout);
   std::unique_ptr<worker::Lower> lower = context.MakeLower();
   lower->Run();
   std::unique_ptr<worker::Runner> runner = context.MakeRunner();
-  std::vector<uint8_t> lhs_buffer = utils::FillBuffer(lhs_meta_),
-                       rhs_buffer = utils::FillBuffer(rhs_meta_),
-                       output_buffer = utils::FillBuffer(output_meta_);
+  const Meta &lhs_meta = GetLhsMeta(), rhs_meta = GetRhsMeta(),
+             output_meta = GetOutputMeta();
+  std::vector<uint8_t> lhs_buffer = utils::FillBuffer(lhs_meta),
+                       rhs_buffer = utils::FillBuffer(rhs_meta),
+                       output_buffer = utils::FillBuffer(output_meta);
   time_cost =
       runner->Run({{worker::KernelBuilder::kLhsKey, lhs_buffer.data()},
                    {worker::KernelBuilder::kRhsKey, rhs_buffer.data()},
@@ -270,9 +290,11 @@ DoubleInputsKernelEval::GetTimeCost(const std::vector<size_t> &lhs_layout,
 
 size_t DoubleInputsKernelEval::GetShortestTimeCost() {
   size_t shortest_time_cost = std::numeric_limits<size_t>::max();
-  const std::vector<int64_t> &lhs_shape = lhs_meta_.GetShape(),
-                             &rhs_shape = rhs_meta_.GetShape(),
-                             &output_shape = output_meta_.GetShape();
+  const Meta &lhs_meta = GetLhsMeta(), rhs_meta = GetRhsMeta(),
+             output_meta = GetOutputMeta();
+  const std::vector<int64_t> &lhs_shape = lhs_meta.GetShape(),
+                             &rhs_shape = rhs_meta.GetShape(),
+                             &output_shape = output_meta.GetShape();
   const size_t lhs_shape_len = lhs_shape.size(),
                rhs_shape_len = rhs_shape.size(),
                output_shape_len = output_shape.size();
@@ -296,12 +318,22 @@ size_t DoubleInputsKernelEval::GetShortestTimeCost() {
   return shortest_time_cost;
 }
 
-const Meta &DoubleInputsKernelEval::GetLhsMeta() const { return lhs_meta_; }
+const Meta &DoubleInputsKernelEval::GetLhsMeta() const {
+  const kernel::DoubleInputsKernelGenerator &generator = GetKernelGenerator();
+  const Meta &lhs_meta = generator.GetLhsMeta();
+  return lhs_meta;
+}
 
-const Meta &DoubleInputsKernelEval::GetRhsMeta() const { return rhs_meta_; }
+const Meta &DoubleInputsKernelEval::GetRhsMeta() const {
+  const kernel::DoubleInputsKernelGenerator &generator = GetKernelGenerator();
+  const Meta &rhs_meta = generator.GetRhsMeta();
+  return rhs_meta;
+}
 
 const Meta &DoubleInputsKernelEval::GetOutputMeta() const {
-  return output_meta_;
+  const kernel::DoubleInputsKernelGenerator &generator = GetKernelGenerator();
+  const Meta &output_meta = generator.GetOutputMeta();
+  return output_meta;
 }
 
 nlohmann::json DoubleInputsKernelEval::ToJson() const {
@@ -319,27 +351,37 @@ nlohmann::json DoubleInputsKernelEval::ToJson() const {
 }
 
 DoubleInputsWithoutBufferKernelEval::DoubleInputsWithoutBufferKernelEval(
-    std::shared_ptr<kernel::DoubleInputsWithoutBufferKernel> &&kernel,
-    Meta &&lhs_meta, Meta &&rhs_meta, Meta &&output_meta)
-    : DoubleInputsKernelEval(std::move(lhs_meta), std::move(rhs_meta),
-                             std::move(output_meta)),
-      kernel_(std::move(kernel)) {}
+    std::shared_ptr<kernel::DoubleInputsWithoutBufferKernelGenerator>
+        &&generator)
+    : generator_(std::move(generator)) {}
 
-const kernel::DoubleInputsWithoutBufferKernel &
-DoubleInputsWithoutBufferKernelEval::GetKernel() {
+const kernel::DoubleInputsWithoutBufferKernelGenerator &
+DoubleInputsWithoutBufferKernelEval::GetKernelGenerator() const {
 #ifdef DEBUG
-  assert(kernel_ != nullptr);
+  assert(generator_ != nullptr);
 #endif
-  return *kernel_;
+  return *generator_;
+}
+
+kernel::DoubleInputsWithoutBufferKernelGenerator &
+DoubleInputsWithoutBufferKernelEval::GetKernelGenerator() {
+#ifdef DEBUG
+  assert(generator_ != nullptr);
+#endif
+  return *generator_;
 }
 
 void DoubleInputsWithoutBufferKernelEval::runKernel(
     worker::KernelBuilder &builer, const std::vector<size_t> &lhs_layout,
     const std::vector<size_t> &rhs_layout,
     const std::vector<size_t> &output_layout) const {
-  builer.RunOnDoubleInputsWithoutBuffer(*kernel_, lhs_meta_, lhs_layout,
-                                        rhs_meta_, rhs_layout, output_meta_,
-                                        output_layout);
+  std::shared_ptr<kernel::DoubleInputsWithoutBufferKernel> kernel =
+      generator_->YieldDoubleInputsWithoutBufferKernel(lhs_layout, rhs_layout,
+                                                       output_layout);
+  const Meta &lhs_meta = GetLhsMeta(), rhs_meta = GetRhsMeta(),
+             output_meta = GetOutputMeta();
+  builer.RunOnDoubleInputsWithoutBuffer(*kernel, lhs_meta, lhs_layout, rhs_meta,
+                                        rhs_layout, output_meta, output_layout);
 }
 
 } // namespace evaluation

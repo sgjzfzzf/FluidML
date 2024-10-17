@@ -50,7 +50,8 @@ std::unique_ptr<Runner> Runner::Make(context::Context &&context) {
   return std::make_unique<RunnerImpl>(std::move(context));
 }
 
-RunnerImpl::RunnerImpl(context::Context &&context) : context_(context) {}
+RunnerImpl::RunnerImpl(context::Context &&context)
+    : context_(std::move(context)) {}
 
 size_t RunnerImpl::Run(const std::unordered_map<std::string, void *> &args,
                        size_t epoch) {

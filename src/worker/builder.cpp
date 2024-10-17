@@ -10,6 +10,7 @@
 #include "mlir/IR/SymbolTable.h"
 #include "mlir/IR/Verifier.h"
 #include "structure/context/attr.h"
+#include "structure/context/factory.h"
 #include "structure/flow/node.h"
 #include "structure/flow/region.h"
 #include "structure/kernel/kernel/kernel.h"
@@ -17,7 +18,6 @@
 #include "utils/isa.hpp"
 #include "utils/type.h"
 #include "utils/utils.h"
-#include "worker/scheduler.h"
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -38,9 +38,10 @@ public:
   void Run(const flow::Sequence &sequence, const memory::Index &index) override;
 
 private:
+  void schedule(mlir::OpBuilder &builder, const flow::Sequence &sequence,
+                std::unordered_map<std::string, mlir::Value> &symbol_table);
   const std::string function_name_;
   context::Context context_;
-  std::unique_ptr<Scheduler> scheduler_;
 };
 
 class KernelBuilderImpl : public KernelBuilder {
@@ -89,8 +90,7 @@ GeneralBuilder::Make(std::string &&function_name, context::Context &&context) {
 
 GeneralBuilderImpl::GeneralBuilderImpl(std::string &&function_name,
                                        context::Context &&context)
-    : scheduler_(Scheduler::Make()), function_name_(std::move(function_name)),
-      context_(context) {}
+    : function_name_(std::move(function_name)), context_(context) {}
 
 void GeneralBuilderImpl::Run(const flow::Sequence &sequence,
                              const memory::Index &index) {
@@ -304,8 +304,8 @@ void GeneralBuilderImpl::Run(const flow::Sequence &sequence,
       symbol_table.insert({std::move(name), std::move(value)});
     }
   }
-  // Run the scheduler.
-  scheduler_->Run(builder, sequence, symbol_table);
+  // Run the schedule.
+  schedule(builder, sequence, symbol_table);
   builder.create<mlir::func::ReturnOp>(builder.getUnknownLoc());
   module->push_back(function);
 #ifdef DEBUG
@@ -313,6 +313,96 @@ void GeneralBuilderImpl::Run(const flow::Sequence &sequence,
 #endif
   context_->SetModule(std::move(module));
   context_->SetFuncAttr(std::move(func_attr));
+}
+
+void GeneralBuilderImpl::schedule(
+    mlir::OpBuilder &builder, const flow::Sequence &sequence,
+    std::unordered_map<std::string, mlir::Value> &symbol_table) {
+  const std::vector<std::shared_ptr<flow::Node>> &nodes = sequence.GetNodes();
+  context::Factory &factory = context_->GetFactory();
+  for (std::shared_ptr<flow::Node> node : nodes) {
+    std::shared_ptr<kernel::KernelGenerator> kgenerator =
+        factory.MakeKernelGenerator(*node);
+#ifdef DEBUG
+    assert(kgenerator != nullptr);
+#endif
+    if (std::shared_ptr<flow::SingleInputWithoutBufferNode> ptr =
+            std::dynamic_pointer_cast<flow::SingleInputWithoutBufferNode>(
+                node)) {
+      std::shared_ptr<kernel::SingleInputWithoutBufferKernelGenerator>
+          generator = std::dynamic_pointer_cast<
+              kernel::SingleInputWithoutBufferKernelGenerator>(kgenerator);
+#ifdef DEBUG
+      assert(generator != nullptr);
+#endif
+      const std::string &input_name = ptr->GetInputAsString(),
+                        &output_name = ptr->GetOutputAsString();
+      mlir::Value &input = symbol_table.at(input_name),
+                  &output = symbol_table.at(output_name);
+      std::shared_ptr<flow::Region> input_region = ptr->GetInput(),
+                                    output_region = ptr->GetOutput();
+      llvm::ArrayRef<size_t> input_layout = input_region->GetLayout(),
+                             output_layout = output_region->GetLayout();
+      std::shared_ptr<kernel::SingleInputWithoutBufferKernel> kernel =
+          generator->YieldSingleInputWithoutBufferKernel(input_layout,
+                                                         output_layout);
+      kernel->Run(builder, input, output);
+    } else if (std::shared_ptr<flow::SingleInputWithBufferNode> ptr =
+                   std::dynamic_pointer_cast<flow::SingleInputWithBufferNode>(
+                       node)) {
+      std::shared_ptr<kernel::SingleInputWithBufferKernelGenerator> generator =
+          std::dynamic_pointer_cast<
+              kernel::SingleInputWithBufferKernelGenerator>(kgenerator);
+#ifdef DEBUG
+      assert(generator != nullptr);
+#endif
+      const std::string &input_name = ptr->GetInputAsString(),
+                        &output_name = ptr->GetOutputAsString(),
+                        &buffer_name = ptr->GetName();
+      mlir::Value &input = symbol_table.at(input_name),
+                  &output = symbol_table.at(output_name),
+                  &buffer = symbol_table.at(buffer_name);
+      std::shared_ptr<flow::Region> input_region = ptr->GetInput(),
+                                    output_region = ptr->GetOutput();
+      llvm::ArrayRef<size_t> input_layout = input_region->GetLayout(),
+                             output_layout = output_region->GetLayout();
+      std::shared_ptr<kernel::SingleInputWithBufferKernel> kernel =
+          generator->YieldSingleInputWithBufferKernel(input_layout,
+                                                      output_layout);
+      kernel->Run(builder, input, output, buffer);
+    } else if (std::shared_ptr<flow::DoubleInputsWithoutBufferNode> ptr =
+                   std::dynamic_pointer_cast<
+                       flow::DoubleInputsWithoutBufferNode>(node)) {
+      std::shared_ptr<kernel::DoubleInputsWithoutBufferKernelGenerator>
+          generator = std::dynamic_pointer_cast<
+              kernel::DoubleInputsWithoutBufferKernelGenerator>(kgenerator);
+#ifdef DEBUG
+      assert(generator != nullptr);
+#endif
+      const std::string &lhs_name = ptr->GetLhsAsString(),
+                        &rhs_name = ptr->GetRhsAsString(),
+                        &output_name = ptr->GetOutputAsString();
+      mlir::Value &lhs = symbol_table.at(lhs_name),
+                  &rhs = symbol_table.at(rhs_name),
+                  &output = symbol_table.at(output_name);
+      std::shared_ptr<flow::Region> lhs_region = ptr->GetLhs(),
+                                    rhs_region = ptr->GetRhs(),
+                                    output_region = ptr->GetOutput();
+      llvm::ArrayRef<size_t> lhs_layout = lhs_region->GetLayout(),
+                             rhs_layout = rhs_region->GetLayout(),
+                             output_layout = output_region->GetLayout();
+      std::shared_ptr<kernel::DoubleInputsWithoutBufferKernel> kernel =
+          generator->YieldDoubleInputsWithoutBufferKernel(
+              lhs_layout, rhs_layout, output_layout);
+      kernel->Run(builder, lhs, rhs, output);
+    } else {
+#ifdef DEBUG
+      assert(false && "unreachable");
+#else
+      __builtin_unreachable();
+#endif
+    }
+  }
 }
 
 std::unique_ptr<KernelBuilder> KernelBuilder::Make(std::string &&function_name,

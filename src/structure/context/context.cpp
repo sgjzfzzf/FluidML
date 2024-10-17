@@ -116,6 +116,13 @@ FuncAttr &ContextImpl::GetFuncAttr() {
   return *func_attr_opt_;
 }
 
+Factory &ContextImpl::GetFactory() {
+  if (!factory_) {
+    factory_ = Factory::Make();
+  }
+  return *factory_;
+}
+
 void ContextImpl::SetModule(mlir::OwningOpRef<mlir::ModuleOp> &&module) {
   module_ = std::move(module);
 }

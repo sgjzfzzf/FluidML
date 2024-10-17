@@ -5,6 +5,7 @@
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/MLIRContext.h"
 #include "structure/context/attr.h"
+#include "structure/context/factory.h"
 #include "structure/context/fwd.h"
 #include "worker/fwd.h"
 #include <memory>
@@ -43,6 +44,7 @@ public:
   mlir::MLIRContext &GetMLIRContext();
   mlir::ModuleOp GetModule();
   FuncAttr &GetFuncAttr();
+  Factory &GetFactory();
   void SetModule(mlir::OwningOpRef<mlir::ModuleOp> &&module);
   void SetFuncAttr(FuncAttr &&func_attr);
   std::unique_ptr<mlir::ExecutionEngine> MakeExecutionEngine();
@@ -56,6 +58,7 @@ protected:
   mlir::MLIRContext mlir_context_;
   mlir::OwningOpRef<mlir::ModuleOp> module_;
   std::optional<FuncAttr> func_attr_opt_;
+  std::unique_ptr<Factory> factory_;
 };
 
 } // namespace context

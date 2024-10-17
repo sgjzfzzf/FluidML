@@ -1,7 +1,7 @@
 #include "worker/evaluator.h"
 #include "evaluation/eval.h"
 #include "nlohmann/json.hpp"
-#include "structure/kernel/kernel/kernel.h"
+#include "structure/kernel/generator/generator.h"
 #include <cassert>
 #include <memory>
 #include <unordered_set>
@@ -12,8 +12,9 @@ struct KeyKernelEvalHash {
   std::size_t operator()(
       const std::shared_ptr<cpu_transformers::evaluation::KernelEval> &eval)
       const {
-    const cpu_transformers::kernel::Kernel &kernel = eval->GetKernel();
-    return typeid(kernel).hash_code();
+    const cpu_transformers::kernel::KernelGenerator &generator =
+        eval->GetKernelGenerator();
+    return generator.GetShapeHashCode();
   }
 };
 
@@ -22,53 +23,10 @@ struct KeyKernelEvalEqual {
       const std::shared_ptr<cpu_transformers::evaluation::KernelEval> &lhs,
       const std::shared_ptr<cpu_transformers::evaluation::KernelEval> &rhs)
       const {
-    std::shared_ptr<cpu_transformers::evaluation::SingleInputKernelEval>
-        lhs_as_single_input = std::dynamic_pointer_cast<
-            cpu_transformers::evaluation::SingleInputKernelEval>(lhs),
-        rhs_as_single_input = std::dynamic_pointer_cast<
-            cpu_transformers::evaluation::SingleInputKernelEval>(rhs);
-    std::shared_ptr<cpu_transformers::evaluation::DoubleInputsKernelEval>
-        lhs_as_double_inputs = std::dynamic_pointer_cast<
-            cpu_transformers::evaluation::DoubleInputsKernelEval>(lhs),
-        rhs_as_double_inputs = std::dynamic_pointer_cast<
-            cpu_transformers::evaluation::DoubleInputsKernelEval>(rhs);
-    if (lhs_as_single_input && rhs_as_single_input) {
-      const cpu_transformers::Meta &lhs_input_meta =
-                                       lhs_as_single_input->GetInputMeta(),
-                                   &rhs_input_meta =
-                                       rhs_as_single_input->GetInputMeta(),
-                                   &lhs_output_meta =
-                                       lhs_as_single_input->GetOutputMeta(),
-                                   &rhs_output_meta =
-                                       rhs_as_single_input->GetOutputMeta();
-      const cpu_transformers::kernel::Kernel
-          &lhs_kernel = lhs_as_single_input->GetKernel(),
-          &rhs_kernel = rhs_as_single_input->GetKernel();
-      return lhs_input_meta == rhs_input_meta &&
-             lhs_output_meta == rhs_output_meta &&
-             typeid(lhs_kernel) == typeid(rhs_kernel);
-    } else if (lhs_as_double_inputs && rhs_as_double_inputs) {
-      const cpu_transformers::Meta &lhs_lhs_meta =
-                                       lhs_as_double_inputs->GetLhsMeta(),
-                                   &rhs_lhs_meta =
-                                       rhs_as_double_inputs->GetLhsMeta(),
-                                   &lhs_rhs_meta =
-                                       lhs_as_double_inputs->GetRhsMeta(),
-                                   &rhs_rhs_meta =
-                                       rhs_as_double_inputs->GetRhsMeta(),
-                                   &lhs_output_meta =
-                                       lhs_as_double_inputs->GetOutputMeta(),
-                                   &rhs_output_meta =
-                                       rhs_as_double_inputs->GetOutputMeta();
-      const cpu_transformers::kernel::Kernel
-          &lhs_kernel = lhs_as_double_inputs->GetKernel(),
-          &rhs_kernel = rhs_as_double_inputs->GetKernel();
-      return lhs_lhs_meta == rhs_lhs_meta && lhs_rhs_meta == rhs_rhs_meta &&
-             lhs_output_meta == rhs_output_meta &&
-             typeid(lhs_kernel) == typeid(rhs_kernel);
-    } else {
-      return false;
-    }
+    const cpu_transformers::kernel::KernelGenerator
+        &lhs_generator = lhs->GetKernelGenerator(),
+        &rhs_generator = rhs->GetKernelGenerator();
+    return lhs_generator.ShapeEquals(rhs_generator);
   }
 };
 
@@ -166,8 +124,8 @@ EvaluatorImpl::GetDoubleInputsEval(const std::string &name) {
 nlohmann::json EvaluatorImpl::ToJson() const {
   nlohmann::json json;
   for (const std::shared_ptr<evaluation::KernelEval> &eval : eval_set_) {
-    const kernel::Kernel &kernel = eval->GetKernel();
-    const std::string kernel_name = kernel.GetKernelName();
+    const kernel::KernelGenerator &generator = eval->GetKernelGenerator();
+    const std::string kernel_name = generator.GetKernelName();
     json.push_back({kernel_name, eval->ToJson()});
   }
   return json;

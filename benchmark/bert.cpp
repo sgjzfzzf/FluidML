@@ -1,5 +1,4 @@
 #include "benchmark/benchmark.h"
-#include "fmt/core.h"
 #include "optimization/graph/manager.h"
 #include "worker/builder.h"
 #include "worker/converter.h"
@@ -8,6 +7,7 @@
 #include "worker/planner.h"
 #include "worker/runner.h"
 #ifdef DEBUG
+#include "fmt/core.h"
 #include <fstream>
 #endif
 #ifdef USE_LOGS
