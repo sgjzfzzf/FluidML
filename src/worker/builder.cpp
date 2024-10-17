@@ -18,6 +18,7 @@
 #include "utils/isa.hpp"
 #include "utils/type.h"
 #include "utils/utils.h"
+#include "worker/utils.h"
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -37,11 +38,42 @@ public:
   virtual ~GeneralBuilderImpl() = default;
   void Run(const flow::Sequence &sequence, const memory::Index &index) override;
 
-private:
-  void schedule(mlir::OpBuilder &builder, const flow::Sequence &sequence,
-                std::unordered_map<std::string, mlir::Value> &symbol_table);
+protected:
+  virtual void
+  schedule(mlir::OpBuilder &builder, const flow::Sequence &sequence,
+           std::unordered_map<std::string, mlir::Value> &symbol_table) = 0;
   const std::string function_name_;
   context::Context context_;
+};
+
+class PlainGeneralBuilderImpl : public GeneralBuilderImpl {
+public:
+  PlainGeneralBuilderImpl(std::string &&function_name,
+                          context::Context &&context);
+  PlainGeneralBuilderImpl(const PlainGeneralBuilderImpl &builder) = delete;
+  PlainGeneralBuilderImpl(PlainGeneralBuilderImpl &&builder) = default;
+  virtual ~PlainGeneralBuilderImpl() = default;
+
+private:
+  void
+  schedule(mlir::OpBuilder &builder, const flow::Sequence &sequence,
+           std::unordered_map<std::string, mlir::Value> &symbol_table) override;
+};
+
+class DynamicProgrammingGeneralBuilderImpl : public GeneralBuilderImpl {
+public:
+  DynamicProgrammingGeneralBuilderImpl(std::string &&function_name,
+                                       context::Context &&context);
+  DynamicProgrammingGeneralBuilderImpl(
+      const DynamicProgrammingGeneralBuilderImpl &builder) = delete;
+  DynamicProgrammingGeneralBuilderImpl(
+      DynamicProgrammingGeneralBuilderImpl &&builder) = default;
+  virtual ~DynamicProgrammingGeneralBuilderImpl() = default;
+
+private:
+  void
+  schedule(mlir::OpBuilder &builder, const flow::Sequence &sequence,
+           std::unordered_map<std::string, mlir::Value> &symbol_table) override;
 };
 
 class KernelBuilderImpl : public KernelBuilder {
@@ -83,14 +115,26 @@ private:
 };
 
 std::unique_ptr<GeneralBuilder>
-GeneralBuilder::Make(std::string &&function_name, context::Context &&context) {
-  return std::make_unique<GeneralBuilderImpl>(std::move(function_name),
-                                              std::move(context));
+GeneralBuilder::MakePlain(std::string &&function_name,
+                          context::Context &&context) {
+  return std::make_unique<PlainGeneralBuilderImpl>(std::move(function_name),
+                                                   std::move(context));
+}
+
+std::unique_ptr<GeneralBuilder>
+GeneralBuilder::MakeDynamicProgramming(std::string &&function_name,
+                                       context::Context &&context) {
+  return std::make_unique<DynamicProgrammingGeneralBuilderImpl>(
+      std::move(function_name), std::move(context));
 }
 
 GeneralBuilderImpl::GeneralBuilderImpl(std::string &&function_name,
                                        context::Context &&context)
     : function_name_(std::move(function_name)), context_(context) {}
+
+DynamicProgrammingGeneralBuilderImpl::DynamicProgrammingGeneralBuilderImpl(
+    std::string &&function_name, context::Context &&context)
+    : GeneralBuilderImpl(std::move(function_name), std::move(context)) {}
 
 void GeneralBuilderImpl::Run(const flow::Sequence &sequence,
                              const memory::Index &index) {
@@ -315,7 +359,90 @@ void GeneralBuilderImpl::Run(const flow::Sequence &sequence,
   context_->SetFuncAttr(std::move(func_attr));
 }
 
-void GeneralBuilderImpl::schedule(
+PlainGeneralBuilderImpl::PlainGeneralBuilderImpl(std::string &&function_name,
+                                                 context::Context &&context)
+    : GeneralBuilderImpl(std::move(function_name), std::move(context)) {}
+
+void PlainGeneralBuilderImpl::schedule(
+    mlir::OpBuilder &builder, const flow::Sequence &sequence,
+    std::unordered_map<std::string, mlir::Value> &symbol_table) {
+  const std::vector<std::shared_ptr<flow::Node>> &nodes = sequence.GetNodes();
+  for (std::shared_ptr<flow::Node> node : nodes) {
+    std::shared_ptr<kernel::Kernel> mkernel = worker::SelectKernel(node.get());
+#ifdef DEBUG
+    assert(mkernel != nullptr);
+#endif
+    if (std::shared_ptr<flow::SingleInputWithoutBufferNode> ptr =
+            std::dynamic_pointer_cast<flow::SingleInputWithoutBufferNode>(
+                node)) {
+      std::shared_ptr<kernel::SingleInputWithoutBufferKernel> kernel =
+          std::dynamic_pointer_cast<kernel::SingleInputWithoutBufferKernel>(
+              mkernel);
+#ifdef DEBUG
+      assert(kernel != nullptr);
+#endif
+      const std::string &input_name = ptr->GetInputAsString(),
+                        &output_name = ptr->GetOutputAsString();
+      mlir::Value &input = symbol_table.at(input_name),
+                  &output = symbol_table.at(output_name);
+      std::shared_ptr<flow::Region> input_region = ptr->GetInput(),
+                                    output_region = ptr->GetOutput();
+      llvm::ArrayRef<size_t> input_layout = input_region->GetLayout(),
+                             output_layout = output_region->GetLayout();
+      kernel->Run(builder, input, output);
+    } else if (std::shared_ptr<flow::SingleInputWithBufferNode> ptr =
+                   std::dynamic_pointer_cast<flow::SingleInputWithBufferNode>(
+                       node)) {
+      std::shared_ptr<kernel::SingleInputWithBufferKernel> kernel =
+          std::dynamic_pointer_cast<kernel::SingleInputWithBufferKernel>(
+              mkernel);
+#ifdef DEBUG
+      assert(kernel != nullptr);
+#endif
+      const std::string &input_name = ptr->GetInputAsString(),
+                        &output_name = ptr->GetOutputAsString(),
+                        &buffer_name = ptr->GetName();
+      mlir::Value &input = symbol_table.at(input_name),
+                  &output = symbol_table.at(output_name),
+                  &buffer = symbol_table.at(buffer_name);
+      std::shared_ptr<flow::Region> input_region = ptr->GetInput(),
+                                    output_region = ptr->GetOutput();
+      llvm::ArrayRef<size_t> input_layout = input_region->GetLayout(),
+                             output_layout = output_region->GetLayout();
+      kernel->Run(builder, input, output, buffer);
+    } else if (std::shared_ptr<flow::DoubleInputsWithoutBufferNode> ptr =
+                   std::dynamic_pointer_cast<
+                       flow::DoubleInputsWithoutBufferNode>(node)) {
+      std::shared_ptr<kernel::DoubleInputsWithoutBufferKernel> kernel =
+          std::dynamic_pointer_cast<kernel::DoubleInputsWithoutBufferKernel>(
+              mkernel);
+#ifdef DEBUG
+      assert(kernel != nullptr);
+#endif
+      const std::string &lhs_name = ptr->GetLhsAsString(),
+                        &rhs_name = ptr->GetRhsAsString(),
+                        &output_name = ptr->GetOutputAsString();
+      mlir::Value &lhs = symbol_table.at(lhs_name),
+                  &rhs = symbol_table.at(rhs_name),
+                  &output = symbol_table.at(output_name);
+      std::shared_ptr<flow::Region> lhs_region = ptr->GetLhs(),
+                                    rhs_region = ptr->GetRhs(),
+                                    output_region = ptr->GetOutput();
+      llvm::ArrayRef<size_t> lhs_layout = lhs_region->GetLayout(),
+                             rhs_layout = rhs_region->GetLayout(),
+                             output_layout = output_region->GetLayout();
+      kernel->Run(builder, lhs, rhs, output);
+    } else {
+#ifdef DEBUG
+      assert(false && "unreachable");
+#else
+      __builtin_unreachable();
+#endif
+    }
+  }
+}
+
+void DynamicProgrammingGeneralBuilderImpl::schedule(
     mlir::OpBuilder &builder, const flow::Sequence &sequence,
     std::unordered_map<std::string, mlir::Value> &symbol_table) {
   const std::vector<std::shared_ptr<flow::Node>> &nodes = sequence.GetNodes();

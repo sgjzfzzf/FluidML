@@ -26,7 +26,9 @@ public:
   Context &operator=(std::shared_ptr<ContextImpl> &&context_impl);
   virtual ~Context() = default;
   std::unique_ptr<worker::GeneralBuilder>
-  MakeGeneralBuilder(std::string &&function_name);
+  MakePlaingGeneralBuilder(std::string &&function_name);
+  std::unique_ptr<worker::GeneralBuilder>
+  MakeDynamicProgrammingGeneralBuilder(std::string &&function_name);
   std::unique_ptr<worker::KernelBuilder>
   MakeKernelBuilder(std::string &&function_name);
   std::unique_ptr<worker::PlainLinearPlanner> MakePlainLinearPlanner();

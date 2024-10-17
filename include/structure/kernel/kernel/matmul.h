@@ -10,6 +10,7 @@ namespace kernel {
 class MatMulKernel : public DoubleInputsWithoutBufferKernel {
 public:
   static constexpr char kKernelName[] = "MatMulKernel";
+  MatMulKernel();
   MatMulKernel(llvm::SmallVector<Axis, 3> &&axes);
   MatMulKernel(const MatMulKernel &other) = delete;
   MatMulKernel(MatMulKernel &&other) = default;

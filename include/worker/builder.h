@@ -27,8 +27,11 @@ public:
   virtual ~GeneralBuilder() = default;
   virtual void Run(const flow::Sequence &sequence,
                    const memory::Index &index) = 0;
-  static std::unique_ptr<GeneralBuilder> Make(std::string &&function_name,
-                                              context::Context &&context);
+  static std::unique_ptr<GeneralBuilder> MakePlain(std::string &&function_name,
+                                                   context::Context &&context);
+  static std::unique_ptr<GeneralBuilder>
+  MakeDynamicProgramming(std::string &&function_name,
+                         context::Context &&context);
 
 protected:
   GeneralBuilder() = default;

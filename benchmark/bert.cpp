@@ -31,7 +31,7 @@ static void BM_RunBertModel(benchmark::State &state) {
         cpu_transformers::worker::Converter::Make();
     cpu_transformers::context::Context context;
     std::unique_ptr<cpu_transformers::worker::GeneralBuilder> builder =
-        context.MakeGeneralBuilder(name.c_str());
+        context.MakePlaingGeneralBuilder(name.c_str());
     std::unique_ptr<cpu_transformers::worker::Lower> lower =
         context.MakeLower();
     std::unique_ptr<cpu_transformers::worker::Runner> runner =

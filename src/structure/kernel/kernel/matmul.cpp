@@ -16,6 +16,8 @@
 namespace cpu_transformers {
 namespace kernel {
 
+MatMulKernel::MatMulKernel() : axes_({Axis::i, Axis::j, Axis::k}) {}
+
 MatMulKernel::MatMulKernel(llvm::SmallVector<Axis, 3> &&axes)
     : axes_(std::move(axes)) {}
 

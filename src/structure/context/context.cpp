@@ -55,10 +55,17 @@ Context &Context::operator=(std::shared_ptr<ContextImpl> &&context_impl) {
 }
 
 std::unique_ptr<worker::GeneralBuilder>
-Context::MakeGeneralBuilder(std::string &&function_name) {
+Context::MakePlaingGeneralBuilder(std::string &&function_name) {
   context::Context context = *this;
-  return worker::GeneralBuilder::Make(std::move(function_name),
-                                      std::move(context));
+  return worker::GeneralBuilder::MakePlain(std::move(function_name),
+                                           std::move(context));
+}
+
+std::unique_ptr<worker::GeneralBuilder>
+Context::MakeDynamicProgrammingGeneralBuilder(std::string &&function_name) {
+  context::Context context = *this;
+  return worker::GeneralBuilder::MakeDynamicProgramming(
+      std::move(function_name), std::move(context));
 }
 
 std::unique_ptr<worker::KernelBuilder>
