@@ -23,6 +23,7 @@ public:
   const Meta &GetMeta() const;
   Type GetType() const;
   const std::vector<int64_t> &GetShape() const;
+  size_t GetHashCode() const;
   friend bool operator==(const Tensor &lhs, const Tensor &rhs);
   friend bool operator!=(const Tensor &lhs, const Tensor &rhs);
 

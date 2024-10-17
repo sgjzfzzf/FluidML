@@ -2,8 +2,10 @@
 #define CPU_TRANSFORMERS_UTILS_FLOAT_H_
 
 namespace cpu_transformers {
-typedef float float32_t;
-typedef double float64_t;
+
+using float32_t = float;
+using float64_t = double;
+
 } // namespace cpu_transformers
 
 #endif

@@ -1,6 +1,7 @@
 #include "structure/tensor/tensor.h"
 #include "structure/tensor/meta.h"
 #include "utils/float.h"
+#include "utils/hash.h"
 #include <numeric>
 #include <vector>
 #ifdef DEBUG
@@ -8,6 +9,7 @@
 #endif
 
 namespace cpu_transformers {
+
 Tensor::Tensor(Meta &&meta) : meta_(meta) {
   data_.resize(std::accumulate(meta_.GetShape().begin(), meta_.GetShape().end(),
                                1, std::multiplies<int64_t>()));
@@ -47,6 +49,15 @@ const std::vector<int64_t> &Tensor::GetShape() const {
   return meta_.GetShape();
 }
 
+size_t Tensor::GetHashCode() const {
+  size_t hash = meta_.GetHashCode();
+  std::hash<float64_t> float64_hash;
+  for (float64_t value : data_) {
+    hash ^= float64_hash(value) + kHashSeed + (hash << 6) + (hash >> 2);
+  }
+  return hash;
+}
+
 bool operator==(const Tensor &lhs, const Tensor &rhs) {
   return lhs.meta_ == rhs.meta_ && lhs.data_ == rhs.data_;
 }
@@ -64,4 +75,5 @@ const float64_t &Tensor::getImpl(const std::vector<size_t> &indices) const {
   }
   return data_[index];
 }
+
 } // namespace cpu_transformers

@@ -58,7 +58,6 @@ public:
   };
 
   struct KeyHash {
-    static constexpr size_t kHashSeed = 0x9e3779b9;
     size_t operator()(const Key &key) const;
   };
 
@@ -147,7 +146,6 @@ public:
   };
 
   struct KeyHash {
-    static constexpr size_t kHashSeed = 0x9e3779b9;
     size_t operator()(const Key &key) const;
   };
 

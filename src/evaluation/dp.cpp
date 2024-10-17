@@ -6,6 +6,7 @@
 #include "structure/flow/flow.h"
 #include "structure/flow/node.h"
 #include "structure/flow/region.h"
+#include "utils/hash.h"
 #include "utils/isa.hpp"
 #include "utils/utils.h"
 #include "worker/evaluator.h"
@@ -54,7 +55,6 @@ public:
     bool operator()(const EdgeLayout &lhs, const EdgeLayout &rhs) const;
   };
   struct EdgeLayoutHash {
-    static constexpr size_t kHashSeed = 0x9e3779b9;
     size_t operator()(const EdgeLayout &edge) const;
   };
   DPOnNoOverlapFlowWoker(std::shared_ptr<worker::Evaluator> &&evaluator);

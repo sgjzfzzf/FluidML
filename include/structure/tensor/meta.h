@@ -21,6 +21,7 @@ public:
   Meta AlignLeftTo(size_t size, float64_t value = 1.0) const;
   size_t GetElementsNum() const;
   size_t GetSize() const;
+  size_t GetHashCode() const;
   friend bool operator==(const Meta &lhs, const Meta &rhs);
   friend bool operator!=(const Meta &lhs, const Meta &rhs);
   friend std::optional<Meta> BroadcastShape(const Meta &lhs, const Meta &rhs,

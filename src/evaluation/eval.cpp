@@ -2,6 +2,7 @@
 #include "fmt/ranges.h"
 #include "nlohmann/json.hpp"
 #include "structure/kernel/kernel/kernel.h"
+#include "utils/hash.h"
 #include "utils/utils.h"
 #include "worker/builder.h"
 #ifndef DP_DEBUG

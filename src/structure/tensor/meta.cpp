@@ -1,4 +1,5 @@
 #include "structure/tensor/meta.h"
+#include "utils/hash.h"
 #include "utils/type.h"
 #include <cstddef>
 #include <numeric>
@@ -36,6 +37,17 @@ size_t Meta::GetElementsNum() const {
 
 size_t Meta::GetSize() const {
   return GetElementsNum() * GetSizeFromType(type_);
+}
+
+size_t Meta::GetHashCode() const {
+  std::hash<int64_t> int64_hash;
+  std::hash<Type> type_hash;
+  Type type = GetType();
+  size_t hash = type_hash(type);
+  for (int64_t dim : shape_) {
+    hash ^= int64_hash(dim) + kHashSeed + (hash << 6) + (hash >> 2);
+  }
+  return hash;
 }
 
 bool operator==(const Meta &lhs, const Meta &rhs) {
