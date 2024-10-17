@@ -12,6 +12,10 @@ class KernelGenerator {
 public:
   virtual ~KernelGenerator() = default;
   virtual std::string GetKernelName() const = 0;
+  virtual size_t GetHashCode() const = 0;
+  virtual size_t GetShapeHashCode() const = 0;
+  virtual bool Equals(const KernelGenerator &other) const = 0;
+  virtual bool ShapeEquals(const KernelGenerator &other) const = 0;
 
 protected:
   KernelGenerator() = default;
@@ -27,6 +31,9 @@ public:
                          llvm::ArrayRef<size_t> output_layout) = 0;
   virtual const Meta &GetInputMeta() const = 0;
   virtual const Meta &GetOutputMeta() const = 0;
+  size_t GetShapeHashCode() const override;
+  bool ShapeEquals(const KernelGenerator &other) const override;
+  bool ShapeEquals(const SingleInputKernelGenerator &other) const;
 
 protected:
   SingleInputKernelGenerator() = default;
@@ -45,6 +52,9 @@ public:
   virtual const Meta &GetLhsMeta() const = 0;
   virtual const Meta &GetRhsMeta() const = 0;
   virtual const Meta &GetOutputMeta() const = 0;
+  size_t GetShapeHashCode() const override;
+  bool ShapeEquals(const KernelGenerator &other) const override;
+  bool ShapeEquals(const DoubleInputsKernelGenerator &other) const;
 
 protected:
   DoubleInputsKernelGenerator() = default;

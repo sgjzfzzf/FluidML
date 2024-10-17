@@ -1,5 +1,6 @@
 #include "structure/kernel/kernel/gather_add_add.h"
 #include "structure/kernel/generator/gather_add_add.h"
+#include "utils/hash.h"
 #include <utility>
 
 namespace cpu_transformers {
@@ -29,6 +30,11 @@ public:
   const Meta &GetInputMeta() const override;
   const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
+  size_t GetHashCode() const override;
+  bool Equals(const KernelGenerator &other) const override;
+  bool Equals(
+      const GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl
+          &other) const;
 
 private:
   const Meta input_meta_;
@@ -88,6 +94,38 @@ std::string
 GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl::
     GetKernelName() const {
   return GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel::kKernelName;
+}
+
+size_t GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl::
+    GetHashCode() const {
+  size_t hash = typeid(GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl).hash_code();
+  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= data_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= add0_weight_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= add1_weight_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  return hash;
+}
+
+bool GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl::
+    Equals(const KernelGenerator &other) const {
+  if (const GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl
+          *other_ptr = dynamic_cast<
+              const GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl
+                  *>(&other)) {
+    return Equals(*other_ptr);
+  } else {
+    return false;
+  }
+}
+
+bool GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl::Equals(
+    const GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl
+        &other) const {
+  return input_meta_ == other.input_meta_ &&
+         output_meta_ == other.output_meta_ && data_ == other.data_ &&
+         add0_weight_ == other.add0_weight_ &&
+         add1_weight_ == other.add1_weight_;
 }
 
 } // namespace kernel

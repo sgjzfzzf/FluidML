@@ -1,4 +1,5 @@
 #include "structure/kernel/generator/gather.h"
+#include "utils/hash.h"
 
 namespace cpu_transformers {
 namespace kernel {
@@ -24,6 +25,9 @@ public:
   const Meta &GetInputMeta() const override;
   const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
+  size_t GetHashCode() const override;
+  bool Equals(const KernelGenerator &other) const override;
+  bool Equals(const GatherConstantIndexScalarKernelGeneratorImpl &other) const;
 
 private:
   const Meta input_meta_;
@@ -53,6 +57,9 @@ public:
   const Meta &GetInputMeta() const override;
   const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
+  size_t GetHashCode() const override;
+  bool Equals(const KernelGenerator &other) const override;
+  bool Equals(const GatherConstantDataTensorKernelGeneratorImpl &other) const;
 
 private:
   const Meta input_meta_;
@@ -110,6 +117,32 @@ GatherConstantIndexScalarKernelGeneratorImpl::GetKernelName() const {
   return GatherConstantIndexScalarKernel::kKernelName;
 }
 
+size_t GatherConstantIndexScalarKernelGeneratorImpl::GetHashCode() const {
+  size_t hash = input_meta_.GetHashCode();
+  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= axis_ + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= index_ + kHashSeed + (hash << 6) + (hash >> 2);
+  return hash;
+}
+
+bool GatherConstantIndexScalarKernelGeneratorImpl::Equals(
+    const KernelGenerator &other) const {
+  if (const GatherConstantIndexScalarKernelGeneratorImpl *other_ptr =
+          dynamic_cast<const GatherConstantIndexScalarKernelGeneratorImpl *>(
+              &other)) {
+    return Equals(*other_ptr);
+  } else {
+    return false;
+  }
+}
+
+bool GatherConstantIndexScalarKernelGeneratorImpl::Equals(
+    const GatherConstantIndexScalarKernelGeneratorImpl &other) const {
+  return input_meta_ == other.input_meta_ &&
+         output_meta_ == other.output_meta_ && axis_ == other.axis_ &&
+         index_ == other.index_;
+}
+
 GatherConstantDataTensorKernelGeneratorImpl::
     GatherConstantDataTensorKernelGeneratorImpl(Meta &&input_meta,
                                                 Meta &&output_meta,
@@ -141,6 +174,31 @@ const Meta &GatherConstantDataTensorKernelGeneratorImpl::GetOutputMeta() const {
 
 std::string GatherConstantDataTensorKernelGeneratorImpl::GetKernelName() const {
   return GatherConstantDataTensorKernel::kKernelName;
+}
+
+size_t GatherConstantDataTensorKernelGeneratorImpl::GetHashCode() const {
+  size_t hash = typeid(GatherConstantDataTensorKernelGeneratorImpl).hash_code();
+  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= data_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  return hash;
+}
+
+bool GatherConstantDataTensorKernelGeneratorImpl::Equals(
+    const KernelGenerator &other) const {
+  if (const GatherConstantDataTensorKernelGeneratorImpl *other_ptr =
+          dynamic_cast<const GatherConstantDataTensorKernelGeneratorImpl *>(
+              &other)) {
+    return Equals(*other_ptr);
+  } else {
+    return false;
+  }
+}
+
+bool GatherConstantDataTensorKernelGeneratorImpl::Equals(
+    const GatherConstantDataTensorKernelGeneratorImpl &other) const {
+  return input_meta_ == other.input_meta_ &&
+         output_meta_ == other.output_meta_ && data_ == other.data_;
 }
 
 } // namespace kernel

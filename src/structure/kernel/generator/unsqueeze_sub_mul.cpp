@@ -27,6 +27,10 @@ public:
   const Meta &GetInputMeta() const override;
   const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
+  size_t GetHashCode() const override;
+  bool Equals(const KernelGenerator &other) const override;
+  bool Equals(
+      const UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl &other) const;
 
 private:
   const Meta input_meta_;
@@ -85,6 +89,45 @@ UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl::GetOutputMeta() const {
 std::string
 UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl::GetKernelName() const {
   return UnsqueezeSubLhsScalarMulRhsScalarKernel::kKernelName;
+}
+
+size_t
+UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl::GetHashCode() const {
+  std::hash<Type> type_hash;
+  std::hash<float64_t> f64_hash;
+  size_t hash =
+      typeid(UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl).hash_code();
+  hash ^= input_meta_.GetHashCode();
+  hash ^= output_meta_.GetHashCode();
+  for (int64_t unsqueeze_axis : unsqueeze_axes_) {
+    hash ^= std::hash<int64_t>()(unsqueeze_axis);
+  }
+  hash ^= type_hash(sub_type_);
+  hash ^= f64_hash(sub_val_);
+  hash ^= type_hash(mul_type_);
+  hash ^= f64_hash(mul_val_);
+  return hash;
+}
+
+bool UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl::Equals(
+    const KernelGenerator &other) const {
+  if (const UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl *other_ptr =
+          dynamic_cast<
+              const UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl *>(
+              &other)) {
+    return Equals(*other_ptr);
+  } else {
+    return false;
+  }
+}
+
+bool UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl::Equals(
+    const UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl &other) const {
+  return input_meta_ == other.input_meta_ &&
+         output_meta_ == other.output_meta_ &&
+         unsqueeze_axes_ == other.unsqueeze_axes_ &&
+         sub_type_ == other.sub_type_ && sub_val_ == other.sub_val_ &&
+         mul_type_ == other.mul_type_ && mul_val_ == other.mul_val_;
 }
 
 } // namespace kernel

@@ -1,4 +1,5 @@
 #include "structure/kernel/generator/tanh.h"
+#include "utils/hash.h"
 
 namespace cpu_transformers {
 namespace kernel {
@@ -19,6 +20,9 @@ public:
   const Meta &GetInputMeta() const override;
   const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
+  size_t GetHashCode() const override;
+  bool Equals(const KernelGenerator &other) const override;
+  bool Equals(const TanhKernelGeneratorImpl &other) const;
 
 private:
   const Meta input_meta_;
@@ -58,6 +62,27 @@ const Meta &TanhKernelGeneratorImpl::GetOutputMeta() const {
 
 std::string TanhKernelGeneratorImpl::GetKernelName() const {
   return TanhKernel::kKernelName;
+}
+
+size_t TanhKernelGeneratorImpl::GetHashCode() const {
+  size_t hash = typeid(TanhKernelGeneratorImpl).hash_code();
+  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  return hash;
+}
+
+bool TanhKernelGeneratorImpl::Equals(const KernelGenerator &other) const {
+  if (const TanhKernelGeneratorImpl *other_ptr =
+          dynamic_cast<const TanhKernelGeneratorImpl *>(&other)) {
+    return Equals(*other_ptr);
+  } else {
+    return false;
+  }
+}
+
+bool TanhKernelGeneratorImpl::Equals(
+    const TanhKernelGeneratorImpl &other) const {
+  return input_meta_ == other.input_meta_ && output_meta_ == other.output_meta_;
 }
 
 } // namespace kernel

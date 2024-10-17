@@ -51,9 +51,9 @@ const std::vector<int64_t> &Tensor::GetShape() const {
 
 size_t Tensor::GetHashCode() const {
   size_t hash = meta_.GetHashCode();
-  std::hash<float64_t> float64_hash;
+  std::hash<float64_t> f64_hash;
   for (float64_t value : data_) {
-    hash ^= float64_hash(value) + kHashSeed + (hash << 6) + (hash >> 2);
+    hash ^= f64_hash(value) + kHashSeed + (hash << 6) + (hash >> 2);
   }
   return hash;
 }

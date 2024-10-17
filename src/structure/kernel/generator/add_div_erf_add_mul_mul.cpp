@@ -1,5 +1,7 @@
 #include "structure/kernel/generator/add_div_erf_add_mul_mul.h"
 #include "structure/tensor/meta.h"
+#include "utils/hash.h"
+#include "utils/type.h"
 
 namespace cpu_transformers {
 namespace kernel {
@@ -26,6 +28,9 @@ public:
   const Meta &GetInputMeta() const override;
   const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
+  size_t GetHashCode() const override;
+  bool Equals(const KernelGenerator &other) const override;
+  bool Equals(const AddDivErfAddMulMulKernelGeneratorImpl &other) const;
 
 private:
   const Meta input_meta_;
@@ -84,6 +89,42 @@ const Meta &AddDivErfAddMulMulKernelGeneratorImpl::GetOutputMeta() const {
 
 std::string AddDivErfAddMulMulKernelGeneratorImpl::GetKernelName() const {
   return AddDivErfAddMulMulKernel::kKernelName;
+}
+
+size_t AddDivErfAddMulMulKernelGeneratorImpl::GetHashCode() const {
+  std::hash<Type> type_hash;
+  std::hash<float64_t> f64_hash;
+  size_t hash = typeid(AddDivErfAddMulMulKernelGeneratorImpl).hash_code();
+  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= add0_weight_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= type_hash(div_type_) + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= f64_hash(div_weight_) + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= type_hash(add1_type_) + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= f64_hash(add1_weight_) + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= type_hash(mul1_type_) + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= f64_hash(mul1_weight_) + kHashSeed + (hash << 6) + (hash >> 2);
+  return hash;
+}
+
+bool AddDivErfAddMulMulKernelGeneratorImpl::Equals(
+    const KernelGenerator &other) const {
+  if (const AddDivErfAddMulMulKernelGeneratorImpl *other_ptr =
+          dynamic_cast<const AddDivErfAddMulMulKernelGeneratorImpl *>(&other)) {
+    return Equals(*other_ptr);
+  } else {
+    return false;
+  }
+}
+
+bool AddDivErfAddMulMulKernelGeneratorImpl::Equals(
+    const AddDivErfAddMulMulKernelGeneratorImpl &other) const {
+  return input_meta_ == other.input_meta_ &&
+         output_meta_ == other.output_meta_ &&
+         add0_weight_ == other.add0_weight_ && div_type_ == other.div_type_ &&
+         div_weight_ == other.div_weight_ && add1_type_ == other.add1_type_ &&
+         add1_weight_ == other.add1_weight_ && mul1_type_ == other.mul1_type_ &&
+         mul1_weight_ == other.mul1_weight_;
 }
 
 } // namespace kernel

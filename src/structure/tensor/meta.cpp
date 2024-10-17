@@ -40,12 +40,12 @@ size_t Meta::GetSize() const {
 }
 
 size_t Meta::GetHashCode() const {
-  std::hash<int64_t> int64_hash;
+  std::hash<int64_t> i64_hash;
   std::hash<Type> type_hash;
   Type type = GetType();
   size_t hash = type_hash(type);
   for (int64_t dim : shape_) {
-    hash ^= int64_hash(dim) + kHashSeed + (hash << 6) + (hash >> 2);
+    hash ^= i64_hash(dim) + kHashSeed + (hash << 6) + (hash >> 2);
   }
   return hash;
 }

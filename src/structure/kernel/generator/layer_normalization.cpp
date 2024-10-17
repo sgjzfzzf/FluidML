@@ -1,4 +1,5 @@
 #include "structure/kernel/generator/layer_normalization.h"
+#include "utils/hash.h"
 
 namespace cpu_transformers {
 namespace kernel {
@@ -25,6 +26,10 @@ public:
   const Meta &GetInputMeta() const override;
   const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
+  size_t GetHashCode() const override;
+  bool Equals(const KernelGenerator &other) const override;
+  bool Equals(const LayerNormalizationConstantScaleBiasKernelGeneratorImpl
+                  &other) const;
 
 private:
   const Meta input_meta_;
@@ -81,6 +86,39 @@ LayerNormalizationConstantScaleBiasKernelGeneratorImpl::GetOutputMeta() const {
 std::string
 LayerNormalizationConstantScaleBiasKernelGeneratorImpl::GetKernelName() const {
   return LayerNormalizationConstantScaleBiasKernel::kKernelName;
+}
+
+size_t
+LayerNormalizationConstantScaleBiasKernelGeneratorImpl::GetHashCode() const {
+  std::hash<int64_t> i64_hash;
+  std::hash<float64_t> f64_hash;
+  size_t hash = input_meta_.GetHashCode();
+  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= i64_hash(axis_) + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= f64_hash(epsilon_) + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= scale_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= bias_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  return hash;
+}
+
+bool LayerNormalizationConstantScaleBiasKernelGeneratorImpl::Equals(
+    const KernelGenerator &other) const {
+  if (const LayerNormalizationConstantScaleBiasKernelGeneratorImpl *other_ptr =
+          dynamic_cast<
+              const LayerNormalizationConstantScaleBiasKernelGeneratorImpl *>(
+              &other)) {
+    return Equals(*other_ptr);
+  } else {
+    return false;
+  }
+}
+
+bool LayerNormalizationConstantScaleBiasKernelGeneratorImpl::Equals(
+    const LayerNormalizationConstantScaleBiasKernelGeneratorImpl &other) const {
+  return input_meta_ == other.input_meta_ &&
+         output_meta_ == other.output_meta_ && axis_ == other.axis_ &&
+         epsilon_ == other.epsilon_ && scale_ == other.scale_ &&
+         bias_ == other.bias_;
 }
 
 } // namespace kernel

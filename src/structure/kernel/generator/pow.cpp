@@ -1,4 +1,5 @@
 #include "structure/kernel/generator/pow.h"
+#include "utils/hash.h"
 
 namespace cpu_transformers {
 namespace kernel {
@@ -20,6 +21,9 @@ public:
   const Meta &GetInputMeta() const override;
   const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
+  size_t GetHashCode() const override;
+  bool Equals(const KernelGenerator &other) const override;
+  bool Equals(const PowKernelGeneratorImpl &other) const;
 
 private:
   const Meta input_meta_;
@@ -62,6 +66,32 @@ const Meta &PowKernelGeneratorImpl::GetOutputMeta() const {
 
 std::string PowKernelGeneratorImpl::GetKernelName() const {
   return PowKernel::kKernelName;
+}
+
+size_t PowKernelGeneratorImpl::GetHashCode() const {
+  std::hash<Type> type_hash;
+  std::hash<float64_t> f64_hash;
+  size_t hash = typeid(PowKernelGeneratorImpl).hash_code();
+  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= type_hash(type_) + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= f64_hash(exp_) + kHashSeed + (hash << 6) + (hash >> 2);
+  return hash;
+}
+
+bool PowKernelGeneratorImpl::Equals(const KernelGenerator &other) const {
+  if (const PowKernelGeneratorImpl *other_ptr =
+          dynamic_cast<const PowKernelGeneratorImpl *>(&other)) {
+    return Equals(*other_ptr);
+  } else {
+    return false;
+  }
+}
+
+bool PowKernelGeneratorImpl::Equals(const PowKernelGeneratorImpl &other) const {
+  return input_meta_ == other.input_meta_ &&
+         output_meta_ == other.output_meta_ && type_ == other.type_ &&
+         exp_ == other.exp_;
 }
 
 } // namespace kernel

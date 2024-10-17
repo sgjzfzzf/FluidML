@@ -1,4 +1,5 @@
 #include "structure/kernel/generator/softmax.h"
+#include "utils/hash.h"
 
 namespace cpu_transformers {
 namespace kernel {
@@ -20,6 +21,9 @@ public:
   const Meta &GetInputMeta() const override;
   const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
+  size_t GetHashCode() const override;
+  bool Equals(const KernelGenerator &other) const override;
+  bool Equals(const SoftmaxKernelGeneratorImpl &other) const;
 
 private:
   const Meta input_meta_;
@@ -62,6 +66,29 @@ const Meta &SoftmaxKernelGeneratorImpl::GetOutputMeta() const {
 
 std::string SoftmaxKernelGeneratorImpl::GetKernelName() const {
   return SoftmaxKernel::kKernelName;
+}
+
+size_t SoftmaxKernelGeneratorImpl::GetHashCode() const {
+  std::hash<int64_t> i64_hash;
+  size_t hash = typeid(SoftmaxKernelGeneratorImpl).hash_code();
+  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= i64_hash(axis_) + kHashSeed + (hash << 6) + (hash >> 2);
+  return hash;
+}
+
+bool SoftmaxKernelGeneratorImpl::Equals(const KernelGenerator &other) const {
+  if (const SoftmaxKernelGeneratorImpl *other_ptr =
+          dynamic_cast<const SoftmaxKernelGeneratorImpl *>(&other)) {
+    return Equals(*other_ptr);
+  }
+  return false;
+}
+
+bool SoftmaxKernelGeneratorImpl::Equals(
+    const SoftmaxKernelGeneratorImpl &other) const {
+  return input_meta_ == other.input_meta_ &&
+         output_meta_ == other.output_meta_ && axis_ == other.axis_;
 }
 
 } // namespace kernel

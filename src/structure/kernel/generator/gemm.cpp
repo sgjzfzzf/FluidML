@@ -1,4 +1,6 @@
 #include "structure/kernel/generator/gemm.h"
+#include "utils/float.h"
+#include "utils/hash.h"
 
 namespace cpu_transformers {
 namespace kernel {
@@ -26,6 +28,9 @@ public:
   const Meta &GetInputMeta() const override;
   const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
+  size_t GetHashCode() const override;
+  bool Equals(const KernelGenerator &other) const override;
+  bool Equals(const GemmConstantWeightsBiasKernelGeneratorImpl &other) const;
 
 private:
   const Meta input_meta_;
@@ -83,6 +88,41 @@ const Meta &GemmConstantWeightsBiasKernelGeneratorImpl::GetOutputMeta() const {
 
 std::string GemmConstantWeightsBiasKernelGeneratorImpl::GetKernelName() const {
   return GemmConstantWeightsBiasKernel::kKernelName;
+}
+
+size_t GemmConstantWeightsBiasKernelGeneratorImpl::GetHashCode() const {
+  std::hash<float64_t> f64_hash;
+  std::hash<bool> bool_hash;
+  size_t hash = typeid(GemmConstantWeightsBiasKernelGeneratorImpl).hash_code();
+  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= f64_hash(alpha_) + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= f64_hash(beta_) + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= bool_hash(transA_) + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= bool_hash(transB_) + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= weights_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= bias_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  return hash;
+}
+
+bool GemmConstantWeightsBiasKernelGeneratorImpl::Equals(
+    const KernelGenerator &other) const {
+  if (const GemmConstantWeightsBiasKernelGeneratorImpl *other_ptr =
+          dynamic_cast<const GemmConstantWeightsBiasKernelGeneratorImpl *>(
+              &other)) {
+    return Equals(*other_ptr);
+  } else {
+    return false;
+  }
+}
+
+bool GemmConstantWeightsBiasKernelGeneratorImpl::Equals(
+    const GemmConstantWeightsBiasKernelGeneratorImpl &other) const {
+  return input_meta_ == other.input_meta_ &&
+         output_meta_ == other.output_meta_ && alpha_ == other.alpha_ &&
+         beta_ == other.beta_ && transA_ == other.transA_ &&
+         transB_ == other.transB_ && weights_ == other.weights_ &&
+         bias_ == other.bias_;
 }
 
 } // namespace kernel

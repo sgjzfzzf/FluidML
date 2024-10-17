@@ -1,4 +1,5 @@
 #include "structure/kernel/generator/mul.h"
+#include "utils/hash.h"
 
 namespace cpu_transformers {
 namespace kernel {
@@ -22,6 +23,9 @@ public:
   const Meta &GetInputMeta() const override;
   const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
+  size_t GetHashCode() const override;
+  bool Equals(const KernelGenerator &other) const override;
+  bool Equals(const MulConstantKernelGeneratorImpl &other) const;
 
 private:
   const Meta input_meta_;
@@ -50,6 +54,9 @@ public:
   const Meta &GetRhsMeta() const override;
   const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
+  size_t GetHashCode() const override;
+  bool Equals(const KernelGenerator &other) const override;
+  bool Equals(const MulCommonKernelGeneratorImpl &other) const;
 
 private:
   const Meta lhs_meta_;
@@ -100,6 +107,35 @@ std::string MulConstantKernelGeneratorImpl::GetKernelName() const {
   return MulConstantKernel::kKernelName;
 }
 
+size_t MulConstantKernelGeneratorImpl::GetHashCode() const {
+  std::hash<Type> type_hash;
+  std::hash<float64_t> f64_hash;
+  size_t hash = typeid(MulConstantKernelGeneratorImpl).hash_code();
+  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= std::hash<Type>()(type_) + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^=
+      std::hash<float64_t>()(constant_) + kHashSeed + (hash << 6) + (hash >> 2);
+  return hash;
+}
+
+bool MulConstantKernelGeneratorImpl::Equals(
+    const KernelGenerator &other) const {
+  if (const MulConstantKernelGeneratorImpl *other_ptr =
+          dynamic_cast<const MulConstantKernelGeneratorImpl *>(&other)) {
+    return Equals(*other_ptr);
+  } else {
+    return false;
+  }
+}
+
+bool MulConstantKernelGeneratorImpl::Equals(
+    const MulConstantKernelGeneratorImpl &other) const {
+  return input_meta_ == other.input_meta_ &&
+         output_meta_ == other.output_meta_ && type_ == other.type_ &&
+         constant_ == other.constant_;
+}
+
 MulCommonKernelGeneratorImpl::MulCommonKernelGeneratorImpl(Meta &&lhs_meta,
                                                            Meta &&rhs_meta,
                                                            Meta &&output_meta)
@@ -134,6 +170,28 @@ const Meta &MulCommonKernelGeneratorImpl::GetOutputMeta() const {
 
 std::string MulCommonKernelGeneratorImpl::GetKernelName() const {
   return MulCommonKernel::kKernelName;
+}
+
+size_t MulCommonKernelGeneratorImpl::GetHashCode() const {
+  size_t hash = lhs_meta_.GetHashCode();
+  hash ^= rhs_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  return hash;
+}
+
+bool MulCommonKernelGeneratorImpl::Equals(const KernelGenerator &other) const {
+  if (const MulCommonKernelGeneratorImpl *other_ptr =
+          dynamic_cast<const MulCommonKernelGeneratorImpl *>(&other)) {
+    return Equals(*other_ptr);
+  } else {
+    return false;
+  }
+}
+
+bool MulCommonKernelGeneratorImpl::Equals(
+    const MulCommonKernelGeneratorImpl &other) const {
+  return lhs_meta_ == other.lhs_meta_ && rhs_meta_ == other.rhs_meta_ &&
+         output_meta_ == other.output_meta_;
 }
 
 } // namespace kernel

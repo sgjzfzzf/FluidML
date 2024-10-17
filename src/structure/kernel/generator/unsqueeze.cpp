@@ -22,6 +22,9 @@ public:
   const Meta &GetInputMeta() const override;
   const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
+  virtual size_t GetHashCode() const override;
+  bool Equals(const KernelGenerator &other) const override;
+  bool Equals(const UnSqueezeKernelGeneratorImpl &other) const;
 
 private:
   const Meta input_meta_;
@@ -64,6 +67,32 @@ const Meta &UnSqueezeKernelGeneratorImpl::GetOutputMeta() const {
 
 std::string UnSqueezeKernelGeneratorImpl::GetKernelName() const {
   return UnSqueezeKernel::kKernelName;
+}
+
+size_t UnSqueezeKernelGeneratorImpl::GetHashCode() const {
+  size_t hash = typeid(UnSqueezeKernelGeneratorImpl).hash_code();
+  std::hash<int64_t> i64_hash;
+  hash ^= input_meta_.GetHashCode() + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+  hash ^= output_meta_.GetHashCode() + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+  for (int64_t axis : axes_) {
+    hash ^= i64_hash(axis) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+  }
+  return hash;
+}
+
+bool UnSqueezeKernelGeneratorImpl::Equals(const KernelGenerator &other) const {
+  if (const UnSqueezeKernelGeneratorImpl *other_ptr =
+          dynamic_cast<const UnSqueezeKernelGeneratorImpl *>(&other)) {
+    return Equals(*other_ptr);
+  } else {
+    return false;
+  }
+}
+
+bool UnSqueezeKernelGeneratorImpl::Equals(
+    const UnSqueezeKernelGeneratorImpl &other) const {
+  return input_meta_ == other.input_meta_ &&
+         output_meta_ == other.output_meta_ && axes_ == other.axes_;
 }
 
 } // namespace kernel

@@ -1,4 +1,5 @@
 #include "structure/kernel/generator/transpose.h"
+#include "utils/hash.h"
 
 namespace cpu_transformers {
 namespace kernel {
@@ -22,6 +23,9 @@ public:
   const Meta &GetInputMeta() const override;
   const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
+  size_t GetHashCode() const override;
+  bool Equals(const KernelGenerator &other) const override;
+  bool Equals(const TransposeKernelGeneratorImpl &other) const;
 
 private:
   const Meta input_meta_;
@@ -64,6 +68,31 @@ const Meta &TransposeKernelGeneratorImpl::GetOutputMeta() const {
 
 std::string TransposeKernelGeneratorImpl::GetKernelName() const {
   return TransposeKernel::kKernelName;
+}
+
+size_t TransposeKernelGeneratorImpl::GetHashCode() const {
+  std::hash<int64_t> i64_hash;
+  size_t hash = typeid(TransposeKernelGeneratorImpl).hash_code();
+  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  for (int64_t perm : perms_) {
+    hash ^= i64_hash(perm) + kHashSeed + (hash << 6) + (hash >> 2);
+  }
+  return hash;
+}
+
+bool TransposeKernelGeneratorImpl::Equals(const KernelGenerator &other) const {
+  if (const TransposeKernelGeneratorImpl *other_ptr =
+          dynamic_cast<const TransposeKernelGeneratorImpl *>(&other)) {
+    return Equals(*other_ptr);
+  }
+  return false;
+}
+
+bool TransposeKernelGeneratorImpl::Equals(
+    const TransposeKernelGeneratorImpl &other) const {
+  return input_meta_ == other.input_meta_ &&
+         output_meta_ == other.output_meta_ && perms_ == other.perms_;
 }
 
 } // namespace kernel

@@ -1,4 +1,6 @@
 #include "structure/kernel/generator/where.h"
+#include "utils/hash.h"
+#include <cstddef>
 
 namespace cpu_transformers {
 namespace kernel {
@@ -27,6 +29,10 @@ public:
   const Meta &GetInputMeta() const override;
   const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
+  size_t GetHashCode() const override;
+  bool Equals(const KernelGenerator &other) const override;
+  bool Equals(
+      const WhereConstantCondConstantScalarYKernelGeneratorImpl &other) const;
 
 private:
   const Meta input_meta_;
@@ -60,6 +66,10 @@ public:
   const Meta &GetInputMeta() const override;
   const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
+  size_t GetHashCode() const override;
+  bool Equals(const KernelGenerator &other) const override;
+  bool Equals(
+      const WhereConstantCondConstantTensorYKernelGeneratorImpl &other) const;
 
 private:
   const Meta input_meta_;
@@ -117,6 +127,38 @@ WhereConstantCondConstantScalarYKernelGeneratorImpl::GetKernelName() const {
   return WhereConstantCondConstantScalarYKernel::kKernelName;
 }
 
+size_t
+WhereConstantCondConstantScalarYKernelGeneratorImpl::GetHashCode() const {
+  std::hash<Type> type_hash;
+  std::hash<float64_t> f64_hash;
+  size_t hash =
+      typeid(WhereConstantCondConstantScalarYKernelGeneratorImpl).hash_code();
+  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= type_hash(type_) + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= f64_hash(y_) + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= cond_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  return hash;
+}
+
+bool WhereConstantCondConstantScalarYKernelGeneratorImpl::Equals(
+    const KernelGenerator &other) const {
+  if (const WhereConstantCondConstantScalarYKernelGeneratorImpl *other_ptr =
+          dynamic_cast<const WhereConstantCondConstantScalarYKernelGeneratorImpl
+                           *>(&other)) {
+    return Equals(*other_ptr);
+  } else {
+    return false;
+  }
+}
+
+bool WhereConstantCondConstantScalarYKernelGeneratorImpl::Equals(
+    const WhereConstantCondConstantScalarYKernelGeneratorImpl &other) const {
+  return input_meta_ == other.input_meta_ &&
+         output_meta_ == other.output_meta_ && cond_ == other.cond_ &&
+         type_ == other.type_ && y_ == other.y_;
+}
+
 std::shared_ptr<WhereConstantCondConstantScalarYKernel>
 WhereConstantCondConstantScalarYKernelGeneratorImpl::Yield(
     llvm::ArrayRef<size_t> input_layout, llvm::ArrayRef<size_t> output_layout) {
@@ -161,6 +203,35 @@ WhereConstantCondConstantTensorYKernelGeneratorImpl::GetOutputMeta() const {
 std::string
 WhereConstantCondConstantTensorYKernelGeneratorImpl::GetKernelName() const {
   return WhereConstantCondConstantTensorYKernel::kKernelName;
+}
+
+size_t
+WhereConstantCondConstantTensorYKernelGeneratorImpl::GetHashCode() const {
+  size_t hash =
+      typeid(WhereConstantCondConstantTensorYKernelGeneratorImpl).hash_code();
+  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= cond_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= y_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  return hash;
+}
+
+bool WhereConstantCondConstantTensorYKernelGeneratorImpl::Equals(
+    const KernelGenerator &other) const {
+  if (const WhereConstantCondConstantTensorYKernelGeneratorImpl *other_ptr =
+          dynamic_cast<const WhereConstantCondConstantTensorYKernelGeneratorImpl
+                           *>(&other)) {
+    return Equals(*other_ptr);
+  } else {
+    return false;
+  }
+}
+
+bool WhereConstantCondConstantTensorYKernelGeneratorImpl::Equals(
+    const WhereConstantCondConstantTensorYKernelGeneratorImpl &other) const {
+  return input_meta_ == other.input_meta_ &&
+         output_meta_ == other.output_meta_ && cond_ == other.cond_ &&
+         y_ == other.y_;
 }
 
 } // namespace kernel

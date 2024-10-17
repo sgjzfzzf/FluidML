@@ -1,4 +1,5 @@
 #include "structure/kernel/generator/erf.h"
+#include "utils/hash.h"
 
 namespace cpu_transformers {
 namespace kernel {
@@ -19,6 +20,9 @@ public:
   const Meta &GetInputMeta() const override;
   const Meta &GetOutputMeta() const override;
   std::string GetKernelName() const override;
+  size_t GetHashCode() const override;
+  bool Equals(const KernelGenerator &other) const override;
+  bool Equals(const ErfKernelGeneratorImpl &other) const;
 
 private:
   const Meta input_meta_;
@@ -56,6 +60,26 @@ const Meta &ErfKernelGeneratorImpl::GetOutputMeta() const {
 
 std::string ErfKernelGeneratorImpl::GetKernelName() const {
   return ErfKernel::kKernelName;
+}
+
+size_t ErfKernelGeneratorImpl::GetHashCode() const {
+  size_t hash = typeid(ErfKernelGeneratorImpl).hash_code();
+  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  return hash;
+}
+
+bool ErfKernelGeneratorImpl::Equals(const KernelGenerator &other) const {
+  if (const ErfKernelGeneratorImpl *other_ptr =
+          dynamic_cast<const ErfKernelGeneratorImpl *>(&other)) {
+    return Equals(*other_ptr);
+  } else {
+    return false;
+  }
+}
+
+bool ErfKernelGeneratorImpl::Equals(const ErfKernelGeneratorImpl &other) const {
+  return input_meta_ == other.input_meta_ && output_meta_ == other.output_meta_;
 }
 
 } // namespace kernel
