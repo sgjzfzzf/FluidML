@@ -18,8 +18,8 @@ public:
   ExecutorImpl(const ExecutorImpl &) = delete;
   ExecutorImpl(ExecutorImpl &&) = default;
   virtual ~ExecutorImpl() = default;
-  void Build(std::istream &input, std::ofstream *mlir,
-             std::ofstream *llvm) override;
+  void Compile(std::istream &input, std::ofstream *mlir,
+               std::ofstream *llvm) override;
   size_t Invoke(const std::unordered_map<std::string, void *> &args) override;
 #ifdef BUILD_PYTHON
   size_t
@@ -70,9 +70,9 @@ private:
   std::unique_ptr<worker::Planner> makePlanner() override;
 };
 
-void Executor::Build(std::string_view input,
-                     std::optional<std::string_view> mlir,
-                     std::optional<std::string_view> llvm) {
+void Executor::Compile(std::string_view input,
+                       std::optional<std::string_view> mlir,
+                       std::optional<std::string_view> llvm) {
   std::ifstream ifs(input.data());
   std::ofstream mlir_ofs, llvm_ofs;
   if (mlir) {
@@ -81,7 +81,7 @@ void Executor::Build(std::string_view input,
   if (llvm) {
     llvm_ofs.open(llvm->data());
   }
-  Build(ifs, mlir ? &mlir_ofs : nullptr, llvm ? &llvm_ofs : nullptr);
+  Compile(ifs, mlir ? &mlir_ofs : nullptr, llvm ? &llvm_ofs : nullptr);
 }
 
 std::unique_ptr<Executor> Executor::MakePlainLinear(std::string &&name,
@@ -99,8 +99,8 @@ std::unique_ptr<Executor> Executor::MakeDPGreedy(std::string &&name,
   return std::make_unique<DPGreedyExecutor>(std::move(name), epoch);
 }
 
-void ExecutorImpl::Build(std::istream &input, std::ofstream *mlir,
-                         std::ofstream *llvm) {
+void ExecutorImpl::Compile(std::istream &input, std::ofstream *mlir,
+                           std::ofstream *llvm) {
   {
     std::unique_ptr<worker::Parser> parser = worker::Parser::Make();
     optimization::GraphPassesManager pm;

@@ -15,7 +15,7 @@ static void BM_RunBertModel(benchmark::State &state) {
                 llvm = fmt::format("{}-llvm.mlir", name);
     std::unique_ptr<cpu_transformers::worker::Executor> executor =
         cpu_transformers::worker::Executor::MakePlainLinear(std::move(name));
-    executor->Build(input, mlir, llvm);
+    executor->Compile(input, mlir, llvm);
     std::vector<int64_t> input_ids(1 * 128, 0);
     std::vector<cpu_transformers::float32_t> attention_mask(1 * 128, 0),
         output0(1 * 128 * 768, 0), output1(1 * 768, 0);
