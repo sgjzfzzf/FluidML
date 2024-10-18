@@ -22,7 +22,7 @@ namespace evaluation {
 
 class KernelEval {
 public:
-  KernelEval(size_t epoch = 1);
+  KernelEval(size_t epoch);
   KernelEval(const KernelEval &) = delete;
   KernelEval(KernelEval &&) = default;
   virtual ~KernelEval() = default;
@@ -62,7 +62,7 @@ public:
     size_t operator()(const Key &key) const;
   };
 
-  SingleInputKernelEval() = default;
+  SingleInputKernelEval(size_t epoch);
   SingleInputKernelEval(const SingleInputKernelEval &) = delete;
   SingleInputKernelEval(SingleInputKernelEval &&) = default;
   virtual ~SingleInputKernelEval() = default;
@@ -87,7 +87,8 @@ class SingleInputWithoutBufferKernelEval : public SingleInputKernelEval {
 public:
   SingleInputWithoutBufferKernelEval(
       std::shared_ptr<kernel::SingleInputWithoutBufferKernelGenerator>
-          &&generator);
+          &&generator,
+      size_t epoch = 1);
   SingleInputWithoutBufferKernelEval(
       const SingleInputWithoutBufferKernelEval &) = delete;
   SingleInputWithoutBufferKernelEval(SingleInputWithoutBufferKernelEval &&) =
@@ -109,7 +110,7 @@ class SingleInputWithBufferKernelEval : public SingleInputKernelEval {
 public:
   SingleInputWithBufferKernelEval(
       std::shared_ptr<kernel::SingleInputWithBufferKernelGenerator> &&generator,
-      size_t buffer_size);
+      size_t buffer_size, size_t epoch = 1);
   SingleInputWithBufferKernelEval(const SingleInputWithBufferKernelEval &) =
       delete;
   SingleInputWithBufferKernelEval(SingleInputWithBufferKernelEval &&) = default;
@@ -156,7 +157,7 @@ public:
     size_t operator()(const Key &key) const;
   };
 
-  DoubleInputsKernelEval() = default;
+  DoubleInputsKernelEval(size_t epoch);
   DoubleInputsKernelEval(const DoubleInputsKernelEval &) = delete;
   DoubleInputsKernelEval(DoubleInputsKernelEval &&) = default;
   virtual ~DoubleInputsKernelEval() = default;
@@ -184,7 +185,8 @@ class DoubleInputsWithoutBufferKernelEval : public DoubleInputsKernelEval {
 public:
   DoubleInputsWithoutBufferKernelEval(
       std::shared_ptr<kernel::DoubleInputsWithoutBufferKernelGenerator>
-          &&generator);
+          &&generator,
+      size_t epoch = 1);
   DoubleInputsWithoutBufferKernelEval(
       const DoubleInputsWithoutBufferKernelEval &) = delete;
   DoubleInputsWithoutBufferKernelEval(DoubleInputsWithoutBufferKernelEval &&) =

@@ -1,4 +1,5 @@
 #include "structure/context/context.h"
+#include "evaluation/dp.h"
 #include "fmt/core.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Bufferization/IR/Bufferization.h"
@@ -54,15 +55,21 @@ Context &Context::operator=(std::shared_ptr<ContextImpl> &&context_impl) {
   return *this;
 }
 
+std::unique_ptr<evaluation::DynamicProgrammingTable>
+Context::MakeDynamicProgrammingTable() {
+  context::Context context = *this;
+  return evaluation::DynamicProgrammingTable::Make(std::move(context));
+}
+
 std::unique_ptr<worker::GeneralBuilder>
-Context::MakePlaingGeneralBuilder(std::string &&function_name) {
+Context::MakePlainGeneralBuilder(std::string &&function_name) {
   context::Context context = *this;
   return worker::GeneralBuilder::MakePlain(std::move(function_name),
                                            std::move(context));
 }
 
 std::unique_ptr<worker::GeneralBuilder>
-Context::MakeDynamicProgrammingGeneralBuilder(std::string &&function_name) {
+Context::MakeDPGeneralBuilder(std::string &&function_name) {
   context::Context context = *this;
   return worker::GeneralBuilder::MakeDynamicProgramming(
       std::move(function_name), std::move(context));
@@ -75,19 +82,19 @@ Context::MakeKernelBuilder(std::string &&function_name) {
                                      std::move(context));
 }
 
-std::unique_ptr<worker::PlainLinearPlanner> Context::MakePlainLinearPlanner() {
+std::unique_ptr<worker::Planner> Context::MakePlainLinearPlanner() {
   context::Context context = *this;
-  return worker::PlainLinearPlanner::Make(std::move(context));
+  return worker::Planner::MakePlainLinearPlanner(std::move(context));
 }
 
-std::unique_ptr<worker::PlainGreedyPlanner> Context::MakePlainGreedyPlanner() {
+std::unique_ptr<worker::Planner> Context::MakePlainGreedyPlanner() {
   context::Context context = *this;
-  return worker::PlainGreedyPlanner::Make(std::move(context));
+  return worker::Planner::MakePlainGreedyPlanner(std::move(context));
 }
 
-std::unique_ptr<worker::DPGreedyPlanner> Context::MakeDPGreedyPlanner() {
+std::unique_ptr<worker::Planner> Context::MakeDPGreedyPlanner() {
   context::Context context = *this;
-  return worker::DPGreedyPlanner::Make(std::move(context));
+  return worker::Planner::MakeDPGreedyPlanner(std::move(context));
 }
 
 std::unique_ptr<worker::Lower> Context::MakeLower() {

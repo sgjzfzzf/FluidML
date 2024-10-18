@@ -7,28 +7,20 @@ namespace worker {
 class Builder;
 class GeneralBuilder;
 class KernelBuilder;
-class NaiveBuilder;
-
-class DynamicProgrammingBuilder;
 
 class Converter;
 
 class Evaluator;
+
+class Executor;
 
 class Lower;
 
 class Parser;
 
 class Planner;
-class PlainLinearPlanner;
-class PlainGreedyPlanner;
-class DPGreedyPlanner;
 
 class Runner;
-
-class Scheduler;
-class NaiveScheduler;
-class DynamicProgrammingScheduler;
 
 } // namespace worker
 } // namespace cpu_transformers

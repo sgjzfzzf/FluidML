@@ -35,15 +35,15 @@ private:
 
 class DynamicProgrammingTable {
 public:
+  virtual ~DynamicProgrammingTable() = default;
   virtual DynamicProgrammingPlan Run(const flow::Flow &flow) = 0;
-  static std::shared_ptr<DynamicProgrammingTable>
+  static std::unique_ptr<DynamicProgrammingTable>
   Make(context::Context &&context);
 
 protected:
   DynamicProgrammingTable() = default;
   DynamicProgrammingTable(const DynamicProgrammingTable &table) = delete;
   DynamicProgrammingTable(DynamicProgrammingTable &&table) = default;
-  virtual ~DynamicProgrammingTable() = default;
 };
 
 } // namespace evaluation

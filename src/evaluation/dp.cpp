@@ -123,9 +123,9 @@ private:
   std::shared_ptr<worker::Evaluator> evaluator_;
 };
 
-std::shared_ptr<DynamicProgrammingTable>
+std::unique_ptr<DynamicProgrammingTable>
 DynamicProgrammingTable::Make(context::Context &&context) {
-  return std::make_shared<DynamicProgrammingTableImpl>(std::move(context));
+  return std::make_unique<DynamicProgrammingTableImpl>(std::move(context));
 }
 
 std::vector<flow::Flow> SubFlowsBuilder::Run(const flow::Flow &flow) {

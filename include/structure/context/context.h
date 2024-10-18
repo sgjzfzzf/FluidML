@@ -1,6 +1,7 @@
 #ifndef CPU_TRANSFORMERS_STRUCTURE_CONTEXT_CONTEXT_H_
 #define CPU_TRANSFORMERS_STRUCTURE_CONTEXT_CONTEXT_H_
 
+#include "evaluation/fwd.h"
 #include "mlir/ExecutionEngine/ExecutionEngine.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/MLIRContext.h"
@@ -25,15 +26,17 @@ public:
   Context &operator=(const std::shared_ptr<ContextImpl> &context_impl);
   Context &operator=(std::shared_ptr<ContextImpl> &&context_impl);
   virtual ~Context() = default;
+  std::unique_ptr<evaluation::DynamicProgrammingTable>
+  MakeDynamicProgrammingTable();
   std::unique_ptr<worker::GeneralBuilder>
-  MakePlaingGeneralBuilder(std::string &&function_name);
+  MakePlainGeneralBuilder(std::string &&function_name);
   std::unique_ptr<worker::GeneralBuilder>
-  MakeDynamicProgrammingGeneralBuilder(std::string &&function_name);
+  MakeDPGeneralBuilder(std::string &&function_name);
   std::unique_ptr<worker::KernelBuilder>
   MakeKernelBuilder(std::string &&function_name);
-  std::unique_ptr<worker::PlainLinearPlanner> MakePlainLinearPlanner();
-  std::unique_ptr<worker::PlainGreedyPlanner> MakePlainGreedyPlanner();
-  std::unique_ptr<worker::DPGreedyPlanner> MakeDPGreedyPlanner();
+  std::unique_ptr<worker::Planner> MakePlainLinearPlanner();
+  std::unique_ptr<worker::Planner> MakePlainGreedyPlanner();
+  std::unique_ptr<worker::Planner> MakeDPGreedyPlanner();
   std::unique_ptr<worker::Lower> MakeLower();
   std::unique_ptr<worker::Runner> MakeRunner();
   friend std::ostream &operator<<(std::ostream &os, Context &context);

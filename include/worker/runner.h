@@ -18,7 +18,7 @@ public:
 #ifdef BUILD_PYTHON
   virtual size_t
   Run(const std::unordered_map<std::string, pybind11::array> &args,
-      size_t epoch) = 0;
+      size_t epoch = 1) = 0;
 #endif
   static std::unique_ptr<Runner> Make(context::Context &&context);
 

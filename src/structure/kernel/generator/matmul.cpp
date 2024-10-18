@@ -92,9 +92,6 @@ MatMulKernelGeneratorImpl::Yield(llvm::ArrayRef<size_t> lhs_layout,
                                  llvm::ArrayRef<size_t> output_layout) {
   const Meta &lhs_meta = GetLhsMeta(), rhs_meta = GetRhsMeta(),
              output_meta = GetOutputMeta();
-  // std::shared_ptr<MatMulKernel> kernel = std::make_shared<MatMulKernel>(
-  //     llvm::SmallVector<Axis, 3>{Axis::i, Axis::j, Axis::k});
-  // return kernel;
   auto it = kernels_.find({lhs_layout, rhs_layout, output_layout});
   if (it != kernels_.end()) {
     return it->second;

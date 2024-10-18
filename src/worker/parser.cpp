@@ -1,8 +1,6 @@
 #include "worker/parser.h"
 #include "onnx/checker.h"
-#include "onnx/common/file_utils.h"
 #include "onnx/onnx-ml.pb.h"
-#include "onnx/onnx_pb.h"
 #include "structure/graph/attribute.h"
 #include "structure/graph/edge.h"
 #include "structure/graph/graph.h"
@@ -11,6 +9,8 @@
 #include "utils/type.h"
 #include <cstddef>
 #include <cstdint>
+#include <fstream>
+#include <istream>
 #include <memory>
 #include <type_traits>
 #include <unordered_map>
@@ -178,25 +178,33 @@ namespace worker {
 class ParserImpl : public Parser {
 public:
   ParserImpl() = default;
-  ~ParserImpl() = default;
   ParserImpl(const ParserImpl &parser) = delete;
-  ParserImpl(ParserImpl &&parser) = delete;
-  Graph Run(const std::string &file) override;
+  ParserImpl(ParserImpl &&parser) = default;
+  virtual ~ParserImpl() = default;
+  graph::Graph Run(onnx::ModelProto &model_proto) override;
 };
 
 std::unique_ptr<Parser> Parser::Make() {
   return std::make_unique<ParserImpl>();
 }
 
-Graph ParserImpl::Run(const std::string &file) {
+Graph Parser::Run(const std::string &input) {
+  std::ifstream ifs(input);
+  return Run(ifs);
+}
+
+Graph Parser::Run(std::istream &input) {
   onnx::ModelProto model_proto;
-  onnx::LoadProtoFromPath(file, model_proto);
+  model_proto.ParseFromIstream(&input);
+  return Run(model_proto);
+}
+
+Graph ParserImpl::Run(onnx::ModelProto &model_proto) {
   Graph graph;
 #ifdef DEBUG
   onnx::checker::check_model(model_proto);
 #endif
   onnx::GraphProto graph_proto = model_proto.graph();
-
   for (const onnx::ValueInfoProto &input : graph_proto.input()) {
     createEdge<InputEdge>(graph, input);
   }

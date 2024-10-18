@@ -58,6 +58,9 @@ size_t SingleInputKernelEval::KeyHash::operator()(const Key &key) const {
   return hash;
 };
 
+SingleInputKernelEval::SingleInputKernelEval(size_t epoch)
+    : KernelEval(epoch) {}
+
 size_t
 SingleInputKernelEval::GetTimeCost(const std::vector<size_t> &input_layout,
                                    const std::vector<size_t> &output_layout) {
@@ -145,8 +148,9 @@ nlohmann::json SingleInputKernelEval::ToJson() const {
 
 SingleInputWithoutBufferKernelEval::SingleInputWithoutBufferKernelEval(
     std::shared_ptr<kernel::SingleInputWithoutBufferKernelGenerator>
-        &&generator)
-    : generator_(std::move(generator)) {}
+        &&generator,
+    size_t epoch)
+    : SingleInputKernelEval(epoch), generator_(std::move(generator)) {}
 
 const kernel::SingleInputWithoutBufferKernelGenerator &
 SingleInputWithoutBufferKernelEval::GetKernelGenerator() const {
@@ -177,8 +181,9 @@ void SingleInputWithoutBufferKernelEval::runKernel(
 
 SingleInputWithBufferKernelEval::SingleInputWithBufferKernelEval(
     std::shared_ptr<kernel::SingleInputWithBufferKernelGenerator> &&generator,
-    size_t buffer_size)
-    : generator_(std::move(generator)), buffer_size_(buffer_size) {}
+    size_t buffer_size, size_t epoch)
+    : SingleInputKernelEval(epoch), generator_(std::move(generator)),
+      buffer_size_(buffer_size) {}
 
 const kernel::SingleInputWithBufferKernelGenerator &
 SingleInputWithBufferKernelEval::GetKernelGenerator() const {
@@ -244,6 +249,9 @@ size_t DoubleInputsKernelEval::KeyHash::operator()(const Key &key) const {
   }
   return hash;
 };
+
+DoubleInputsKernelEval::DoubleInputsKernelEval(size_t epoch)
+    : KernelEval(epoch) {}
 
 size_t
 DoubleInputsKernelEval::GetTimeCost(const std::vector<size_t> &lhs_layout,
@@ -352,8 +360,9 @@ nlohmann::json DoubleInputsKernelEval::ToJson() const {
 
 DoubleInputsWithoutBufferKernelEval::DoubleInputsWithoutBufferKernelEval(
     std::shared_ptr<kernel::DoubleInputsWithoutBufferKernelGenerator>
-        &&generator)
-    : generator_(std::move(generator)) {}
+        &&generator,
+    size_t epoch)
+    : DoubleInputsKernelEval(epoch), generator_(std::move(generator)) {}
 
 const kernel::DoubleInputsWithoutBufferKernelGenerator &
 DoubleInputsWithoutBufferKernelEval::GetKernelGenerator() const {
