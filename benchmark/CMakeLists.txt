@@ -8,4 +8,4 @@ link_directories(${CMAKE_BINARY_DIR}/external/lib)
 
 add_executable(bert bert.cpp)
 add_dependencies(bert download_bert)
-target_link_libraries(bert ${PROJECT_NAME}Static benchmark glog)
+target_link_libraries(bert LIB_STATIC benchmark glog)

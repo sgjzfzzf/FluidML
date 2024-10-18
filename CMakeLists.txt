@@ -15,20 +15,22 @@ option(USE_LOGS "Use logs" OFF)
 
 add_compile_options(-fPIC -Werror)
 
-ExternalProject_Add(
-    libbenchmark
-    GIT_REPOSITORY https://github.com/google/benchmark.git
-    GIT_TAG v1.9.0
-    CMAKE_ARGS -DBENCHMARK_DOWNLOAD_DEPENDENCIES=ON -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/external 
-    BUILD_COMMAND ${CMAKE_COMMAND} --build . --target all
-    INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
-)
+if(${BUILD_TESTS})
+    ExternalProject_Add(
+        libbenchmark
+        GIT_REPOSITORY https://github.com/google/benchmark.git
+        GIT_TAG v1.9.0
+        CMAKE_ARGS -DBENCHMARK_DOWNLOAD_DEPENDENCIES=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/external 
+        BUILD_COMMAND ${CMAKE_COMMAND} --build . --target all
+        INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
+    )
+endif()
 
 ExternalProject_Add(
     libfmt
     GIT_REPOSITORY https://github.com/fmtlib/fmt.git
     GIT_TAG 10.2.1
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/external -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/external -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_BUILD_TYPE=Release
     BUILD_COMMAND ${CMAKE_COMMAND} --build . --target all
     INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
 )
@@ -37,7 +39,7 @@ ExternalProject_Add(
     libglog
     GIT_REPOSITORY https://github.com/google/glog.git
     GIT_TAG v0.7.1
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/external -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/external -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_BUILD_TYPE=Release
     BUILD_COMMAND ${CMAKE_COMMAND} --build . --target all
     INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
 )
@@ -46,7 +48,7 @@ ExternalProject_Add(
     libjson
     GIT_REPOSITORY https://github.com/nlohmann/json.git
     GIT_TAG v3.11.3
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/external -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/external -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_BUILD_TYPE=Release
     BUILD_COMMAND ${CMAKE_COMMAND} --build . --target all
     INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
 )
@@ -75,5 +77,10 @@ find_program(BLACK_FORMAT black REQUIRED)
 add_custom_target(
     format
     COMMAND find ${CMAKE_CURRENT_SOURCE_DIR}/test -name "\"*.py\"" | xargs ${BLACK_FORMAT}
-    COMMAND find ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/test -name "\"*.cpp\"" -o -name "\"*.h\"" -o -name "\"*.hpp\"" | xargs ${CLANG_FORMAT} -i
+    COMMAND find ${CMAKE_CURRENT_SOURCE_DIR}/benchmark ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/test -name "\"*.cpp\"" -o -name "\"*.h\"" -o -name "\"*.hpp\"" | xargs ${CLANG_FORMAT} -i
+)
+
+install(
+    DIRECTORY ${CMAKE_SOURCE_DIR}/include/
+    DESTINATION include/cpu_transformers
 )

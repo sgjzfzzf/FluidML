@@ -45,7 +45,7 @@ endforeach()
 add_executable(node_test node_test.cpp)
 add_custom_target(NodeOnnxDepsTarget DEPENDS ${OpModels})
 add_dependencies(node_test NodeOnnxDepsTarget)
-target_link_libraries(node_test ${GTEST_BOTH_LIBRARIES} ${PROJECT_NAME}Static)
+target_link_libraries(node_test ${GTEST_BOTH_LIBRARIES} LIB_STATIC)
 add_test(NAME NodeTest COMMAND node_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 add_custom_target(PyNodeOnnxDepsTarget DEPENDS ${OpModels})
@@ -56,5 +56,5 @@ set_tests_properties(PyNodeTest
 )
 
 add_executable(graph_test graph_test.cpp)
-target_link_libraries(graph_test ${GTEST_BOTH_LIBRARIES} ${PROJECT_NAME}Static)
+target_link_libraries(graph_test ${GTEST_BOTH_LIBRARIES} LIB_STATIC)
 add_test(NAME GraphTest COMMAND ./graph_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
