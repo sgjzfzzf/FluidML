@@ -14,7 +14,7 @@
 namespace cpu_transformers {
 namespace context {
 
-class Context : public std::shared_ptr<ContextImpl> {
+class Context {
 public:
   Context();
   Context(const Context &context) = default;
@@ -26,6 +26,8 @@ public:
   Context &operator=(const std::shared_ptr<ContextImpl> &context_impl);
   Context &operator=(std::shared_ptr<ContextImpl> &&context_impl);
   virtual ~Context() = default;
+  ContextImpl &operator*();
+  ContextImpl *operator->();
   std::unique_ptr<evaluation::DynamicProgrammingTable>
   MakeDynamicProgrammingTable();
   std::unique_ptr<worker::GeneralBuilder>
@@ -40,6 +42,9 @@ public:
   std::unique_ptr<worker::Lower> MakeLower();
   std::unique_ptr<worker::Runner> MakeRunner();
   friend std::ostream &operator<<(std::ostream &os, Context &context);
+
+private:
+  std::shared_ptr<ContextImpl> impl_;
 };
 
 class ContextImpl {
@@ -56,7 +61,7 @@ public:
   std::string ExportHeaderFile();
   friend std::ostream &operator<<(std::ostream &os, ContextImpl &context);
 
-protected:
+private:
   ContextImpl();
   ContextImpl(const ContextImpl &context) = delete;
   ContextImpl(ContextImpl &&context) = delete;

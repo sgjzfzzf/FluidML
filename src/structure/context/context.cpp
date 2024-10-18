@@ -37,23 +37,27 @@
 namespace cpu_transformers {
 namespace context {
 
-Context::Context() : std::shared_ptr<ContextImpl>(ContextImpl::Make()) {}
+Context::Context() : impl_(ContextImpl::Make()) {}
 
 Context::Context(const std::shared_ptr<ContextImpl> &context_impl)
-    : std::shared_ptr<ContextImpl>(context_impl) {}
+    : impl_(context_impl) {}
 
 Context::Context(std::shared_ptr<ContextImpl> &&context_impl)
-    : std::shared_ptr<ContextImpl>(std::move(context_impl)) {}
+    : impl_(std::move(context_impl)) {}
 
 Context &Context::operator=(const std::shared_ptr<ContextImpl> &context_impl) {
-  std::shared_ptr<ContextImpl>::operator=(context_impl);
+  impl_ = context_impl;
   return *this;
 }
 
 Context &Context::operator=(std::shared_ptr<ContextImpl> &&context_impl) {
-  std::shared_ptr<ContextImpl>::operator=(std::move(context_impl));
+  impl_ = std::move(context_impl);
   return *this;
 }
+
+ContextImpl &Context::operator*() { return *impl_; }
+
+ContextImpl *Context::operator->() { return impl_.get(); }
 
 std::unique_ptr<evaluation::DynamicProgrammingTable>
 Context::MakeDynamicProgrammingTable() {
@@ -108,7 +112,7 @@ std::unique_ptr<worker::Runner> Context::MakeRunner() {
 }
 
 std::ostream &operator<<(std::ostream &os, Context &context) {
-  os << *context;
+  os << context.impl_;
   return os;
 }
 
