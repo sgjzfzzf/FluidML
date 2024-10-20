@@ -1,0 +1,7 @@
+black
+numpy
+onnx
+onnxruntime
+onnxsim
+pybind11
+wheel

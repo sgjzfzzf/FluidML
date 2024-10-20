@@ -11,7 +11,7 @@ namespace worker {
 class Parser {
 public:
   virtual ~Parser() = default;
-  graph::Graph Run(const std::string &input);
+  graph::Graph Run(std::string_view input);
   graph::Graph Run(std::istream &input);
   virtual graph::Graph Run(onnx::ModelProto &model_proto) = 0;
   static std::unique_ptr<Parser> Make();

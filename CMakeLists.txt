@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.17)
 
 project(CpuTransformers)
+set(PYTHON_PROJECT_NAME "cpu_transformers")
 
 set(CMAKE_CXX_STANDARD_REQUIRED 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -13,18 +14,14 @@ option(BUILD_PYTHON "Build python bindings" OFF)
 option(DP_DEBUG "Skip the Dynamic Programming optimization for debug" OFF)
 option(USE_LOGS "Use logs" OFF)
 
-add_compile_options(-fPIC -Werror)
-
-if(${BUILD_TESTS})
-    ExternalProject_Add(
-        libbenchmark
-        GIT_REPOSITORY https://github.com/google/benchmark.git
-        GIT_TAG v1.9.0
-        CMAKE_ARGS -DBENCHMARK_DOWNLOAD_DEPENDENCIES=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/external 
-        BUILD_COMMAND ${CMAKE_COMMAND} --build . --target all
-        INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
-    )
-endif()
+ExternalProject_Add(
+    libbenchmark
+    GIT_REPOSITORY https://github.com/google/benchmark.git
+    GIT_TAG v1.9.0
+    CMAKE_ARGS -DBENCHMARK_DOWNLOAD_DEPENDENCIES=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/external 
+    BUILD_COMMAND ${CMAKE_COMMAND} --build . --target all
+    INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
+)
 
 ExternalProject_Add(
     libfmt
@@ -63,6 +60,8 @@ include_directories(${LLVM_INCLUDE_DIRS})
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/third_party/onnx)
 link_directories(${LLVM_LIBRARY_DIRS})
 
+add_link_options(-Wl,-rpath,${LLVM_LIBRARY_DIRS})
+
 add_subdirectory(third_party)
 add_subdirectory(src)
 
@@ -76,8 +75,8 @@ find_program(CLANG_FORMAT clang-format REQUIRED)
 find_program(BLACK_FORMAT black REQUIRED)
 add_custom_target(
     format
-    COMMAND find ${CMAKE_CURRENT_SOURCE_DIR}/test -name "\"*.py\"" | xargs ${BLACK_FORMAT}
-    COMMAND find ${CMAKE_CURRENT_SOURCE_DIR}/benchmark ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/test -name "\"*.cpp\"" -o -name "\"*.h\"" -o -name "\"*.hpp\"" | xargs ${CLANG_FORMAT} -i
+    COMMAND find ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/test -name "\"*.py\"" -o -name "\"*.pyi\"" | xargs ${BLACK_FORMAT} ${CMAKE_SOURCE_DIR}/setup.py
+    COMMAND find ${CMAKE_SOURCE_DIR}/benchmark ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/test -name "\"*.cpp\"" -o -name "\"*.h\"" -o -name "\"*.hpp\"" | xargs ${CLANG_FORMAT} -i
 )
 
 install(

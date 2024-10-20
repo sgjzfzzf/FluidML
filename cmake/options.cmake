@@ -1,3 +1,5 @@
+add_compile_options(-fPIC)
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_options(-O0 -g)
     add_compile_definitions(DEBUG)
@@ -8,7 +10,7 @@ else()
     message(FATAL_ERROR "Unknown build type: ${CMAKE_BUILD_TYPE}. Please use Debug or Release.")
 endif()
 
-if(BUILD_PYTHON)
+if(${BUILD_PYTHON} STREQUAL "ON")
     find_package(Python3 3.10 COMPONENTS Development Interpreter REQUIRED)
     include_directories(${Python3_INCLUDE_DIRS})
     execute_process(COMMAND ${Python3_EXECUTABLE} -c "import pybind11\nprint(pybind11.get_include())" 

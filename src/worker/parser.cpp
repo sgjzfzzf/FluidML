@@ -188,8 +188,8 @@ std::unique_ptr<Parser> Parser::Make() {
   return std::make_unique<ParserImpl>();
 }
 
-Graph Parser::Run(const std::string &input) {
-  std::ifstream ifs(input);
+Graph Parser::Run(std::string_view input) {
+  std::ifstream ifs(input.data());
   return Run(ifs);
 }
 
