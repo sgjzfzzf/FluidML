@@ -16,6 +16,7 @@ if(${BUILD_PYTHON} STREQUAL "ON")
     execute_process(COMMAND ${Python3_EXECUTABLE} -c "import pybind11\nprint(pybind11.get_include())" 
     OUTPUT_VARIABLE PYBIND11_INCLUDE_DIR)
     include_directories(${PYBIND11_INCLUDE_DIR})
+    add_compile_options(-fPIC)
     add_compile_definitions(BUILD_PYTHON)
 endif()
 

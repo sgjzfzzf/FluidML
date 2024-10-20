@@ -1,9 +1,12 @@
 #ifndef CPU_TRANSFORMERS_WORKER_EXECUTOR_H_
 #define CPU_TRANSFORMERS_WORKER_EXECUTOR_H_
 
+#ifdef BUILD_PYTHON
 #include "pybind11/numpy.h"
+#endif
 #include <fstream>
 #include <memory>
+#include <optional>
 #include <unordered_map>
 
 namespace cpu_transformers {
