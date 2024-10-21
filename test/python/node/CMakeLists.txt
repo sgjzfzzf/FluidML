@@ -21,7 +21,6 @@ set(
     "pow"
     "reshape"
     "softmax"
-    "split"
     "sub"
     "tanh"
     "transpose"

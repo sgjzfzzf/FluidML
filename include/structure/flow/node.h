@@ -523,29 +523,6 @@ private:
   const int64_t axis_;
 };
 
-// TODO:
-class SplitNode : public Node {
-public:
-  constexpr static int64_t kAxis = 0;
-  constexpr static const char *kAxisAttrName = "axis";
-  SplitNode(std::string &&name, std::shared_ptr<Region> &&input,
-            std::vector<std::shared_ptr<Region>> &&outputs, int64_t axis);
-  SplitNode(const SplitNode &node) = delete;
-  SplitNode(SplitNode &&node) = default;
-  virtual ~SplitNode() = default;
-  virtual std::shared_ptr<Node> CloneAsNode() const override;
-  std::shared_ptr<SplitNode> Clone() const;
-  std::shared_ptr<Region> GetInput() const noexcept;
-  const std::vector<std::shared_ptr<Region>> &GetOutputs() const noexcept;
-  int64_t GetAxis() const noexcept;
-  const Meta &GetMeta() const noexcept;
-
-private:
-  std::shared_ptr<Region> input_;
-  std::vector<std::shared_ptr<Region>> outputs_;
-  const int64_t axis_;
-};
-
 class SubNode : virtual public Node {
 public:
   SubNode(std::string &&name);

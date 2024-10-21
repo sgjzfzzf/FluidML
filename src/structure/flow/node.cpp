@@ -801,57 +801,6 @@ const Meta &SoftmaxNode::GetMeta() const noexcept {
   return input_->GetMeta();
 }
 
-SplitNode::SplitNode(std::string &&name, std::shared_ptr<Region> &&input,
-                     std::vector<std::shared_ptr<Region>> &&outputs,
-                     int64_t axis)
-    : Node(std::move(name)), input_(std::move(input)),
-      outputs_(std::move(outputs)), axis_(axis) {
-#ifdef DEBUG
-  const Meta &input_meta = input_->GetMeta();
-  const std::vector<int64_t> &input_shape = input_meta.GetShape();
-  size_t input_shape_len = input_shape.size();
-  assert(axis < input_shape_len);
-  size_t sum = 0;
-  for (const std::shared_ptr<Region> &output : outputs_) {
-    const Meta &output_meta = output->GetMeta();
-    const std::vector<int64_t> &output_shape = output_meta.GetShape();
-    size_t output_shape_len = output_shape.size();
-    assert(input_shape_len == output_shape_len);
-    int64_t axis = GetAxis();
-    for (size_t i = 0; i < output_shape_len; ++i) {
-      if (axis == i) {
-        sum += output_shape[i];
-      } else {
-        assert(input_shape[i] == output_shape[i]);
-      }
-    }
-  }
-  assert(sum == input_shape[axis]);
-#endif
-}
-
-std::shared_ptr<Node> SplitNode::CloneAsNode() const { return Clone(); }
-
-std::shared_ptr<SplitNode> SplitNode::Clone() const {
-  std::string name = GetName();
-  std::vector<std::shared_ptr<Region>> outputs = GetOutputs();
-  return std::make_shared<SplitNode>(std::move(name), GetInput(),
-                                     std::move(outputs), GetAxis());
-}
-
-std::shared_ptr<Region> SplitNode::GetInput() const noexcept { return input_; }
-
-const std::vector<std::shared_ptr<Region>> &
-SplitNode::GetOutputs() const noexcept {
-  return outputs_;
-}
-
-int64_t SplitNode::GetAxis() const noexcept {
-  return axis_ >= 0 ? axis_ : GetMeta().GetShape().size() + axis_;
-}
-
-const Meta &SplitNode::GetMeta() const noexcept { return input_->GetMeta(); }
-
 SubNode::SubNode(std::string &&name) : Node(std::move(name)) {}
 
 SubConstantScalarLhsNode::SubConstantScalarLhsNode(

@@ -289,8 +289,6 @@ Graph ParserImpl::Run(onnx::ModelProto &model_proto) {
       createNode(graph, node, Node::Op::Reshape);
     } else if (node.op_type() == "Softmax") {
       createNode(graph, node, Node::Op::Softmax);
-    } else if (node.op_type() == "Split") {
-      createNode(graph, node, Node::Op::Split);
     } else if (node.op_type() == "Sub") {
       createNode(graph, node, Node::Op::Sub);
     } else if (node.op_type() == "Tanh") {

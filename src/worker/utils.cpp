@@ -129,13 +129,6 @@ std::unique_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
     assert(axis >= 0);
 #endif
     kernel = std::make_unique<kernel::SoftmaxKernel>(axis);
-  } else if (const flow::SplitNode *ptr =
-                 dynamic_cast<const flow::SplitNode *>(node)) {
-#ifdef DEBUG
-    assert(false && "unimplemented");
-#else
-    __builtin_unreachable();
-#endif
   } else if (const flow::SubConstantScalarLhsNode *ptr =
                  dynamic_cast<const flow::SubConstantScalarLhsNode *>(node)) {
     Type type = ptr->GetType();
@@ -405,15 +398,6 @@ SelectKernelGenerator(const flow::Node *node) {
 #endif
     generator = kernel::SoftmaxKernelGenerator::Make(
         std::move(input_meta), std::move(output_meta), axis);
-  } else if (const flow::SplitNode *ptr =
-                 dynamic_cast<const flow::SplitNode *>(node)) {
-    const int64_t axis = ptr->GetAxis();
-#ifdef DEBUG
-    assert(axis >= 0);
-    assert(false && "unimplemented");
-#else
-    __builtin_unreachable();
-#endif
   } else if (const flow::SubConstantScalarLhsNode *ptr =
                  dynamic_cast<const flow::SubConstantScalarLhsNode *>(node)) {
     std::shared_ptr<flow::Region> input = ptr->GetInput(),

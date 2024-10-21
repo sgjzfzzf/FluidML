@@ -43,7 +43,6 @@ class MulCommonNode;
 class PowNode;
 class ReshapeNode;
 class SoftmaxNode;
-class SplitNode;
 class SubNode;
 class SubConstantScalarLhsNode;
 class TanhNode;

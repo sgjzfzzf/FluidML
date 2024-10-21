@@ -30,7 +30,6 @@ public:
     Pow,
     Reshape,
     Softmax,
-    Split,
     Sub,
     Tanh,
     Transpose,

@@ -54,8 +54,6 @@ private:
                           const graph::Node &node);
   void convertSoftmaxNode(flow::Flow &flow, const graph::Graph &graph,
                           const graph::Node &node);
-  void convertSplitNode(flow::Flow &flow, const graph::Graph &graph,
-                        const graph::Node &node);
   void convertSubNode(flow::Flow &flow, const graph::Graph &graph,
                       const graph::Node &node);
   void convertTanhNode(flow::Flow &flow, const graph::Graph &graph,
@@ -155,9 +153,6 @@ flow::Flow ConverterImpl::Run(const graph::Graph &graph) {
       break;
     case graph::Node::Op::Softmax:
       convertSoftmaxNode(flow, graph, *node);
-      break;
-    case graph::Node::Op::Split:
-      convertSplitNode(flow, graph, *node);
       break;
     case graph::Node::Op::Sub:
       convertSubNode(flow, graph, *node);
@@ -1079,72 +1074,6 @@ void ConverterImpl::convertSoftmaxNode(flow::Flow &flow,
 #endif
   ptr = std::make_shared<flow::SoftmaxNode>(
       std::move(name), std::move(input_region), std::move(output_region), axis);
-  flow.PutNode(std::move(ptr));
-}
-
-void ConverterImpl::convertSplitNode(flow::Flow &flow,
-                                     const graph::Graph &graph,
-                                     const graph::Node &node) {
-#ifdef DEBUG
-  assert(node.GetOp() == graph::Node::Op::Split);
-#endif
-  std::string name = node.GetName();
-  std::vector<std::shared_ptr<graph::Edge>> inputs = graph.GetNodeFrom(node);
-  std::vector<std::shared_ptr<graph::Edge>> outputs = graph.GetNodeTo(node);
-#ifdef DEBUG
-  assert(inputs.size() == 2);
-  assert(outputs.size() >= 1);
-#endif
-  std::shared_ptr<graph::Edge> input = inputs[0];
-  std::shared_ptr<graph::Edge> shapes = inputs[1];
-#ifdef DEBUG
-  assert(input != nullptr);
-#endif
-  std::shared_ptr<flow::SplitNode> ptr = nullptr;
-  std::shared_ptr<graph::NonConstantEdge> input_as_non_constant =
-      std::dynamic_pointer_cast<graph::NonConstantEdge>(input);
-  std::shared_ptr<graph::ConstantTensorEdge> shapes_as_constant_tensor =
-      std::dynamic_pointer_cast<graph::ConstantTensorEdge>(shapes);
-#ifdef DEBUG
-  assert(input_as_non_constant != nullptr);
-  assert(shapes_as_constant_tensor != nullptr);
-#endif
-  const std::string &input_name = input_as_non_constant->GetName();
-  std::shared_ptr<flow::Region> input_region = flow.GetRegion(input_name);
-  Tensor shapes_tensor = shapes_as_constant_tensor->GetValue();
-  const std::vector<int64_t> &shape = shapes_tensor.GetShape();
-#ifdef DEBUG
-  assert(shape.size() == 1);
-#endif
-  size_t size = shape[0];
-#ifdef DEBUG
-  assert(size == outputs.size());
-#endif
-  size_t axis = flow::SplitNode::kAxis;
-  if (node.HasAttribute(flow::SplitNode::kAxisAttrName)) {
-    axis = node.GetAttribute(flow::SplitNode::kAxisAttrName).GetInt64();
-  }
-  std::vector<std::shared_ptr<flow::Region>> output_regions;
-  for (size_t i = 0; i < size; ++i) {
-    std::shared_ptr<graph::Edge> output = outputs[i];
-    std::shared_ptr<graph::NonConstantEdge> output_as_non_constant =
-        std::dynamic_pointer_cast<graph::NonConstantEdge>(output);
-#ifdef DEBUG
-    assert(output_as_non_constant != nullptr);
-#endif
-    const std::string &output_name = output_as_non_constant->GetName();
-    std::shared_ptr<flow::Region> output_region = flow.GetRegion(output_name);
-#ifdef DEBUG
-    assert(output_region != nullptr);
-    const Meta &output_meta = output_region->GetMeta();
-    std::vector<int64_t> output_shape = output_meta.GetShape();
-    assert(output_shape[axis] == shapes_tensor.Get({i}));
-#endif
-    output_regions.push_back(std::move(output_region));
-  }
-  ptr = std::make_shared<flow::SplitNode>(std::move(name),
-                                          std::move(input_region),
-                                          std::move(output_regions), axis);
   flow.PutNode(std::move(ptr));
 }
 
