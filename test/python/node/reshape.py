@@ -9,27 +9,29 @@ if __name__ == "__main__":
         opset_import=[onnx.helper.make_opsetid("", 18)],
     )
     graph = model.graph
-    graph.name = "gather0"
-    data = onnx.helper.make_tensor(
-        "data",
+    graph.name = "reshape"
+    input = onnx.helper.make_tensor_value_info(
+        "input",
         onnx.TensorProto.FLOAT,
-        [30522, 768],
-        np.random.rand(30522, 768).astype(np.float32).flatten().tolist(),
+        [1, 128, 768],
     )
-    graph.initializer.extend([data])
-    indices = onnx.helper.make_tensor_value_info(
-        "indices", onnx.TensorProto.INT64, [1, 128]
+    shape = onnx.helper.make_tensor(
+        "shape",
+        onnx.TensorProto.INT64,
+        [4],
+        np.array([1, 128, 12, 64], dtype=np.int64),
     )
     output = onnx.helper.make_tensor_value_info(
-        "output", onnx.TensorProto.FLOAT, [1, 128, 768]
+        "output", onnx.TensorProto.FLOAT, [1, 128, 12, 64]
     )
-    graph.input.extend([indices])
+    graph.input.extend([input])
+    graph.initializer.extend([shape])
     graph.output.extend([output])
     node = onnx.helper.make_node(
-        "Gather",
-        inputs=["data", "indices"],
+        "Reshape",
+        inputs=["input", "shape"],
         outputs=["output"],
-        name="gather",
+        name="reshape",
     )
     graph.node.extend([node])
     onnx.checker.check_model(model)

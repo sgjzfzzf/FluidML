@@ -1,10 +1,14 @@
-add_test(   
+include(${CMAKE_SOURCE_DIR}/cmake/models.cmake)
+
+message(STATUS "BERT_MODEL_PATH: ${BERT_MODEL_PATH}")
+
+add_test(
     NAME PyImportTest 
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/import_test.py
 )
 
-add_test(   
+add_test(
     NAME PyModelTest 
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/model_test.py
@@ -13,5 +17,7 @@ add_test(
 set_tests_properties(
     PyImportTest PyModelTest
     PROPERTIES
-    ENVIRONMENT "PYTHONPATH=${CMAKE_BINARY_DIR}/src:$ENV{PYTHONPATH};BERT_MODEL_PATH=${BERT_MODEL_PATH};GPT2_MODEL_PATH=${GPT2_MODEL_PATH}"
+    ENVIRONMENT "PYTHONPATH=${CMAKE_BINARY_DIR}/src:$ENV{PYTHONPATH};BERT_MODEL_PATH=${BERT_MODEL_PATH}"
 )
+
+add_subdirectory(node)

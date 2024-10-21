@@ -1,3 +1,4 @@
+import numpy as np
 import onnx
 import sys
 
@@ -8,25 +9,25 @@ if __name__ == "__main__":
         opset_import=[onnx.helper.make_opsetid("", 18)],
     )
     graph = model.graph
-    graph.name = "mul0"
-    input0 = onnx.helper.make_tensor_value_info(
-        "input0",
+    graph.name = "gather1"
+    input = onnx.helper.make_tensor_value_info(
+        "input",
         onnx.TensorProto.FLOAT,
-        [1, 128, 3072],
+        [1, 128, 768],
     )
-    input1 = onnx.helper.make_tensor_value_info(
-        "input1", onnx.TensorProto.FLOAT, [1, 128, 3072]
-    )
+    graph.input.extend([input])
+    indices = onnx.helper.make_tensor("indices", onnx.TensorProto.INT64, [], [0])
     output = onnx.helper.make_tensor_value_info(
-        "output", onnx.TensorProto.FLOAT, [1, 128, 3072]
+        "output", onnx.TensorProto.FLOAT, [1, 768]
     )
-    graph.input.extend([input0, input1])
+    graph.initializer.extend([indices])
     graph.output.extend([output])
     node = onnx.helper.make_node(
-        "Mul",
-        inputs=["input0", "input1"],
+        "Gather",
+        inputs=["input", "indices"],
         outputs=["output"],
-        name="mul",
+        name="gather",
+        axis=1,
     )
     graph.node.extend([node])
     onnx.checker.check_model(model)

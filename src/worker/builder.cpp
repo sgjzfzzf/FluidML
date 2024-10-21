@@ -310,6 +310,25 @@ void GeneralBuilderImpl::Run(const flow::Sequence &sequence,
           builder.getUnknownLoc(), name, builder.getStringAttr("private"),
           plain_memref_type, elements, true, mlir::IntegerAttr());
       sym_table.insert(global_op);
+    } else if (type == Type::kBool) {
+      plain_memref_type = mlir::MemRefType::get(shape, builder.getI1Type());
+      mlir::RankedTensorType tensor_type =
+          mlir::RankedTensorType::get(shape, builder.getI1Type());
+      llvm::SmallVector<bool> data;
+      for (const std::vector<size_t> &indices :
+           utils::GenAllIndicesInOrder(shape)) {
+        size_t index = utils::GenIndex(indices, strides);
+#ifdef DEBUG
+        assert(index < buffer.size());
+#endif
+        data.push_back(buffer[index]);
+      }
+      mlir::DenseElementsAttr elements =
+          mlir::DenseElementsAttr::get(tensor_type, llvm::ArrayRef(data));
+      mlir::memref::GlobalOp global_op = builder.create<mlir::memref::GlobalOp>(
+          builder.getUnknownLoc(), name, builder.getStringAttr("private"),
+          plain_memref_type, elements, true, mlir::IntegerAttr());
+      sym_table.insert(global_op);
     } else {
 #ifdef DEBUG
       assert(false && "unimplemented");

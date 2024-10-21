@@ -8,7 +8,6 @@ link_directories(${CMAKE_BINARY_DIR}/external/lib)
 include(${CMAKE_SOURCE_DIR}/cmake/options.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/models.cmake)
 
-add_subdirectory(node)
 if(${BUILD_PYTHON} STREQUAL "ON")
     add_subdirectory(python)
 endif()

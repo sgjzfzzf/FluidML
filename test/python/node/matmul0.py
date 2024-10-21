@@ -9,20 +9,20 @@ if __name__ == "__main__":
     )
     graph = model.graph
     graph.name = "matmul0"
-    input0 = onnx.helper.make_tensor_value_info(
-        "input0", onnx.TensorProto.FLOAT, [1, 12, 128, 64]
+    lhs = onnx.helper.make_tensor_value_info(
+        "lhs", onnx.TensorProto.FLOAT, [1, 12, 128, 64]
     )
-    input1 = onnx.helper.make_tensor_value_info(
-        "input1", onnx.TensorProto.FLOAT, [1, 12, 64, 128]
+    rhs = onnx.helper.make_tensor_value_info(
+        "rhs", onnx.TensorProto.FLOAT, [1, 12, 64, 128]
     )
     output = onnx.helper.make_tensor_value_info(
         "output", onnx.TensorProto.FLOAT, [1, 12, 128, 128]
     )
-    graph.input.extend([input0, input1])
+    graph.input.extend([lhs, rhs])
     graph.output.extend([output])
     node = onnx.helper.make_node(
         "MatMul",
-        inputs=["input0", "input1"],
+        inputs=["lhs", "rhs"],
         outputs=["output"],
         name="matmul",
     )
