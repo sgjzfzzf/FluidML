@@ -112,7 +112,7 @@ std::unique_ptr<worker::Runner> Context::MakeRunner() {
 }
 
 std::ostream &operator<<(std::ostream &os, Context &context) {
-  os << context.impl_;
+  os << *context.impl_;
   return os;
 }
 
