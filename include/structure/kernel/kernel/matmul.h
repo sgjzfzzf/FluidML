@@ -1,5 +1,5 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_KERNEL_MATMUL_H_
-#define CPU_TRANSFORMERS_STRUCTURE_KERNEL_MATMUL_H_
+#ifndef CPU_TRANSFORMERS_STRUCTURE_KERNEL_KERNEL_MATMUL_H_
+#define CPU_TRANSFORMERS_STRUCTURE_KERNEL_KERNEL_MATMUL_H_
 
 #include "structure/kernel/kernel/kernel.h"
 #include "structure/kernel/kernel/utils.h"
