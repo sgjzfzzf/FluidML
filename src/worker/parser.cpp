@@ -89,10 +89,10 @@ std::vector<float64_t> getTensorProtoAs(const onnx::TensorProto &tensorProto) {
   return data;
 }
 
-void createNode(Graph &graph, const onnx::NodeProto &nodeProto, Node::Op op) {
-  std::string name = nodeProto.name();
+void createNode(Graph &graph, const onnx::NodeProto &node_proto, Node::Op op) {
+  std::string name = node_proto.name();
   std::unordered_map<std::string, Attribute> attributes;
-  for (const auto &attribute : nodeProto.attribute()) {
+  for (const auto &attribute : node_proto.attribute()) {
     std::string attribute_name = attribute.name();
     if (attribute.type() ==
         onnx::AttributeProto_AttributeType::AttributeProto_AttributeType_INT) {
@@ -163,11 +163,11 @@ void createNode(Graph &graph, const onnx::NodeProto &nodeProto, Node::Op op) {
 #ifdef DEBUG
   assert(holder->GetGraph() == &graph);
 #endif
-  for (const std::string &input : nodeProto.input()) {
-    graph.EdgeToNode(input, nodeProto.name());
+  for (const std::string &input : node_proto.input()) {
+    graph.EdgeToNode(input, node_proto.name());
   }
-  for (const std::string &output : nodeProto.output()) {
-    graph.NodeToEdge(nodeProto.name(), output);
+  for (const std::string &output : node_proto.output()) {
+    graph.NodeToEdge(node_proto.name(), output);
   }
 }
 } // namespace
