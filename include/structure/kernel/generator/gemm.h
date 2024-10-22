@@ -3,27 +3,28 @@
 
 #include "structure/kernel/generator/generator.h"
 #include "structure/kernel/kernel/gemm.h"
+#include "llvm/ADT/ArrayRef.h"
 
 namespace cpu_transformers {
 namespace kernel {
 
-class GemmConstantWeightsBiasKernelGenerator
-    : public SingleInputWithoutBufferKernelGenerator {
+class GemmConstantBiasKernelGenerator
+    : public DoubleInputsWithoutBufferKernelGenerator {
 public:
-  virtual ~GemmConstantWeightsBiasKernelGenerator() = default;
-  virtual std::shared_ptr<GemmConstantWeightsBiasKernel>
-  Yield(llvm::ArrayRef<size_t> input_layout,
+  virtual ~GemmConstantBiasKernelGenerator() = default;
+  virtual std::shared_ptr<GemmConstantBiasKernel>
+  Yield(llvm::ArrayRef<size_t> lhs_layout, llvm::ArrayRef<size_t> rhs_layout,
         llvm::ArrayRef<size_t> output_layout) = 0;
-  static std::unique_ptr<GemmConstantWeightsBiasKernelGenerator>
-  Make(Meta &&input_meta, Meta &&output_meta, float64_t alpha, float64_t beta,
-       bool transA, bool transB, Tensor &&weights, Tensor &&bias);
+  static std::unique_ptr<GemmConstantBiasKernelGenerator>
+  Make(Meta &&lhs_meta, Meta &&rhs_meta, Meta &&output_meta, float64_t alpha,
+       float64_t beta, bool transA, bool transB, Tensor &&bias);
 
 protected:
-  GemmConstantWeightsBiasKernelGenerator() = default;
-  GemmConstantWeightsBiasKernelGenerator(
-      const GemmConstantWeightsBiasKernelGenerator &generator) = delete;
-  GemmConstantWeightsBiasKernelGenerator(
-      GemmConstantWeightsBiasKernelGenerator &&generator) = default;
+  GemmConstantBiasKernelGenerator() = default;
+  GemmConstantBiasKernelGenerator(
+      const GemmConstantBiasKernelGenerator &generator) = delete;
+  GemmConstantBiasKernelGenerator(GemmConstantBiasKernelGenerator &&generator) =
+      default;
 };
 
 } // namespace kernel

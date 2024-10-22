@@ -8,6 +8,8 @@
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/Types.h"
+#include "mlir/IR/Value.h"
+#include "structure/kernel/kernel/utils.h"
 #include "utils/float.h"
 #ifdef DEBUG
 #include <cassert>
@@ -16,45 +18,42 @@
 namespace cpu_transformers {
 namespace kernel {
 
-GemmConstantWeightsBiasKernel::GemmConstantWeightsBiasKernel(
-    float64_t alpha, float64_t beta, bool transA, bool transB, Tensor &&weights,
-    Tensor &&bias)
-    : alpha_(alpha), beta_(beta), transA_(transA), transB_(transB),
-      weights_(weights), bias_(bias) {}
+GemmConstantBiasKernel::GemmConstantBiasKernel(float64_t alpha, float64_t beta,
+                                               bool transA, bool transB,
+                                               Tensor &&bias)
+    : alpha_(alpha), beta_(beta), transA_(transA), transB_(transB), bias_(bias),
+      axes_({Axis::i, Axis::j, Axis::k}) {}
 
-std::string GemmConstantWeightsBiasKernel::GetKernelName() const {
+GemmConstantBiasKernel::GemmConstantBiasKernel(
+    float64_t alpha, float64_t beta, bool transA, bool transB, Tensor &&bias,
+    llvm::SmallVector<Axis, 3> &&axes)
+    : alpha_(alpha), beta_(beta), transA_(transA), transB_(transB), bias_(bias),
+      axes_(std::move(axes)) {}
+
+std::string GemmConstantBiasKernel::GetKernelName() const {
   return kKernelName;
 }
 
-void GemmConstantWeightsBiasKernel::Run(mlir::OpBuilder &builder,
-                                        mlir::Value &input,
-                                        mlir::Value &output) const {
+void GemmConstantBiasKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
+                                 mlir::Value &rhs, mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
-  mlir::MemRefType input_memref_type =
-      mlir::cast<mlir::MemRefType>(input.getType());
-  const int64_t input_rank = input_memref_type.getRank();
-  llvm::ArrayRef<int64_t> input_shape = input_memref_type.getShape();
-  Type weights_raw_type = weights_.GetType();
-  const std::vector<int64_t> &weights_shape = weights_.GetShape(),
-                             bias_shape = bias_.GetShape();
-  const std::vector<float64_t> &weights_ref = weights_.Get(),
-                               bias_ref = bias_.Get();
-  const int64_t weights_rank = weights_shape.size(),
-                bias_rank = bias_shape.size();
+  mlir::MemRefType lhs_memref_type =
+                       mlir::cast<mlir::MemRefType>(lhs.getType()),
+                   rhs_memref_type =
+                       mlir::cast<mlir::MemRefType>(rhs.getType());
+  const int64_t lhs_rank = lhs_memref_type.getRank();
+  llvm::ArrayRef<int64_t> lhs_shape = lhs_memref_type.getShape(),
+                          rhs_shape = rhs_memref_type.getShape();
+  const std::vector<int64_t> bias_shape = bias_.GetShape();
+  const std::vector<float64_t> &bias_ref = bias_.Get();
+  const int64_t rhs_rank = rhs_shape.size(), bias_rank = bias_shape.size();
   Type bias_raw_type = bias_.GetType();
   mlir::MemRefType output_memref_type =
       mlir::cast<mlir::MemRefType>(output.getType());
   const int64_t output_rank = output_memref_type.getRank();
-  llvm::ArrayRef<int64_t> output_shape = output_memref_type.getShape();
-  const size_t m = transA_ ? input_shape[input_rank - 1]
-                           : input_shape[input_rank - 2],
-               n = transB_ ? weights_shape[weights_rank - 2]
-                           : weights_shape[weights_rank - 1],
-               k = transA_ ? input_shape[input_rank - 2]
-                           : input_shape[input_rank - 1];
 #ifdef DEBUG
-  assert(input_rank == 2);
-  assert(weights_rank == 2);
+  assert(lhs_rank == 2);
+  assert(rhs_rank == 2);
   assert(bias_rank == 1 || bias_rank == 2);
   assert(output_rank == 2);
 #endif
@@ -70,25 +69,10 @@ void GemmConstantWeightsBiasKernel::Run(mlir::OpBuilder &builder,
                   builder.getUnknownLoc(),
                   builder.getFloatAttr(output_memref_type.getElementType(),
                                        beta_));
-  mlir::Type weights_type = GetMLIRType(weights_raw_type, builder),
-             bias_type = GetMLIRType(bias_raw_type, builder);
-  mlir::RankedTensorType weights_shaped_type =
-      mlir::RankedTensorType::get(weights_shape, weights_type);
+  mlir::Type bias_type = GetMLIRType(bias_raw_type, builder);
   mlir::RankedTensorType bias_shaped_type =
       mlir::RankedTensorType::get(bias_shape, bias_type);
-  mlir::DenseElementsAttr weights_elements, bias_elements;
-  if (weights_raw_type == Type::kFloat32) {
-    llvm::SmallVector<float32_t> weights_data(weights_ref.begin(),
-                                              weights_ref.end());
-    weights_elements = mlir::DenseElementsAttr::get(
-        weights_shaped_type, llvm::ArrayRef(weights_data));
-  } else {
-#ifdef DEBUG
-    assert(false && "unreachable");
-#else
-    __builtin_unreachable();
-#endif
-  }
+  mlir::DenseElementsAttr bias_elements;
   if (bias_raw_type == Type::kFloat32) {
     llvm::SmallVector<float32_t> bias_data(bias_ref.begin(), bias_ref.end());
     bias_elements = mlir::DenseElementsAttr::get(bias_shaped_type,
@@ -100,40 +84,34 @@ void GemmConstantWeightsBiasKernel::Run(mlir::OpBuilder &builder,
     __builtin_unreachable();
 #endif
   }
-  mlir::Value weights_value = builder.create<mlir::arith::ConstantOp>(
-                  builder.getUnknownLoc(), weights_elements),
-              bias_value = builder.create<mlir::arith::ConstantOp>(
-                  builder.getUnknownLoc(), bias_elements);
-  mlir::MemRefType weights_memref_type = mlir::MemRefType::get(
-                       weights_shape, weights_type, {}, 0),
-                   bias_memref_type =
-                       mlir::MemRefType::get(bias_shape, bias_type, {}, 0);
-  mlir::Value weights_memref = builder.create<mlir::bufferization::ToMemrefOp>(
-                  builder.getUnknownLoc(), weights_memref_type, weights_value),
-              bias_memref = builder.create<mlir::bufferization::ToMemrefOp>(
-                  builder.getUnknownLoc(), bias_memref_type, bias_value);
-  // the order of axes is m, k, n
+  mlir::Value bias_value = builder.create<mlir::arith::ConstantOp>(
+      builder.getUnknownLoc(), bias_elements);
+  mlir::MemRefType bias_memref_type =
+      mlir::MemRefType::get(bias_shape, bias_type, {}, 0);
+  mlir::Value bias_memref = builder.create<mlir::bufferization::ToMemrefOp>(
+      builder.getUnknownLoc(), bias_memref_type, bias_value);
+  const Axis x0 = axes_[0], x1 = axes_[1], x2 = axes_[2];
   llvm::SmallVector<mlir::AffineExpr>
-      input_affine_exprs =
+      lhs_affine_exprs =
           transA_ ? llvm::SmallVector<mlir::AffineExpr>{mlir::getAffineDimExpr(
-                                                            1, context),
+                                                            x2, context),
                                                         mlir::getAffineDimExpr(
-                                                            0, context)}
+                                                            x0, context)}
                   : llvm::SmallVector<mlir::AffineExpr>{mlir::getAffineDimExpr(
-                                                            0, context),
+                                                            x0, context),
                                                         mlir::getAffineDimExpr(
-                                                            1, context)},
-      weight_affine_exprs =
+                                                            x2, context)},
+      rhs_affine_exprs =
           transB_ ? llvm::SmallVector<mlir::AffineExpr>{mlir::getAffineDimExpr(
-                                                            2, context),
+                                                            x1, context),
                                                         mlir::getAffineDimExpr(
-                                                            1, context)}
+                                                            x2, context)}
                   : llvm::SmallVector<mlir::AffineExpr>{mlir::getAffineDimExpr(
-                                                            1, context),
+                                                            x2, context),
                                                         mlir::getAffineDimExpr(
-                                                            2, context)},
-      output0_affine_exprs = {mlir::getAffineDimExpr(0, context),
-                              mlir::getAffineDimExpr(2, context)},
+                                                            x1, context)},
+      output0_affine_exprs = {mlir::getAffineDimExpr(x0, context),
+                              mlir::getAffineDimExpr(x1, context)},
       bias_affine_exprs,
       output1_affine_exprs = {mlir::getAffineDimExpr(0, context),
                               mlir::getAffineDimExpr(1, context)};
@@ -149,54 +127,51 @@ void GemmConstantWeightsBiasKernel::Run(mlir::OpBuilder &builder,
     __builtin_unreachable();
 #endif
   }
-  mlir::AffineMap input_affine_map =
-                      mlir::AffineMap::get(3, 0, input_affine_exprs, context),
-                  weight_affine_map =
-                      mlir::AffineMap::get(3, 0, weight_affine_exprs, context),
+  mlir::AffineMap lhs_affine_map =
+                      mlir::AffineMap::get(3, 0, lhs_affine_exprs, context),
+                  rhs_affine_map =
+                      mlir::AffineMap::get(3, 0, rhs_affine_exprs, context),
                   output0_affine_map =
                       mlir::AffineMap::get(3, 0, output0_affine_exprs, context),
                   bias_affine_map =
                       mlir::AffineMap::get(2, 0, bias_affine_exprs, context),
                   output1_affine_map =
                       mlir::AffineMap::get(2, 0, output1_affine_exprs, context);
-  llvm::SmallVector<mlir::AffineMap> weight_affine_maps = {input_affine_map,
-                                                           weight_affine_map,
-                                                           output0_affine_map},
-                                     bias_affine_maps = {output1_affine_map,
-                                                         bias_affine_map,
-                                                         output1_affine_map};
-  llvm::SmallVector<mlir::utils::IteratorType>
-      weight_iterator_types = {mlir::utils::IteratorType::parallel,
-                               mlir::utils::IteratorType::reduction,
-                               mlir::utils::IteratorType::parallel},
-      bias_iterator_types = {mlir::utils::IteratorType::parallel,
-                             mlir::utils::IteratorType::parallel};
+  llvm::SmallVector<mlir::utils::IteratorType> matmul_iterator_types(
+      3, mlir::utils::IteratorType::parallel),
+      add_iterator_types(2, mlir::utils::IteratorType::parallel);
+  const size_t k_index = std::distance(
+      axes_.begin(), std::find(axes_.begin(), axes_.end(), Axis::k));
+#ifdef DEBUG
+  assert(k_index < 3);
+#endif
+  matmul_iterator_types[k_index] = mlir::utils::IteratorType::reduction;
   builder.create<mlir::linalg::FillOp>(builder.getUnknownLoc(), c0f, output);
-  // TODO: potential bugs, the types of weights and output are not float.
   builder.create<mlir::linalg::GenericOp>(
-      builder.getUnknownLoc(), mlir::TypeRange{},
-      mlir::ValueRange{input, weights_memref}, mlir::ValueRange{output},
-      weight_affine_maps, weight_iterator_types,
+      builder.getUnknownLoc(), mlir::TypeRange{}, mlir::ValueRange{lhs, rhs},
+      mlir::ValueRange{output},
+      llvm::ArrayRef{lhs_affine_map, rhs_affine_map, output0_affine_map},
+      matmul_iterator_types,
       [&](mlir::OpBuilder &b, mlir::Location loc, mlir::ValueRange inputs) {
 #ifdef DEBUG
         assert(inputs.size() == 3);
 #endif
-        mlir::Value input = inputs[0], weights = inputs[1], output = inputs[2],
-                    mul_op = b.create<mlir::arith::MulFOp>(loc, input, weights),
+        mlir::Value lhs = inputs[0], rhs = inputs[1], output = inputs[2],
+                    mul_op = b.create<mlir::arith::MulFOp>(loc, lhs, rhs),
                     add_op = b.create<mlir::arith::AddFOp>(loc, mul_op, output);
         b.create<mlir::linalg::YieldOp>(loc, add_op);
       });
   builder.create<mlir::linalg::GenericOp>(
       builder.getUnknownLoc(), mlir::TypeRange{},
       mlir::ValueRange{output, bias_memref}, mlir::ValueRange{output},
-      bias_affine_maps, bias_iterator_types,
+      llvm::ArrayRef{output1_affine_map, bias_affine_map, output1_affine_map},
+      add_iterator_types,
       [&](mlir::OpBuilder &b, mlir::Location loc, mlir::ValueRange inputs) {
 #ifdef DEBUG
         assert(inputs.size() == 3);
 #endif
-        mlir::Value output = inputs[0], weights = inputs[1],
-                    mul0_op =
-                        b.create<mlir::arith::MulFOp>(loc, alpha, weights),
+        mlir::Value output = inputs[0], bias = inputs[1],
+                    mul0_op = b.create<mlir::arith::MulFOp>(loc, alpha, bias),
                     mul1_op = b.create<mlir::arith::MulFOp>(loc, beta, output),
                     add_op =
                         b.create<mlir::arith::AddFOp>(loc, mul0_op, mul1_op);

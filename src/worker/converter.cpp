@@ -739,28 +739,28 @@ void ConverterImpl::convertGemmNode(flow::Flow &flow, const graph::Graph &graph,
   assert(inputs.size() == 3);
   assert(outputs.size() == 1);
 #endif
-  std::shared_ptr<graph::Edge> input = inputs[0];
-  std::shared_ptr<graph::Edge> weights = inputs[1];
+  std::shared_ptr<graph::Edge> lhs = inputs[0];
+  std::shared_ptr<graph::Edge> rhs = inputs[1];
   std::shared_ptr<graph::Edge> bias = inputs[2];
   std::shared_ptr<graph::Edge> output = outputs[0];
 #ifdef DEBUG
-  assert(input != nullptr);
-  assert(weights != nullptr);
+  assert(lhs != nullptr);
+  assert(rhs != nullptr);
   assert(bias != nullptr);
   assert(output != nullptr);
 #endif
   std::shared_ptr<flow::GemmNode> ptr = nullptr;
-  std::shared_ptr<graph::NonConstantEdge> input_as_non_constant =
-      std::dynamic_pointer_cast<graph::NonConstantEdge>(input);
-  std::shared_ptr<graph::ConstantTensorEdge> weights_as_constant_tensor =
-      std::dynamic_pointer_cast<graph::ConstantTensorEdge>(weights);
+  std::shared_ptr<graph::NonConstantEdge> lhs_as_non_constant =
+      std::dynamic_pointer_cast<graph::NonConstantEdge>(lhs);
+  std::shared_ptr<graph::ConstantTensorEdge> rhs_as_constant_tensor =
+      std::dynamic_pointer_cast<graph::ConstantTensorEdge>(rhs);
   std::shared_ptr<graph::ConstantTensorEdge> bias_as_constant_tensor =
       std::dynamic_pointer_cast<graph::ConstantTensorEdge>(bias);
   std::shared_ptr<graph::NonConstantEdge> output_as_non_constant =
       std::dynamic_pointer_cast<graph::NonConstantEdge>(output);
 #ifdef DEBUG
-  assert(input_as_non_constant != nullptr);
-  assert(weights_as_constant_tensor != nullptr);
+  assert(lhs_as_non_constant != nullptr);
+  assert(rhs_as_constant_tensor != nullptr);
   assert(bias_as_constant_tensor != nullptr);
   assert(output_as_non_constant != nullptr);
 #endif
@@ -780,15 +780,16 @@ void ConverterImpl::convertGemmNode(flow::Flow &flow, const graph::Graph &graph,
   if (node.HasAttribute(flow::GemmNode::kTransBAttrName)) {
     transB = node.GetAttribute(flow::GemmNode::kTransBAttrName).GetInt64();
   }
-  const std::string &input_name = input_as_non_constant->GetName();
-  const std::string &output_name = output_as_non_constant->GetName();
-  std::shared_ptr<flow::Region> input_region = flow.GetRegion(input_name);
-  std::shared_ptr<flow::Region> output_region = flow.GetRegion(output_name);
-  Tensor weights_tensor = weights_as_constant_tensor->GetValue();
+  const std::string &lhs_name = lhs_as_non_constant->GetName(),
+                    &rhs_name = rhs_as_constant_tensor->GetName(),
+                    &output_name = output_as_non_constant->GetName();
+  std::shared_ptr<flow::Region> lhs_region = flow.GetRegion(lhs_name),
+                                rhs_region = flow.GetRegion(rhs_name),
+                                output_region = flow.GetRegion(output_name);
   Tensor biasTensor = bias_as_constant_tensor->GetValue();
   ptr = std::make_shared<flow::GemmConstantWeightsBiasNode>(
-      std::move(name), std::move(input_region), std::move(output_region),
-      std::move(weights_tensor), std::move(biasTensor), alpha, beta, transA,
+      std::move(name), std::move(lhs_region), std::move(rhs_region),
+      std::move(output_region), std::move(biasTensor), alpha, beta, transA,
       transB);
   flow.PutNode(std::move(ptr));
 }

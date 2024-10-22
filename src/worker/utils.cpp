@@ -99,11 +99,11 @@ std::unique_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
   } else if (const flow::GemmConstantWeightsBiasNode *ptr =
                  dynamic_cast<const flow::GemmConstantWeightsBiasNode *>(
                      node)) {
-    Tensor weights = ptr->GetWeights(), bias = ptr->GetBias();
+    Tensor bias = ptr->GetBias();
     float64_t alpha = ptr->GetAlpha(), beta = ptr->GetBeta();
     bool transA = ptr->GetTransA(), transB = ptr->GetTransB();
-    kernel = std::make_unique<kernel::GemmConstantWeightsBiasKernel>(
-        alpha, beta, transA, transB, std::move(weights), std::move(bias));
+    kernel = std::make_unique<kernel::GemmConstantBiasKernel>(
+        alpha, beta, transA, transB, std::move(bias));
   } else if (const flow::LayerNormalizationConstantScaleBiasNode *ptr =
                  dynamic_cast<
                      const flow::LayerNormalizationConstantScaleBiasNode *>(
@@ -333,19 +333,21 @@ SelectKernelGenerator(const flow::Node *node) {
   } else if (const flow::GemmConstantWeightsBiasNode *ptr =
                  dynamic_cast<const flow::GemmConstantWeightsBiasNode *>(
                      node)) {
-    std::shared_ptr<flow::Region> input = ptr->GetInput(),
+    std::shared_ptr<flow::Region> lhs = ptr->GetLhs(), rhs = ptr->GetRhs(),
                                   output = ptr->GetOutput();
 #ifdef DEBUG
-    assert(input != nullptr);
+    assert(lhs != nullptr);
+    assert(rhs != nullptr);
     assert(output != nullptr);
 #endif
-    Meta input_meta = input->GetMeta(), output_meta = output->GetMeta();
-    Tensor weights = ptr->GetWeights(), bias = ptr->GetBias();
+    Meta lhs_meta = lhs->GetMeta(), rhs_meta = rhs->GetMeta(),
+         output_meta = output->GetMeta();
+    Tensor bias = ptr->GetBias();
     float64_t alpha = ptr->GetAlpha(), beta = ptr->GetBeta();
     bool transA = ptr->GetTransA(), transB = ptr->GetTransB();
-    generator = kernel::GemmConstantWeightsBiasKernelGenerator::Make(
-        std::move(input_meta), std::move(output_meta), alpha, beta, transA,
-        transB, std::move(weights), std::move(bias));
+    generator = kernel::GemmConstantBiasKernelGenerator::Make(
+        std::move(lhs_meta), std::move(rhs_meta), std::move(output_meta), alpha,
+        beta, transA, transB, std::move(bias));
   } else if (const flow::LayerNormalizationConstantScaleBiasNode *ptr =
                  dynamic_cast<
                      const flow::LayerNormalizationConstantScaleBiasNode *>(

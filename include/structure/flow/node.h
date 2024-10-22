@@ -382,24 +382,22 @@ protected:
 };
 
 class GemmConstantWeightsBiasNode : public GemmNode,
-                                    public SingleInputWithoutBufferNode {
+                                    public DoubleInputsWithoutBufferNode {
 public:
-  GemmConstantWeightsBiasNode(std::string &&name,
-                              std::shared_ptr<Region> &&input,
-                              std::shared_ptr<Region> &&output,
-                              Tensor &&weights, Tensor &&bias, float64_t alpha,
-                              float64_t beta, bool transA, bool transB);
+  GemmConstantWeightsBiasNode(std::string &&name, std::shared_ptr<Region> &&lhs,
+                              std::shared_ptr<Region> &&rhs,
+                              std::shared_ptr<Region> &&output, Tensor &&bias,
+                              float64_t alpha, float64_t beta, bool transA,
+                              bool transB);
   GemmConstantWeightsBiasNode(const GemmConstantWeightsBiasNode &node) = delete;
   GemmConstantWeightsBiasNode(GemmConstantWeightsBiasNode &&node) = default;
   virtual ~GemmConstantWeightsBiasNode() = default;
-  std::shared_ptr<SingleInputWithoutBufferNode>
-  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<DoubleInputsWithoutBufferNode>
+  CloneAsDoubleInputsWithoutBufferNode() const override;
   std::shared_ptr<GemmConstantWeightsBiasNode> Clone() const;
-  const Tensor &GetWeights() const noexcept;
   const Tensor &GetBias() const noexcept;
 
 private:
-  const Tensor weights_;
   const Tensor bias_;
 };
 

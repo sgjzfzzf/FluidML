@@ -2,23 +2,25 @@
 #define CPU_TRANSFORMERS_STRUCTURE_KERNEL_GEMM_H_
 
 #include "structure/kernel/kernel/kernel.h"
+#include "structure/kernel/kernel/utils.h"
 #include "structure/tensor/tensor.h"
 
 namespace cpu_transformers {
 namespace kernel {
 
-class GemmConstantWeightsBiasKernel : public SingleInputWithoutBufferKernel {
+class GemmConstantBiasKernel : public DoubleInputsWithoutBufferKernel {
 public:
   static constexpr char kKernelName[] = "GemmConstantWeightsBiasKernel";
-  GemmConstantWeightsBiasKernel(float64_t alpha, float64_t beta, bool transA,
-                                bool transB, Tensor &&weights, Tensor &&bias);
-  GemmConstantWeightsBiasKernel(const GemmConstantWeightsBiasKernel &other) =
-      delete;
-  GemmConstantWeightsBiasKernel(GemmConstantWeightsBiasKernel &&other) =
-      default;
-  virtual ~GemmConstantWeightsBiasKernel() = default;
+  GemmConstantBiasKernel(float64_t alpha, float64_t beta, bool transA,
+                         bool transB, Tensor &&bias);
+  GemmConstantBiasKernel(float64_t alpha, float64_t beta, bool transA,
+                         bool transB, Tensor &&bias,
+                         llvm::SmallVector<Axis, 3> &&axes);
+  GemmConstantBiasKernel(const GemmConstantBiasKernel &other) = delete;
+  GemmConstantBiasKernel(GemmConstantBiasKernel &&other) = default;
+  virtual ~GemmConstantBiasKernel() = default;
   std::string GetKernelName() const override;
-  void Run(mlir::OpBuilder &builder, mlir::Value &input,
+  void Run(mlir::OpBuilder &builder, mlir::Value &lhs, mlir::Value &rhs,
            mlir::Value &output) const override;
 
 private:
@@ -26,8 +28,8 @@ private:
   const float64_t beta_;
   const bool transA_;
   const bool transB_;
-  const Tensor weights_;
   const Tensor bias_;
+  llvm::SmallVector<Axis, 3> axes_;
 };
 
 } // namespace kernel

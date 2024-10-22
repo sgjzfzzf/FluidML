@@ -521,31 +521,31 @@ bool GemmNode::GetTransA() const noexcept { return transA_; }
 bool GemmNode::GetTransB() const noexcept { return transB_; }
 
 GemmConstantWeightsBiasNode::GemmConstantWeightsBiasNode(
-    std::string &&name, std::shared_ptr<Region> &&input,
-    std::shared_ptr<Region> &&output, Tensor &&weights, Tensor &&bias,
-    float64_t alpha = GemmNode::kAlpha, float64_t beta = GemmNode::kBeta,
-    bool transA = GemmNode::kTransA, bool transB = GemmNode::kTransB)
+    std::string &&name, std::shared_ptr<Region> &&lhs,
+    std::shared_ptr<Region> &&rhs, std::shared_ptr<Region> &&output,
+    Tensor &&bias, float64_t alpha = GemmNode::kAlpha,
+    float64_t beta = GemmNode::kBeta, bool transA = GemmNode::kTransA,
+    bool transB = GemmNode::kTransB)
     : Node(std::move(name)),
       GemmNode(std::move(name), alpha, beta, transA, transB),
-      SingleInputWithoutBufferNode(std::move(name), std::move(input),
-                                   std::move(output)),
-      weights_(std::move(weights)), bias_(std::move(bias)) {
+      DoubleInputsWithoutBufferNode(std::move(name), std::move(lhs),
+                                    std::move(rhs), std::move(output)),
+      bias_(std::move(bias)) {
 #ifdef DEBUG
-  const Meta &input_meta = input_->GetMeta();
-  const Meta &output_meta = output_->GetMeta();
-  const std::vector<int64_t> &input_shape = input_meta.GetShape();
-  const std::vector<int64_t> &weights_shape = weights_.GetShape();
-  const std::vector<int64_t> &bias_shape = bias_.GetShape();
-  const std::vector<int64_t> &output_shape = output_meta.GetShape();
-  assert(input_shape.size() == 2);
-  assert(weights_shape.size() == 2);
+  const Meta &lhs_meta = lhs_->GetMeta(), &rhs_meta = rhs_->GetMeta(),
+             &output_meta = output_->GetMeta();
+  const std::vector<int64_t> &lhs_shape = lhs_meta.GetShape(),
+                             &rhs_shape = rhs_meta.GetShape(),
+                             &bias_shape = bias_.GetShape(),
+                             &output_shape = output_meta.GetShape();
+  assert(lhs_shape.size() == 2);
+  assert(rhs_shape.size() == 2);
   size_t bias_shape_len = bias_shape.size();
   assert(bias_shape_len == 1 || bias_shape_len == 2);
   assert(output_shape.size() == 2);
-  size_t m = std::lround(input_shape[0]);
-  size_t k = std::lround(input_shape[1]);
-  size_t n = std::lround(weights_shape[1]);
-  assert(weights_shape[0] == k);
+  const size_t m = std::lround(lhs_shape[0]), k = std::lround(lhs_shape[1]),
+               n = std::lround(rhs_shape[1]);
+  assert(rhs_shape[0] == k);
   if (bias_shape_len == 1) {
     assert(bias_shape[0] == n);
   } else {
@@ -557,22 +557,18 @@ GemmConstantWeightsBiasNode::GemmConstantWeightsBiasNode(
 #endif
 }
 
-std::shared_ptr<SingleInputWithoutBufferNode>
-GemmConstantWeightsBiasNode::CloneAsSingleInputWithoutBufferNode() const {
+std::shared_ptr<DoubleInputsWithoutBufferNode>
+GemmConstantWeightsBiasNode::CloneAsDoubleInputsWithoutBufferNode() const {
   return Clone();
 }
 
 std::shared_ptr<GemmConstantWeightsBiasNode>
 GemmConstantWeightsBiasNode::Clone() const {
   std::string name = GetName();
-  Tensor weights = GetWeights(), bias = GetBias();
+  Tensor bias = GetBias();
   return std::make_shared<GemmConstantWeightsBiasNode>(
-      std::move(name), GetInput(), GetOutput(), std::move(weights),
-      std::move(bias), GetAlpha(), GetBeta(), GetTransA(), GetTransB());
-}
-
-const Tensor &GemmConstantWeightsBiasNode::GetWeights() const noexcept {
-  return weights_;
+      std::move(name), GetLhs(), GetRhs(), GetOutput(), std::move(bias),
+      GetAlpha(), GetBeta(), GetTransA(), GetTransB());
 }
 
 const Tensor &GemmConstantWeightsBiasNode::GetBias() const noexcept {
