@@ -23,10 +23,9 @@ public:
 protected:
   UnsqueezeSubLhsScalarMulRhsScalarKernelGenerator() = default;
   UnsqueezeSubLhsScalarMulRhsScalarKernelGenerator(
-      const UnsqueezeSubLhsScalarMulRhsScalarKernelGenerator &generator) =
-      delete;
+      const UnsqueezeSubLhsScalarMulRhsScalarKernelGenerator &) = delete;
   UnsqueezeSubLhsScalarMulRhsScalarKernelGenerator(
-      UnsqueezeSubLhsScalarMulRhsScalarKernelGenerator &&generator) = default;
+      UnsqueezeSubLhsScalarMulRhsScalarKernelGenerator &&) = default;
 };
 
 } // namespace kernel

@@ -21,10 +21,9 @@ public:
 protected:
   LayerNormalizationConstantScaleBiasKernelGenerator() = default;
   LayerNormalizationConstantScaleBiasKernelGenerator(
-      const LayerNormalizationConstantScaleBiasKernelGenerator &generator) =
-      delete;
+      const LayerNormalizationConstantScaleBiasKernelGenerator &) = delete;
   LayerNormalizationConstantScaleBiasKernelGenerator(
-      LayerNormalizationConstantScaleBiasKernelGenerator &&generator) = default;
+      LayerNormalizationConstantScaleBiasKernelGenerator &&) = default;
 };
 
 } // namespace kernel

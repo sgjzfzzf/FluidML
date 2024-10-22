@@ -13,11 +13,9 @@ public:
                                                       Tensor &&cond, Type type,
                                                       float64_t y);
   WhereConstantCondConstantScalarYKernelGeneratorImpl(
-      const WhereConstantCondConstantScalarYKernelGeneratorImpl &generator) =
-      delete;
+      const WhereConstantCondConstantScalarYKernelGeneratorImpl &) = delete;
   WhereConstantCondConstantScalarYKernelGeneratorImpl(
-      WhereConstantCondConstantScalarYKernelGeneratorImpl &&generator) =
-      default;
+      WhereConstantCondConstantScalarYKernelGeneratorImpl &&) = default;
   virtual ~WhereConstantCondConstantScalarYKernelGeneratorImpl() = default;
   std::shared_ptr<SingleInputWithoutBufferKernel>
   YieldSingleInputWithoutBufferKernel(
@@ -50,11 +48,9 @@ public:
                                                       Tensor &&cond,
                                                       Tensor &&y);
   WhereConstantCondConstantTensorYKernelGeneratorImpl(
-      const WhereConstantCondConstantTensorYKernelGeneratorImpl &generator) =
-      delete;
+      const WhereConstantCondConstantTensorYKernelGeneratorImpl &) = delete;
   WhereConstantCondConstantTensorYKernelGeneratorImpl(
-      WhereConstantCondConstantTensorYKernelGeneratorImpl &&generator) =
-      default;
+      WhereConstantCondConstantTensorYKernelGeneratorImpl &&) = default;
   virtual ~WhereConstantCondConstantTensorYKernelGeneratorImpl() = default;
   std::shared_ptr<SingleInputWithoutBufferKernel>
   YieldSingleInputWithoutBufferKernel(

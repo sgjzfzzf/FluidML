@@ -9,8 +9,8 @@ public:
   SliceKernelGeneratorImpl(
       Meta &&input_meta, Meta &&output_meta,
       llvm::SmallVector<llvm::SmallVector<int64_t, 4>> &&informations);
-  SliceKernelGeneratorImpl(const SliceKernelGeneratorImpl &generator) = delete;
-  SliceKernelGeneratorImpl(SliceKernelGeneratorImpl &&generator) = default;
+  SliceKernelGeneratorImpl(const SliceKernelGeneratorImpl &) = delete;
+  SliceKernelGeneratorImpl(SliceKernelGeneratorImpl &&) = default;
   virtual ~SliceKernelGeneratorImpl() = default;
   std::shared_ptr<SingleInputWithoutBufferKernel>
   YieldSingleInputWithoutBufferKernel(

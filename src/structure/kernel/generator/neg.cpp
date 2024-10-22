@@ -8,8 +8,8 @@ namespace kernel {
 class NegKernelGeneratorImpl : public NegKernelGenerator {
 public:
   NegKernelGeneratorImpl(Meta &&input_meta, Meta &&output_meta);
-  NegKernelGeneratorImpl(const NegKernelGeneratorImpl &generator) = delete;
-  NegKernelGeneratorImpl(NegKernelGeneratorImpl &&generator) = default;
+  NegKernelGeneratorImpl(const NegKernelGeneratorImpl &) = delete;
+  NegKernelGeneratorImpl(NegKernelGeneratorImpl &&) = default;
   virtual ~NegKernelGeneratorImpl() = default;
   std::shared_ptr<SingleInputWithoutBufferKernel>
   YieldSingleInputWithoutBufferKernel(

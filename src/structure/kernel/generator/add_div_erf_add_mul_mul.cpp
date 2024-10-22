@@ -14,9 +14,9 @@ public:
                                         float64_t add1_weight, Type mul1_type,
                                         float64_t mul1_weight);
   AddDivErfAddMulMulKernelGeneratorImpl(
-      const AddDivErfAddMulMulKernelGeneratorImpl &generator) = delete;
+      const AddDivErfAddMulMulKernelGeneratorImpl &) = delete;
   AddDivErfAddMulMulKernelGeneratorImpl(
-      AddDivErfAddMulMulKernelGeneratorImpl &&generator) = default;
+      AddDivErfAddMulMulKernelGeneratorImpl &&) = default;
   virtual ~AddDivErfAddMulMulKernelGeneratorImpl() = default;
   std::shared_ptr<SingleInputWithoutBufferKernel>
   YieldSingleInputWithoutBufferKernel(

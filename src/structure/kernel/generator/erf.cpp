@@ -7,8 +7,8 @@ namespace kernel {
 class ErfKernelGeneratorImpl : public ErfKernelGenerator {
 public:
   ErfKernelGeneratorImpl(Meta &&input_meta, Meta &&output_meta);
-  ErfKernelGeneratorImpl(const ErfKernelGeneratorImpl &generator) = delete;
-  ErfKernelGeneratorImpl(ErfKernelGeneratorImpl &&generator) = default;
+  ErfKernelGeneratorImpl(const ErfKernelGeneratorImpl &) = delete;
+  ErfKernelGeneratorImpl(ErfKernelGeneratorImpl &&) = default;
   virtual ~ErfKernelGeneratorImpl() = default;
   std::shared_ptr<SingleInputWithoutBufferKernel>
   YieldSingleInputWithoutBufferKernel(

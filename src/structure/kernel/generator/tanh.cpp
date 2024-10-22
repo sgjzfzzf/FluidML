@@ -7,8 +7,8 @@ namespace kernel {
 class TanhKernelGeneratorImpl : public TanhKernelGenerator {
 public:
   TanhKernelGeneratorImpl(Meta &&input_meta, Meta &&output_meta);
-  TanhKernelGeneratorImpl(const TanhKernelGeneratorImpl &generator) = delete;
-  TanhKernelGeneratorImpl(TanhKernelGeneratorImpl &&generator) = default;
+  TanhKernelGeneratorImpl(const TanhKernelGeneratorImpl &) = delete;
+  TanhKernelGeneratorImpl(TanhKernelGeneratorImpl &&) = default;
   virtual ~TanhKernelGeneratorImpl() = default;
   std::shared_ptr<SingleInputWithoutBufferKernel>
   YieldSingleInputWithoutBufferKernel(

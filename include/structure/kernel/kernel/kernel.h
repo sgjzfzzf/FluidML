@@ -13,8 +13,8 @@ public:
 
 protected:
   Kernel() = default;
-  Kernel(const Kernel &kernel) = delete;
-  Kernel(Kernel &&kernel) = default;
+  Kernel(const Kernel &) = delete;
+  Kernel(Kernel &&) = default;
 };
 
 class SingleInputKernel : virtual public Kernel {
@@ -23,8 +23,8 @@ public:
 
 protected:
   SingleInputKernel() = default;
-  SingleInputKernel(const SingleInputKernel &kernel) = delete;
-  SingleInputKernel(SingleInputKernel &&kernel) = default;
+  SingleInputKernel(const SingleInputKernel &) = delete;
+  SingleInputKernel(SingleInputKernel &&) = default;
 };
 
 class DoubleInputsKernel : virtual public Kernel {
@@ -33,8 +33,8 @@ public:
 
 protected:
   DoubleInputsKernel() = default;
-  DoubleInputsKernel(const DoubleInputsKernel &kernel) = delete;
-  DoubleInputsKernel(DoubleInputsKernel &&kernel) = default;
+  DoubleInputsKernel(const DoubleInputsKernel &) = delete;
+  DoubleInputsKernel(DoubleInputsKernel &&) = default;
 };
 
 class SingleInputWithoutBufferKernel : public SingleInputKernel {
@@ -45,10 +45,9 @@ public:
 
 protected:
   SingleInputWithoutBufferKernel() = default;
-  SingleInputWithoutBufferKernel(const SingleInputWithoutBufferKernel &kernel) =
+  SingleInputWithoutBufferKernel(const SingleInputWithoutBufferKernel &) =
       delete;
-  SingleInputWithoutBufferKernel(SingleInputWithoutBufferKernel &&kernel) =
-      default;
+  SingleInputWithoutBufferKernel(SingleInputWithoutBufferKernel &&) = default;
 };
 
 class SingleInputWithBufferKernel : public SingleInputKernel {
@@ -59,9 +58,8 @@ public:
 
 protected:
   SingleInputWithBufferKernel() = default;
-  SingleInputWithBufferKernel(const SingleInputWithBufferKernel &kernel) =
-      delete;
-  SingleInputWithBufferKernel(SingleInputWithBufferKernel &&kernel) = default;
+  SingleInputWithBufferKernel(const SingleInputWithBufferKernel &) = delete;
+  SingleInputWithBufferKernel(SingleInputWithBufferKernel &&) = default;
 };
 
 class DoubleInputsWithoutBufferKernel : public DoubleInputsKernel {
@@ -72,10 +70,9 @@ public:
 
 protected:
   DoubleInputsWithoutBufferKernel() = default;
-  DoubleInputsWithoutBufferKernel(
-      const DoubleInputsWithoutBufferKernel &kernel) = delete;
-  DoubleInputsWithoutBufferKernel(DoubleInputsWithoutBufferKernel &&kernel) =
-      default;
+  DoubleInputsWithoutBufferKernel(const DoubleInputsWithoutBufferKernel &) =
+      delete;
+  DoubleInputsWithoutBufferKernel(DoubleInputsWithoutBufferKernel &&) = default;
 };
 
 class DoubleInputsWithBufferKernel : public DoubleInputsKernel {
@@ -86,9 +83,8 @@ public:
 
 protected:
   DoubleInputsWithBufferKernel() = default;
-  DoubleInputsWithBufferKernel(const DoubleInputsWithBufferKernel &kernel) =
-      delete;
-  DoubleInputsWithBufferKernel(DoubleInputsWithBufferKernel &&kernel) = default;
+  DoubleInputsWithBufferKernel(const DoubleInputsWithBufferKernel &) = delete;
+  DoubleInputsWithBufferKernel(DoubleInputsWithBufferKernel &&) = default;
 };
 
 } // namespace kernel

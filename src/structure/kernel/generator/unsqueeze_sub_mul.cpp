@@ -11,11 +11,9 @@ public:
       std::vector<int64_t> &&unsqueeze_axes, const Type &sub_type,
       float64_t sub_val, const Type &mul_type, float64_t mul_val);
   UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl(
-      const UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl &generator) =
-      delete;
+      const UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl &) = delete;
   UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl(
-      UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl &&generator) =
-      default;
+      UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl &&) = default;
   virtual ~UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl() = default;
   std::shared_ptr<SingleInputWithoutBufferKernel>
   YieldSingleInputWithoutBufferKernel(

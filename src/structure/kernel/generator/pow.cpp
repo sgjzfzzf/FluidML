@@ -8,8 +8,8 @@ class PowKernelGeneratorImpl : public PowKernelGenerator {
 public:
   PowKernelGeneratorImpl(Meta &&input_meta, Meta &&output_meta, Type type,
                          float64_t exp);
-  PowKernelGeneratorImpl(const PowKernelGeneratorImpl &generator) = delete;
-  PowKernelGeneratorImpl(PowKernelGeneratorImpl &&generator) = default;
+  PowKernelGeneratorImpl(const PowKernelGeneratorImpl &) = delete;
+  PowKernelGeneratorImpl(PowKernelGeneratorImpl &&) = default;
   virtual ~PowKernelGeneratorImpl() = default;
   std::shared_ptr<SingleInputWithoutBufferKernel>
   YieldSingleInputWithoutBufferKernel(

@@ -12,8 +12,8 @@ class PowKernel : public SingleInputWithoutBufferKernel {
 public:
   static constexpr char kKernelName[] = "PowKernel";
   PowKernel(Type type, float64_t exp);
-  PowKernel(const PowKernel &other) = delete;
-  PowKernel(PowKernel &&other) = default;
+  PowKernel(const PowKernel &) = delete;
+  PowKernel(PowKernel &&) = default;
   virtual ~PowKernel() = default;
   std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,

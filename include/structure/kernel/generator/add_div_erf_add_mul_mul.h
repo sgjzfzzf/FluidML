@@ -21,10 +21,10 @@ public:
 
 protected:
   AddDivErfAddMulMulKernelGenerator() = default;
-  AddDivErfAddMulMulKernelGenerator(
-      const AddDivErfAddMulMulKernelGenerator &generator) = delete;
-  AddDivErfAddMulMulKernelGenerator(
-      AddDivErfAddMulMulKernelGenerator &&generator) = default;
+  AddDivErfAddMulMulKernelGenerator(const AddDivErfAddMulMulKernelGenerator &) =
+      delete;
+  AddDivErfAddMulMulKernelGenerator(AddDivErfAddMulMulKernelGenerator &&) =
+      default;
 };
 
 } // namespace kernel

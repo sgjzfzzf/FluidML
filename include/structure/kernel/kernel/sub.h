@@ -12,8 +12,8 @@ class SubConstantLhsKernel : public SingleInputWithoutBufferKernel {
 public:
   static constexpr char kKernelName[] = "SubConstantLhsKernel";
   SubConstantLhsKernel(Type type, float64_t value);
-  SubConstantLhsKernel(const SubConstantLhsKernel &sub_kernel) = delete;
-  SubConstantLhsKernel(SubConstantLhsKernel &&sub_kernel) = default;
+  SubConstantLhsKernel(const SubConstantLhsKernel &) = delete;
+  SubConstantLhsKernel(SubConstantLhsKernel &&) = default;
   virtual ~SubConstantLhsKernel() = default;
   std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,

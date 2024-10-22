@@ -11,10 +11,9 @@ class GatherConstantIndexScalarKernel : public SingleInputWithoutBufferKernel {
 public:
   static constexpr char kKernelName[] = "GatherConstantIndexScalarKernel";
   GatherConstantIndexScalarKernel(int64_t axis, int64_t index);
-  GatherConstantIndexScalarKernel(
-      const GatherConstantIndexScalarKernel &gather_kernel) = delete;
-  GatherConstantIndexScalarKernel(
-      GatherConstantIndexScalarKernel &&gather_kernel) = default;
+  GatherConstantIndexScalarKernel(const GatherConstantIndexScalarKernel &) =
+      delete;
+  GatherConstantIndexScalarKernel(GatherConstantIndexScalarKernel &&) = default;
   virtual ~GatherConstantIndexScalarKernel() = default;
   std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,
@@ -29,10 +28,9 @@ class GatherConstantDataTensorKernel : public SingleInputWithoutBufferKernel {
 public:
   static constexpr char kKernelName[] = "GatherConstantDataTensorKernel";
   GatherConstantDataTensorKernel(Tensor &&data);
-  GatherConstantDataTensorKernel(
-      const GatherConstantDataTensorKernel &gather_kernel) = delete;
-  GatherConstantDataTensorKernel(
-      GatherConstantDataTensorKernel &&gather_kernel) = default;
+  GatherConstantDataTensorKernel(const GatherConstantDataTensorKernel &) =
+      delete;
+  GatherConstantDataTensorKernel(GatherConstantDataTensorKernel &&) = default;
   virtual ~GatherConstantDataTensorKernel() = default;
   std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,

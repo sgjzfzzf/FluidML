@@ -20,9 +20,8 @@ public:
 
 protected:
   AddConstantKernelGenerator() = default;
-  AddConstantKernelGenerator(const AddConstantKernelGenerator &generator) =
-      delete;
-  AddConstantKernelGenerator(AddConstantKernelGenerator &&generator) = default;
+  AddConstantKernelGenerator(const AddConstantKernelGenerator &) = delete;
+  AddConstantKernelGenerator(AddConstantKernelGenerator &&) = default;
 };
 
 class AddCommonKernelGenerator
@@ -37,8 +36,8 @@ public:
 
 protected:
   AddCommonKernelGenerator() = default;
-  AddCommonKernelGenerator(const AddCommonKernelGenerator &generator) = delete;
-  AddCommonKernelGenerator(AddCommonKernelGenerator &&generator) = default;
+  AddCommonKernelGenerator(const AddCommonKernelGenerator &) = delete;
+  AddCommonKernelGenerator(AddCommonKernelGenerator &&) = default;
 };
 
 } // namespace kernel

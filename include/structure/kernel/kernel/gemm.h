@@ -16,8 +16,8 @@ public:
   GemmConstantBiasKernel(float64_t alpha, float64_t beta, bool transA,
                          bool transB, Tensor &&bias,
                          llvm::SmallVector<Axis, 3> &&axes);
-  GemmConstantBiasKernel(const GemmConstantBiasKernel &other) = delete;
-  GemmConstantBiasKernel(GemmConstantBiasKernel &&other) = default;
+  GemmConstantBiasKernel(const GemmConstantBiasKernel &) = delete;
+  GemmConstantBiasKernel(GemmConstantBiasKernel &&) = default;
   virtual ~GemmConstantBiasKernel() = default;
   std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &lhs, mlir::Value &rhs,

@@ -19,8 +19,8 @@ public:
 
 protected:
   ErfKernelGenerator() = default;
-  ErfKernelGenerator(const ErfKernelGenerator &generator) = delete;
-  ErfKernelGenerator(ErfKernelGenerator &&generator) = default;
+  ErfKernelGenerator(const ErfKernelGenerator &) = delete;
+  ErfKernelGenerator(ErfKernelGenerator &&) = default;
 };
 
 } // namespace kernel

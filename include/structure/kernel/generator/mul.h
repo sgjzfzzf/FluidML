@@ -20,9 +20,8 @@ public:
 
 protected:
   MulConstantKernelGenerator() = default;
-  MulConstantKernelGenerator(const MulConstantKernelGenerator &generator) =
-      delete;
-  MulConstantKernelGenerator(MulConstantKernelGenerator &&generator) = default;
+  MulConstantKernelGenerator(const MulConstantKernelGenerator &) = delete;
+  MulConstantKernelGenerator(MulConstantKernelGenerator &&) = default;
 };
 
 class MulCommonKernelGenerator
@@ -37,8 +36,8 @@ public:
 
 protected:
   MulCommonKernelGenerator() = default;
-  MulCommonKernelGenerator(const MulCommonKernelGenerator &generator) = delete;
-  MulCommonKernelGenerator(MulCommonKernelGenerator &&generator) = default;
+  MulCommonKernelGenerator(const MulCommonKernelGenerator &) = delete;
+  MulCommonKernelGenerator(MulCommonKernelGenerator &&) = default;
 };
 
 } // namespace kernel

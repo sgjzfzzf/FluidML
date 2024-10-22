@@ -21,10 +21,9 @@ public:
 
 protected:
   GemmConstantBiasKernelGenerator() = default;
-  GemmConstantBiasKernelGenerator(
-      const GemmConstantBiasKernelGenerator &generator) = delete;
-  GemmConstantBiasKernelGenerator(GemmConstantBiasKernelGenerator &&generator) =
-      default;
+  GemmConstantBiasKernelGenerator(const GemmConstantBiasKernelGenerator &) =
+      delete;
+  GemmConstantBiasKernelGenerator(GemmConstantBiasKernelGenerator &&) = default;
 };
 
 } // namespace kernel

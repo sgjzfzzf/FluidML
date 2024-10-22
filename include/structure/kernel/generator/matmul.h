@@ -18,8 +18,8 @@ public:
 
 protected:
   MatMulKernelGenerator() = default;
-  MatMulKernelGenerator(const MatMulKernelGenerator &generator) = delete;
-  MatMulKernelGenerator(MatMulKernelGenerator &&generator) = default;
+  MatMulKernelGenerator(const MatMulKernelGenerator &) = delete;
+  MatMulKernelGenerator(MatMulKernelGenerator &&) = default;
 };
 
 } // namespace kernel

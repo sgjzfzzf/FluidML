@@ -20,8 +20,8 @@ public:
 
 protected:
   UnSqueezeKernelGenerator() = default;
-  UnSqueezeKernelGenerator(const UnSqueezeKernelGenerator &generator) = delete;
-  UnSqueezeKernelGenerator(UnSqueezeKernelGenerator &&generator) = default;
+  UnSqueezeKernelGenerator(const UnSqueezeKernelGenerator &) = delete;
+  UnSqueezeKernelGenerator(UnSqueezeKernelGenerator &&) = default;
 };
 
 } // namespace kernel

@@ -8,10 +8,8 @@ class TransposeKernelGeneratorImpl : public TransposeKernelGenerator {
 public:
   TransposeKernelGeneratorImpl(Meta &&input_meta, Meta &&output_meta,
                                std::vector<int64_t> &&perms);
-  TransposeKernelGeneratorImpl(const TransposeKernelGeneratorImpl &generator) =
-      delete;
-  TransposeKernelGeneratorImpl(TransposeKernelGeneratorImpl &&generator) =
-      default;
+  TransposeKernelGeneratorImpl(const TransposeKernelGeneratorImpl &) = delete;
+  TransposeKernelGeneratorImpl(TransposeKernelGeneratorImpl &&) = default;
   virtual ~TransposeKernelGeneratorImpl() = default;
   std::shared_ptr<SingleInputWithoutBufferKernel>
   YieldSingleInputWithoutBufferKernel(

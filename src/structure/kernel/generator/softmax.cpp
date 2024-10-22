@@ -8,9 +8,8 @@ class SoftmaxKernelGeneratorImpl : public SoftmaxKernelGenerator {
 public:
   SoftmaxKernelGeneratorImpl(Meta &&input_meta, Meta &&output_meta,
                              int64_t axis);
-  SoftmaxKernelGeneratorImpl(const SoftmaxKernelGeneratorImpl &generator) =
-      delete;
-  SoftmaxKernelGeneratorImpl(SoftmaxKernelGeneratorImpl &&generator) = default;
+  SoftmaxKernelGeneratorImpl(const SoftmaxKernelGeneratorImpl &) = delete;
+  SoftmaxKernelGeneratorImpl(SoftmaxKernelGeneratorImpl &&) = default;
   virtual ~SoftmaxKernelGeneratorImpl() = default;
   std::shared_ptr<SingleInputWithBufferKernel> YieldSingleInputWithBufferKernel(
       llvm::ArrayRef<size_t> input_layout,

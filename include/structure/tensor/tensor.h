@@ -15,8 +15,8 @@ public:
   Tensor(Type type, std::vector<int64_t> &&shape);
   Tensor(Type type, std::vector<int64_t> &&shape,
          std::vector<float64_t> &&data);
-  Tensor(const Tensor &other) = default;
-  Tensor(Tensor &&other) = default;
+  Tensor(const Tensor &) = default;
+  Tensor(Tensor &&) = default;
   const std::vector<float64_t> &Get() const;
   float64_t &Get(const std::vector<size_t> &indices);
   const float64_t &Get(const std::vector<size_t> &indices) const;

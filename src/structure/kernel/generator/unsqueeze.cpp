@@ -7,10 +7,8 @@ class UnSqueezeKernelGeneratorImpl : public UnSqueezeKernelGenerator {
 public:
   UnSqueezeKernelGeneratorImpl(Meta &&input_meta, Meta &&output_meta,
                                std::vector<int64_t> &&axes);
-  UnSqueezeKernelGeneratorImpl(const UnSqueezeKernelGeneratorImpl &generator) =
-      delete;
-  UnSqueezeKernelGeneratorImpl(UnSqueezeKernelGeneratorImpl &&generator) =
-      default;
+  UnSqueezeKernelGeneratorImpl(const UnSqueezeKernelGeneratorImpl &) = delete;
+  UnSqueezeKernelGeneratorImpl(UnSqueezeKernelGeneratorImpl &&) = default;
   virtual ~UnSqueezeKernelGeneratorImpl() = default;
   std::shared_ptr<SingleInputWithoutBufferKernel>
   YieldSingleInputWithoutBufferKernel(

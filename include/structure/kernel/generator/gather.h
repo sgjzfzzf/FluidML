@@ -20,9 +20,9 @@ public:
 protected:
   GatherConstantIndexScalarKernelGenerator() = default;
   GatherConstantIndexScalarKernelGenerator(
-      const GatherConstantIndexScalarKernelGenerator &generator) = delete;
+      const GatherConstantIndexScalarKernelGenerator &) = delete;
   GatherConstantIndexScalarKernelGenerator(
-      GatherConstantIndexScalarKernelGenerator &&generator) = default;
+      GatherConstantIndexScalarKernelGenerator &&) = default;
 };
 
 class GatherConstantDataTensorKernelGenerator
@@ -38,9 +38,9 @@ public:
 protected:
   GatherConstantDataTensorKernelGenerator() = default;
   GatherConstantDataTensorKernelGenerator(
-      const GatherConstantDataTensorKernelGenerator &generator) = delete;
+      const GatherConstantDataTensorKernelGenerator &) = delete;
   GatherConstantDataTensorKernelGenerator(
-      GatherConstantDataTensorKernelGenerator &&generator) = default;
+      GatherConstantDataTensorKernelGenerator &&) = default;
 };
 
 } // namespace kernel

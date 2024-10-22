@@ -19,8 +19,8 @@ public:
 
 protected:
   KernelGenerator() = default;
-  KernelGenerator(const KernelGenerator &generator) = delete;
-  KernelGenerator(KernelGenerator &&generator) = default;
+  KernelGenerator(const KernelGenerator &) = delete;
+  KernelGenerator(KernelGenerator &&) = default;
 };
 
 class SingleInputKernelGenerator : public KernelGenerator {
@@ -37,9 +37,8 @@ public:
 
 protected:
   SingleInputKernelGenerator() = default;
-  SingleInputKernelGenerator(const SingleInputKernelGenerator &generator) =
-      delete;
-  SingleInputKernelGenerator(SingleInputKernelGenerator &&generator) = default;
+  SingleInputKernelGenerator(const SingleInputKernelGenerator &) = delete;
+  SingleInputKernelGenerator(SingleInputKernelGenerator &&) = default;
 };
 
 class DoubleInputsKernelGenerator : public KernelGenerator {
@@ -58,10 +57,8 @@ public:
 
 protected:
   DoubleInputsKernelGenerator() = default;
-  DoubleInputsKernelGenerator(const DoubleInputsKernelGenerator &generator) =
-      delete;
-  DoubleInputsKernelGenerator(DoubleInputsKernelGenerator &&generator) =
-      default;
+  DoubleInputsKernelGenerator(const DoubleInputsKernelGenerator &) = delete;
+  DoubleInputsKernelGenerator(DoubleInputsKernelGenerator &&) = default;
 };
 
 class SingleInputWithoutBufferKernelGenerator
@@ -78,9 +75,9 @@ public:
 protected:
   SingleInputWithoutBufferKernelGenerator() = default;
   SingleInputWithoutBufferKernelGenerator(
-      const SingleInputWithoutBufferKernelGenerator &generator) = delete;
+      const SingleInputWithoutBufferKernelGenerator &) = delete;
   SingleInputWithoutBufferKernelGenerator(
-      SingleInputWithoutBufferKernelGenerator &&generator) = default;
+      SingleInputWithoutBufferKernelGenerator &&) = default;
 };
 
 class SingleInputWithBufferKernelGenerator : public SingleInputKernelGenerator {
@@ -96,9 +93,9 @@ public:
 protected:
   SingleInputWithBufferKernelGenerator() = default;
   SingleInputWithBufferKernelGenerator(
-      const SingleInputWithBufferKernelGenerator &generator) = delete;
+      const SingleInputWithBufferKernelGenerator &) = delete;
   SingleInputWithBufferKernelGenerator(
-      SingleInputWithBufferKernelGenerator &&generator) = default;
+      SingleInputWithBufferKernelGenerator &&) = default;
 };
 
 class DoubleInputsWithoutBufferKernelGenerator
@@ -117,9 +114,9 @@ public:
 protected:
   DoubleInputsWithoutBufferKernelGenerator() = default;
   DoubleInputsWithoutBufferKernelGenerator(
-      const DoubleInputsWithoutBufferKernelGenerator &generator) = delete;
+      const DoubleInputsWithoutBufferKernelGenerator &) = delete;
   DoubleInputsWithoutBufferKernelGenerator(
-      DoubleInputsWithoutBufferKernelGenerator &&generator) = default;
+      DoubleInputsWithoutBufferKernelGenerator &&) = default;
 };
 
 class DoubleInputsWithBufferKernelGenerator
@@ -138,9 +135,9 @@ public:
 protected:
   DoubleInputsWithBufferKernelGenerator() = default;
   DoubleInputsWithBufferKernelGenerator(
-      const DoubleInputsWithBufferKernelGenerator &generator) = delete;
+      const DoubleInputsWithBufferKernelGenerator &) = delete;
   DoubleInputsWithBufferKernelGenerator(
-      DoubleInputsWithBufferKernelGenerator &&generator) = default;
+      DoubleInputsWithBufferKernelGenerator &&) = default;
 };
 
 } // namespace kernel

@@ -8,10 +8,10 @@ class DivConstantRhsKernelGeneratorImpl : public DivConstantRhsKernelGenerator {
 public:
   DivConstantRhsKernelGeneratorImpl(Meta &&input_meta, Meta &&output_meta,
                                     Type type, float64_t constant);
-  DivConstantRhsKernelGeneratorImpl(
-      const DivConstantRhsKernelGeneratorImpl &generator) = delete;
-  DivConstantRhsKernelGeneratorImpl(
-      DivConstantRhsKernelGeneratorImpl &&generator) = default;
+  DivConstantRhsKernelGeneratorImpl(const DivConstantRhsKernelGeneratorImpl &) =
+      delete;
+  DivConstantRhsKernelGeneratorImpl(DivConstantRhsKernelGeneratorImpl &&) =
+      default;
   virtual ~DivConstantRhsKernelGeneratorImpl() = default;
   std::shared_ptr<SingleInputWithoutBufferKernel>
   YieldSingleInputWithoutBufferKernel(

@@ -14,10 +14,8 @@ public:
                            float64_t div_weight, Type add1_type,
                            float64_t add1_weight, Type mul1_type,
                            float64_t mul1_weight);
-  AddDivErfAddMulMulKernel(
-      const AddDivErfAddMulMulKernel &add_div_erf_add_mul_mul_kernel) = delete;
-  AddDivErfAddMulMulKernel(
-      AddDivErfAddMulMulKernel &&add_div_erf_add_mul_mul_kernel) = default;
+  AddDivErfAddMulMulKernel(const AddDivErfAddMulMulKernel &) = delete;
+  AddDivErfAddMulMulKernel(AddDivErfAddMulMulKernel &&) = default;
   virtual ~AddDivErfAddMulMulKernel() = default;
   std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,

@@ -14,10 +14,10 @@ public:
       Tensor &&add0_weight, Tensor &&add1_weight);
   GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl(
       const GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl
-          &generator) = delete;
+          &) = delete;
   GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl(
-      GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl
-          &&generator) = default;
+      GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl &&) =
+      default;
   virtual ~GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl() =
       default;
   std::shared_ptr<SingleInputWithoutBufferKernel>

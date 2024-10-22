@@ -11,9 +11,9 @@ public:
                                                Meta &&output_meta, int64_t axis,
                                                int64_t index);
   GatherConstantIndexScalarKernelGeneratorImpl(
-      const GatherConstantIndexScalarKernelGeneratorImpl &generator) = delete;
+      const GatherConstantIndexScalarKernelGeneratorImpl &) = delete;
   GatherConstantIndexScalarKernelGeneratorImpl(
-      GatherConstantIndexScalarKernelGeneratorImpl &&generator) = default;
+      GatherConstantIndexScalarKernelGeneratorImpl &&) = default;
   virtual ~GatherConstantIndexScalarKernelGeneratorImpl() = default;
   std::shared_ptr<SingleInputWithoutBufferKernel>
   YieldSingleInputWithoutBufferKernel(
@@ -43,9 +43,9 @@ public:
                                               Meta &&output_meta,
                                               Tensor &&data);
   GatherConstantDataTensorKernelGeneratorImpl(
-      const GatherConstantDataTensorKernelGeneratorImpl &generator) = delete;
+      const GatherConstantDataTensorKernelGeneratorImpl &) = delete;
   GatherConstantDataTensorKernelGeneratorImpl(
-      GatherConstantDataTensorKernelGeneratorImpl &&generator) = default;
+      GatherConstantDataTensorKernelGeneratorImpl &&) = default;
   virtual ~GatherConstantDataTensorKernelGeneratorImpl() = default;
   std::shared_ptr<SingleInputWithoutBufferKernel>
   YieldSingleInputWithoutBufferKernel(

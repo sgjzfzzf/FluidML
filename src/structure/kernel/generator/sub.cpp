@@ -8,10 +8,10 @@ class SubConstantLhsKernelGeneratorImpl : public SubConstantLhsKernelGenerator {
 public:
   SubConstantLhsKernelGeneratorImpl(Meta &&input_meta, Meta &&output_meta,
                                     Type type, float64_t value);
-  SubConstantLhsKernelGeneratorImpl(
-      const SubConstantLhsKernelGeneratorImpl &generator) = delete;
-  SubConstantLhsKernelGeneratorImpl(
-      SubConstantLhsKernelGeneratorImpl &&generator) = default;
+  SubConstantLhsKernelGeneratorImpl(const SubConstantLhsKernelGeneratorImpl &) =
+      delete;
+  SubConstantLhsKernelGeneratorImpl(SubConstantLhsKernelGeneratorImpl &&) =
+      default;
   virtual ~SubConstantLhsKernelGeneratorImpl() = default;
   std::shared_ptr<SingleInputWithoutBufferKernel>
   YieldSingleInputWithoutBufferKernel(

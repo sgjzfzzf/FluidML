@@ -12,8 +12,8 @@ class DivConstantRhsKernel : public SingleInputWithoutBufferKernel {
 public:
   static constexpr char kKernelName[] = "DivConstantRhsKernel";
   DivConstantRhsKernel(Type type, float64_t constant);
-  DivConstantRhsKernel(const DivConstantRhsKernel &div_kernel) = delete;
-  DivConstantRhsKernel(DivConstantRhsKernel &&div_kernel) = default;
+  DivConstantRhsKernel(const DivConstantRhsKernel &) = delete;
+  DivConstantRhsKernel(DivConstantRhsKernel &&) = default;
   virtual ~DivConstantRhsKernel() = default;
   std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,

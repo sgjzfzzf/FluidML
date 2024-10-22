@@ -10,9 +10,8 @@ class Concat2KernelGeneratorImpl : public Concat2KernelGenerator {
 public:
   Concat2KernelGeneratorImpl(Meta &&lhs_meta, Meta &&rhs_meta,
                              Meta &&output_meta, size_t axis);
-  Concat2KernelGeneratorImpl(const Concat2KernelGeneratorImpl &generator) =
-      delete;
-  Concat2KernelGeneratorImpl(Concat2KernelGeneratorImpl &&generator) = default;
+  Concat2KernelGeneratorImpl(const Concat2KernelGeneratorImpl &) = delete;
+  Concat2KernelGeneratorImpl(Concat2KernelGeneratorImpl &&) = default;
   virtual ~Concat2KernelGeneratorImpl() = default;
   std::shared_ptr<DoubleInputsWithoutBufferKernel>
   YieldDoubleInputsWithoutBufferKernel(

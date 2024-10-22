@@ -12,8 +12,8 @@ namespace kernel {
 class AddKernel : virtual public Kernel {
 public:
   AddKernel() = default;
-  AddKernel(const AddKernel &add_node) = delete;
-  AddKernel(AddKernel &&add_node) = default;
+  AddKernel(const AddKernel &) = delete;
+  AddKernel(AddKernel &&) = default;
   virtual ~AddKernel() = default;
 };
 
@@ -22,8 +22,8 @@ class AddConstantKernel : public AddKernel,
 public:
   static constexpr char kKernelName[] = "AddConstantKernel";
   AddConstantKernel(Type type, float64_t constant);
-  AddConstantKernel(const AddConstantKernel &add_kernel) = delete;
-  AddConstantKernel(AddConstantKernel &&add_kernel) = default;
+  AddConstantKernel(const AddConstantKernel &) = delete;
+  AddConstantKernel(AddConstantKernel &&) = default;
   virtual ~AddConstantKernel() = default;
   std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,
@@ -38,8 +38,8 @@ class AddCommonKernel : public DoubleInputsWithoutBufferKernel {
 public:
   static constexpr char kKernelName[] = "AddCommonKernel";
   AddCommonKernel() = default;
-  AddCommonKernel(const AddCommonKernel &add_kernel) = delete;
-  AddCommonKernel(AddCommonKernel &&add_kernel) = default;
+  AddCommonKernel(const AddCommonKernel &) = delete;
+  AddCommonKernel(AddCommonKernel &&) = default;
   virtual ~AddCommonKernel() = default;
   std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &lhs, mlir::Value &rhs,

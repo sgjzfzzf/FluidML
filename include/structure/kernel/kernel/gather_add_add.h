@@ -16,11 +16,9 @@ public:
                                                          Tensor &&add0_weight,
                                                          Tensor &&add1_weight);
   GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel(
-      const GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel
-          &gather_kernel) = delete;
+      const GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel &) = delete;
   GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel(
-      GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel &&gather_kernel) =
-      default;
+      GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel &&) = default;
   virtual ~GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel() = default;
   std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,

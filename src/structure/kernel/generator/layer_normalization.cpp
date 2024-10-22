@@ -11,11 +11,9 @@ public:
       Meta &&input_meta, Meta &&output_meta, int64_t axis, float64_t epsilon,
       Tensor &&scale, Tensor &&bias);
   LayerNormalizationConstantScaleBiasKernelGeneratorImpl(
-      const LayerNormalizationConstantScaleBiasKernelGeneratorImpl &generator) =
-      delete;
+      const LayerNormalizationConstantScaleBiasKernelGeneratorImpl &) = delete;
   LayerNormalizationConstantScaleBiasKernelGeneratorImpl(
-      LayerNormalizationConstantScaleBiasKernelGeneratorImpl &&generator) =
-      default;
+      LayerNormalizationConstantScaleBiasKernelGeneratorImpl &&) = default;
   virtual ~LayerNormalizationConstantScaleBiasKernelGeneratorImpl() = default;
   std::shared_ptr<SingleInputWithBufferKernel> YieldSingleInputWithBufferKernel(
       llvm::ArrayRef<size_t> input_layout,

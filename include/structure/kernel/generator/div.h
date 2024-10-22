@@ -20,10 +20,8 @@ public:
 
 protected:
   DivConstantRhsKernelGenerator() = default;
-  DivConstantRhsKernelGenerator(
-      const DivConstantRhsKernelGenerator &generator) = delete;
-  DivConstantRhsKernelGenerator(DivConstantRhsKernelGenerator &&generator) =
-      default;
+  DivConstantRhsKernelGenerator(const DivConstantRhsKernelGenerator &) = delete;
+  DivConstantRhsKernelGenerator(DivConstantRhsKernelGenerator &&) = default;
 };
 
 } // namespace kernel

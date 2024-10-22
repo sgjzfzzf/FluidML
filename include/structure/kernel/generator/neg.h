@@ -18,8 +18,8 @@ public:
 
 protected:
   NegKernelGenerator() = default;
-  NegKernelGenerator(const NegKernelGenerator &generator) = delete;
-  NegKernelGenerator(NegKernelGenerator &&generator) = default;
+  NegKernelGenerator(const NegKernelGenerator &) = delete;
+  NegKernelGenerator(NegKernelGenerator &&) = default;
 };
 
 } // namespace kernel

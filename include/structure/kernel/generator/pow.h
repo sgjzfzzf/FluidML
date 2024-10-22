@@ -19,8 +19,8 @@ public:
 
 protected:
   PowKernelGenerator() = default;
-  PowKernelGenerator(const PowKernelGenerator &generator) = delete;
-  PowKernelGenerator(PowKernelGenerator &&generator) = default;
+  PowKernelGenerator(const PowKernelGenerator &) = delete;
+  PowKernelGenerator(PowKernelGenerator &&) = default;
 };
 
 } // namespace kernel

@@ -8,10 +8,9 @@ class MulConstantKernelGeneratorImpl : public MulConstantKernelGenerator {
 public:
   MulConstantKernelGeneratorImpl(Meta &&input_meta, Meta &&output_meta,
                                  Type type, float64_t constant);
-  MulConstantKernelGeneratorImpl(
-      const MulConstantKernelGeneratorImpl &generator) = delete;
-  MulConstantKernelGeneratorImpl(MulConstantKernelGeneratorImpl &&generator) =
-      default;
+  MulConstantKernelGeneratorImpl(const MulConstantKernelGeneratorImpl &) =
+      delete;
+  MulConstantKernelGeneratorImpl(MulConstantKernelGeneratorImpl &&) = default;
   virtual ~MulConstantKernelGeneratorImpl() = default;
   std::shared_ptr<SingleInputWithoutBufferKernel>
   YieldSingleInputWithoutBufferKernel(
@@ -38,10 +37,8 @@ class MulCommonKernelGeneratorImpl : public MulCommonKernelGenerator {
 public:
   MulCommonKernelGeneratorImpl(Meta &&lhs_meta, Meta &&rhs_meta,
                                Meta &&output_meta);
-  MulCommonKernelGeneratorImpl(const MulCommonKernelGeneratorImpl &generator) =
-      delete;
-  MulCommonKernelGeneratorImpl(MulCommonKernelGeneratorImpl &&generator) =
-      default;
+  MulCommonKernelGeneratorImpl(const MulCommonKernelGeneratorImpl &) = delete;
+  MulCommonKernelGeneratorImpl(MulCommonKernelGeneratorImpl &&) = default;
   virtual ~MulCommonKernelGeneratorImpl() = default;
   std::shared_ptr<DoubleInputsWithoutBufferKernel>
   YieldDoubleInputsWithoutBufferKernel(

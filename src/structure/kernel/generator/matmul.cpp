@@ -13,9 +13,8 @@ class MatMulKernelGeneratorImpl : public MatMulKernelGenerator {
 public:
   MatMulKernelGeneratorImpl(Meta &&lhs_meta, Meta &&rhs_meta,
                             Meta &&output_meta);
-  MatMulKernelGeneratorImpl(const MatMulKernelGeneratorImpl &generator) =
-      delete;
-  MatMulKernelGeneratorImpl(MatMulKernelGeneratorImpl &&generator) = default;
+  MatMulKernelGeneratorImpl(const MatMulKernelGeneratorImpl &) = delete;
+  MatMulKernelGeneratorImpl(MatMulKernelGeneratorImpl &&) = default;
   virtual ~MatMulKernelGeneratorImpl() = default;
   std::shared_ptr<DoubleInputsWithoutBufferKernel>
   YieldDoubleInputsWithoutBufferKernel(

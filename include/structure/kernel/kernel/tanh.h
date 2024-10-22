@@ -10,8 +10,8 @@ class TanhKernel : public SingleInputWithoutBufferKernel {
 public:
   static constexpr char kKernelName[] = "TanhKernel";
   TanhKernel() = default;
-  TanhKernel(const TanhKernel &other) = delete;
-  TanhKernel(TanhKernel &&other) = default;
+  TanhKernel(const TanhKernel &) = delete;
+  TanhKernel(TanhKernel &&) = default;
   virtual ~TanhKernel() = default;
   std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,

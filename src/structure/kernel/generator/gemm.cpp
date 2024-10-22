@@ -20,9 +20,9 @@ public:
                                       float64_t beta, bool transA, bool transB,
                                       Tensor &&bias);
   GemmConstantBiasKernelGeneratorImpl(
-      const GemmConstantBiasKernelGeneratorImpl &generator) = delete;
-  GemmConstantBiasKernelGeneratorImpl(
-      GemmConstantBiasKernelGeneratorImpl &&generator) = default;
+      const GemmConstantBiasKernelGeneratorImpl &) = delete;
+  GemmConstantBiasKernelGeneratorImpl(GemmConstantBiasKernelGeneratorImpl &&) =
+      default;
   virtual ~GemmConstantBiasKernelGeneratorImpl() = default;
   std::shared_ptr<DoubleInputsWithoutBufferKernel>
   YieldDoubleInputsWithoutBufferKernel(

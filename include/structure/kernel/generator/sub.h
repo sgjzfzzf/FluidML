@@ -20,10 +20,8 @@ public:
 
 protected:
   SubConstantLhsKernelGenerator() = default;
-  SubConstantLhsKernelGenerator(
-      const SubConstantLhsKernelGenerator &generator) = delete;
-  SubConstantLhsKernelGenerator(SubConstantLhsKernelGenerator &&generator) =
-      default;
+  SubConstantLhsKernelGenerator(const SubConstantLhsKernelGenerator &) = delete;
+  SubConstantLhsKernelGenerator(SubConstantLhsKernelGenerator &&) = default;
 };
 
 } // namespace kernel

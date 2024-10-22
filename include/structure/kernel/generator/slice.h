@@ -19,8 +19,8 @@ public:
 
 protected:
   SliceKernelGenerator() = default;
-  SliceKernelGenerator(const SliceKernelGenerator &generator) = delete;
-  SliceKernelGenerator(SliceKernelGenerator &&generator) = default;
+  SliceKernelGenerator(const SliceKernelGenerator &) = delete;
+  SliceKernelGenerator(SliceKernelGenerator &&) = default;
 };
 
 } // namespace kernel

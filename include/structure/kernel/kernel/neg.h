@@ -12,8 +12,8 @@ class NegKernel : public SingleInputWithoutBufferKernel {
 public:
   static constexpr char kKernelName[] = "NegKernel";
   NegKernel() = default;
-  NegKernel(const NegKernel &other) = delete;
-  NegKernel(NegKernel &&other) = default;
+  NegKernel(const NegKernel &) = delete;
+  NegKernel(NegKernel &&) = default;
   virtual ~NegKernel() = default;
   std::string GetKernelName() const;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,

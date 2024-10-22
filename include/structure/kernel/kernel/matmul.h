@@ -12,8 +12,8 @@ public:
   static constexpr char kKernelName[] = "MatMulKernel";
   MatMulKernel();
   MatMulKernel(llvm::SmallVector<Axis, 3> &&axes);
-  MatMulKernel(const MatMulKernel &other) = delete;
-  MatMulKernel(MatMulKernel &&other) = default;
+  MatMulKernel(const MatMulKernel &) = delete;
+  MatMulKernel(MatMulKernel &&) = default;
   virtual ~MatMulKernel() = default;
   std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &lhs, mlir::Value &rhs,

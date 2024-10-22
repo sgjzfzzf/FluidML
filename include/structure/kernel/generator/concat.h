@@ -18,8 +18,8 @@ public:
 
 protected:
   Concat2KernelGenerator() = default;
-  Concat2KernelGenerator(const Concat2KernelGenerator &generator) = delete;
-  Concat2KernelGenerator(Concat2KernelGenerator &&generator) = default;
+  Concat2KernelGenerator(const Concat2KernelGenerator &) = delete;
+  Concat2KernelGenerator(Concat2KernelGenerator &&) = default;
 };
 
 } // namespace kernel

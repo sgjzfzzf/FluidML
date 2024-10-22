@@ -24,11 +24,11 @@ public:
 protected:
   GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGenerator() = default;
   GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGenerator(
-      const GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGenerator
-          &generator) = delete;
+      const GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGenerator &) =
+      delete;
   GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGenerator(
-      GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGenerator
-          &&generator) = default;
+      GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGenerator &&) =
+      default;
 };
 
 } // namespace kernel

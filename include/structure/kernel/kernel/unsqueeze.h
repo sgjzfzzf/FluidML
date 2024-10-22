@@ -10,8 +10,8 @@ class UnSqueezeKernel : public SingleInputWithoutBufferKernel {
 public:
   static constexpr char kKernelName[] = "UnSqueezeKernel";
   UnSqueezeKernel(std::vector<int64_t> &&axes);
-  UnSqueezeKernel(const UnSqueezeKernel &other) = delete;
-  UnSqueezeKernel(UnSqueezeKernel &&other) = default;
+  UnSqueezeKernel(const UnSqueezeKernel &) = delete;
+  UnSqueezeKernel(UnSqueezeKernel &&) = default;
   virtual ~UnSqueezeKernel() = default;
   std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,

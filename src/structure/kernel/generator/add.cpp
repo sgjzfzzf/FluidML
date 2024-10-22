@@ -8,10 +8,9 @@ class AddConstantKernelGeneratorImpl : public AddConstantKernelGenerator {
 public:
   AddConstantKernelGeneratorImpl(Meta &&input_meta, Meta &&output_meta,
                                  Type type, float64_t constant);
-  AddConstantKernelGeneratorImpl(
-      const AddConstantKernelGeneratorImpl &generator) = delete;
-  AddConstantKernelGeneratorImpl(AddConstantKernelGeneratorImpl &&generator) =
-      default;
+  AddConstantKernelGeneratorImpl(const AddConstantKernelGeneratorImpl &) =
+      delete;
+  AddConstantKernelGeneratorImpl(AddConstantKernelGeneratorImpl &&) = default;
   virtual ~AddConstantKernelGeneratorImpl() = default;
   std::shared_ptr<SingleInputWithoutBufferKernel>
   YieldSingleInputWithoutBufferKernel(
@@ -38,10 +37,8 @@ class AddCommonKernelGeneratorImpl : public AddCommonKernelGenerator {
 public:
   AddCommonKernelGeneratorImpl(Meta &&lhs_meta, Meta &&rhs_meta,
                                Meta &&output_meta);
-  AddCommonKernelGeneratorImpl(const AddCommonKernelGeneratorImpl &generator) =
-      delete;
-  AddCommonKernelGeneratorImpl(AddCommonKernelGeneratorImpl &&generator) =
-      default;
+  AddCommonKernelGeneratorImpl(const AddCommonKernelGeneratorImpl &) = delete;
+  AddCommonKernelGeneratorImpl(AddCommonKernelGeneratorImpl &&) = default;
   virtual ~AddCommonKernelGeneratorImpl() = default;
   std::shared_ptr<DoubleInputsWithoutBufferKernel>
   YieldDoubleInputsWithoutBufferKernel(

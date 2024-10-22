@@ -19,9 +19,9 @@ public:
                                           const Type &mul_type,
                                           float64_t mul_val);
   UnsqueezeSubLhsScalarMulRhsScalarKernel(
-      const UnsqueezeSubLhsScalarMulRhsScalarKernel &other) = delete;
+      const UnsqueezeSubLhsScalarMulRhsScalarKernel &) = delete;
   UnsqueezeSubLhsScalarMulRhsScalarKernel(
-      UnsqueezeSubLhsScalarMulRhsScalarKernel &&other) = default;
+      UnsqueezeSubLhsScalarMulRhsScalarKernel &&) = default;
   virtual ~UnsqueezeSubLhsScalarMulRhsScalarKernel() = default;
   std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,

@@ -7,9 +7,8 @@ namespace kernel {
 class ReshapeKernelGeneratorImpl : public ReshapeKernelGenerator {
 public:
   ReshapeKernelGeneratorImpl(Meta &&input_meta, Meta &&output_meta);
-  ReshapeKernelGeneratorImpl(const ReshapeKernelGeneratorImpl &generator) =
-      delete;
-  ReshapeKernelGeneratorImpl(ReshapeKernelGeneratorImpl &&generator) = default;
+  ReshapeKernelGeneratorImpl(const ReshapeKernelGeneratorImpl &) = delete;
+  ReshapeKernelGeneratorImpl(ReshapeKernelGeneratorImpl &&) = default;
   virtual ~ReshapeKernelGeneratorImpl() = default;
   std::shared_ptr<SingleInputWithoutBufferKernel>
   YieldSingleInputWithoutBufferKernel(
