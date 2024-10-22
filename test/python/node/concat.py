@@ -8,23 +8,24 @@ if __name__ == "__main__":
         opset_import=[onnx.helper.make_opsetid("", 18)],
     )
     graph = model.graph
-    graph.name = "add0"
+    graph.name = "concat"
     lhs = onnx.helper.make_tensor_value_info(
-        "lhs", onnx.TensorProto.FLOAT, [1, 128, 768]
+        "lhs", onnx.TensorProto.FLOAT, [1, 4, 128, 2]
     )
     rhs = onnx.helper.make_tensor_value_info(
-        "rhs", onnx.TensorProto.FLOAT, [1, 128, 768]
+        "rhs", onnx.TensorProto.FLOAT, [1, 4, 128, 6]
     )
     output = onnx.helper.make_tensor_value_info(
-        "output", onnx.TensorProto.FLOAT, [1, 128, 768]
+        "output", onnx.TensorProto.FLOAT, [1, 4, 128, 8]
     )
     graph.input.extend([lhs, rhs])
     graph.output.extend([output])
     node = onnx.helper.make_node(
-        "Add",
+        "Concat",
         inputs=["lhs", "rhs"],
         outputs=["output"],
-        name="add",
+        name="concat",
+        axis=-1,
     )
     graph.node.extend([node])
     onnx.checker.check_model(model)

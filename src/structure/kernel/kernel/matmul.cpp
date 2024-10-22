@@ -26,9 +26,9 @@ std::string MatMulKernel::GetKernelName() const { return kKernelName; }
 void MatMulKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
                        mlir::Value &rhs, mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
-  mlir::MemRefType lhs_type = mlir::cast<mlir::MemRefType>(lhs.getType());
-  mlir::MemRefType rhs_type = mlir::cast<mlir::MemRefType>(rhs.getType());
-  mlir::MemRefType output_type = mlir::cast<mlir::MemRefType>(output.getType());
+  mlir::MemRefType lhs_type = mlir::cast<mlir::MemRefType>(lhs.getType()),
+                   rhs_type = mlir::cast<mlir::MemRefType>(rhs.getType()),
+                   output_type = mlir::cast<mlir::MemRefType>(output.getType());
   llvm::SmallVector<mlir::AffineMap> maps = GetBroadcastMatMulAffineMaps(
       context, lhs_type, rhs_type, output_type, axes_);
   const int64_t rank = output_type.getRank();

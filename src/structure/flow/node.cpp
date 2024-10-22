@@ -277,6 +277,55 @@ float64_t AddDivErfAddMulMulNode::GetMul1Weight() const noexcept {
   return mul1_weight_;
 }
 
+ConcatNode::ConcatNode(std::string &&name) : Node(std::move(name)) {}
+
+Concat2CommonNode::Concat2CommonNode(std::string &&name,
+                                     std::shared_ptr<Region> &&lhs,
+                                     std::shared_ptr<Region> &&rhs,
+                                     std::shared_ptr<Region> &&output,
+                                     int64_t axis)
+    : Node(std::move(name)),
+      DoubleInputsWithoutBufferNode(std::move(name), std::move(lhs),
+                                    std::move(rhs), std::move(output)),
+      ConcatNode(std::move(name)), axis_(axis) {
+#ifdef DEBUG
+  const Meta &lhs_meta = lhs_->GetMeta(), &rhs_meta = rhs_->GetMeta(),
+             &output_meta = output_->GetMeta();
+  const std::vector<int64_t> &lhs_shape = lhs_meta.GetShape(),
+                             &rhs_shape = rhs_meta.GetShape(),
+                             &output_shape = output_meta.GetShape();
+  const int64_t rank = lhs_shape.size();
+  assert(rank == rhs_shape.size());
+  assert(rank == output_shape.size());
+  assert(axis >= -rank && axis < rank);
+  const int64_t x = GetAxis(), lhs_dim = lhs_shape[x], rhs_dim = rhs_shape[x],
+                output_dim = output_shape[x];
+  assert(lhs_dim + rhs_dim == output_dim);
+#endif
+}
+
+std::shared_ptr<DoubleInputsWithoutBufferNode>
+Concat2CommonNode::CloneAsDoubleInputsWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<Concat2CommonNode> Concat2CommonNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<Concat2CommonNode>(std::move(name), GetLhs(),
+                                             GetRhs(), GetOutput(), GetAxis());
+}
+
+int64_t Concat2CommonNode::GetAxis() const noexcept {
+  std::shared_ptr<Region> lhs = GetLhs();
+#ifdef DEBUG
+  assert(lhs != nullptr);
+#endif
+  const Meta &lhs_meta = lhs->GetMeta();
+  const std::vector<int64_t> &lhs_shape = lhs_meta.GetShape();
+  const size_t rank = lhs_shape.size();
+  return axis_ >= 0 ? axis_ : rank + axis_;
+}
+
 DivNode::DivNode(std::string &&name) : Node(std::move(name)) {}
 
 DivConstantScalarNode::DivConstantScalarNode(std::string &&name, Type type,
@@ -341,9 +390,9 @@ GatherConstantIndexScalarNode::GatherConstantIndexScalarNode(
   const Meta &output_meta = output_->GetMeta();
   const std::vector<int64_t> &lhs_shape = lhs_meta.GetShape();
   const std::vector<int64_t> &output_shape = output_meta.GetShape();
-  const size_t lhs_shapeLen = lhs_shape.size();
+  const size_t lhs_shape_len = lhs_shape.size();
   const size_t output_shape_len = output_shape.size();
-  assert(output_shape_len + 1 == lhs_shapeLen);
+  assert(output_shape_len + 1 == lhs_shape_len);
 #endif
 }
 
@@ -386,10 +435,10 @@ GatherConstantDataTensorNode::GatherConstantDataTensorNode(
   const std::vector<int64_t> &lhs_shape = lhs_meta.GetShape();
   const std::vector<int64_t> &rhs_shape = rhs_meta.GetShape();
   const std::vector<int64_t> &output_shape = output_meta.GetShape();
-  const size_t lhs_shapeLen = lhs_shape.size();
+  const size_t lhs_shape_len = lhs_shape.size();
   const size_t rhs_shape_len = rhs_shape.size();
   const size_t output_shape_len = output_shape.size();
-  assert(lhs_shapeLen + rhs_shape_len - 1 == output_shape_len);
+  assert(lhs_shape_len + rhs_shape_len - 1 == output_shape_len);
 #endif
 }
 
@@ -618,14 +667,14 @@ MatMulNode::MatMulNode(std::string &&name, std::shared_ptr<Region> &&lhs,
   const std::vector<int64_t> &lhs_shape = lhs_meta.GetShape();
   const std::vector<int64_t> &rhs_shape = rhs_meta.GetShape();
   const std::vector<int64_t> &output_shape = output_meta.GetShape();
-  size_t lhs_shapeLen = lhs_shape.size();
+  size_t lhs_shape_len = lhs_shape.size();
   size_t rhs_shape_len = rhs_shape.size();
   size_t output_shape_len = output_shape.size();
-  assert(lhs_shapeLen >= 2);
+  assert(lhs_shape_len >= 2);
   assert(rhs_shape_len >= 2);
   assert(output_shape_len >= 2);
-  size_t m = lhs_shape[lhs_shapeLen - 2];
-  size_t k = lhs_shape[lhs_shapeLen - 1];
+  size_t m = lhs_shape[lhs_shape_len - 2];
+  size_t k = lhs_shape[lhs_shape_len - 1];
   size_t n = rhs_shape[rhs_shape_len - 1];
   assert(rhs_shape[rhs_shape_len - 2] == k);
   assert(output_shape[output_shape_len - 2] == m);
@@ -698,6 +747,22 @@ std::shared_ptr<MulCommonNode> MulCommonNode::Clone() const {
                                          GetOutput());
 }
 
+NegNode::NegNode(std::string &&name, std::shared_ptr<Region> &&input,
+                 std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)) {}
+
+std::shared_ptr<SingleInputWithoutBufferNode>
+NegNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<NegNode> NegNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<NegNode>(std::move(name), GetInput(), GetOutput());
+}
+
 PowNode::PowNode(std::string &&name, Type type, float64_t exp,
                  std::shared_ptr<Region> &&input,
                  std::shared_ptr<Region> &&output)
@@ -747,6 +812,54 @@ std::shared_ptr<ReshapeNode> ReshapeNode::Clone() const {
   std::string name = GetName();
   return std::make_shared<ReshapeNode>(std::move(name), GetInput(),
                                        GetOutput());
+}
+
+SliceNode::SliceNode(std::string &&name, std::vector<int64_t> &&starts,
+                     std::vector<int64_t> &&ends, std::vector<int64_t> &&axes,
+                     std::vector<int64_t> &&steps,
+                     std::shared_ptr<Region> &&input,
+                     std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      starts_(std::move(starts)), ends_(std::move(ends)),
+      axes_(std::move(axes)), steps_(std::move(steps)) {
+#ifdef DEBUG
+  const size_t len = starts_.size();
+  assert(len == ends_.size());
+  assert(len == axes_.size());
+  assert(len == steps_.size());
+#endif
+}
+
+std::shared_ptr<SingleInputWithoutBufferNode>
+SliceNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<SliceNode> SliceNode::Clone() const {
+  std::string name = GetName();
+  std::vector<int64_t> starts = GetStarts(), ends = GetEnds(), axes = GetAxes(),
+                       steps = GetSteps();
+  return std::make_shared<SliceNode>(std::move(name), std::move(starts),
+                                     std::move(ends), std::move(axes),
+                                     std::move(steps), GetInput(), GetOutput());
+}
+
+const std::vector<int64_t> &SliceNode::GetStarts() const noexcept {
+  return starts_;
+}
+
+const std::vector<int64_t> &SliceNode::GetEnds() const noexcept {
+  return ends_;
+}
+
+const std::vector<int64_t> &SliceNode::GetAxes() const noexcept {
+  return axes_;
+}
+
+const std::vector<int64_t> &SliceNode::GetSteps() const noexcept {
+  return steps_;
 }
 
 SoftmaxNode::SoftmaxNode(std::string &&name, std::shared_ptr<Region> &&input,

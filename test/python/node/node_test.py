@@ -28,15 +28,15 @@ class NodeTest(unittest.TestCase):
         session: onnxruntime.InferenceSession = onnxruntime.InferenceSession(
             onnx_path, session_options
         )
-        input0: np.ndarray = np.random.random((1, 128, 768)).astype(np.float32)
-        input1: np.ndarray = np.random.random((1, 128, 768)).astype(np.float32)
+        lhs: np.ndarray = np.random.random((1, 128, 768)).astype(np.float32)
+        rhs: np.ndarray = np.random.random((1, 128, 768)).astype(np.float32)
         output: np.ndarray = np.zeros((1, 128, 768)).astype(np.float32)
         start: int = time.time_ns()
         onnx_output_tuple: Tuple[np.ndarray] = session.run(
             ["output"],
             {
-                "input0": input0,
-                "input1": input1,
+                "lhs": lhs,
+                "rhs": rhs,
             },
         )
         (onnx_output,) = onnx_output_tuple
@@ -47,8 +47,8 @@ class NodeTest(unittest.TestCase):
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
-                "input0": input0,
-                "input1": input1,
+                "lhs": lhs,
+                "rhs": rhs,
                 "output": output,
             }
         )
@@ -85,6 +85,45 @@ class NodeTest(unittest.TestCase):
         timecost: int = executor.invoke(
             {
                 "input": input,
+                "output": output,
+            }
+        )
+        self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"{name}, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
+
+    def test_concat(self):
+        name: str = "concat"
+        onnx_path: str = os.environ.get(f"ONNX_{name}_PATH")
+        self.assertIsNotNone(onnx_path)
+        session_options: onnxruntime.SessionOptions = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session: onnxruntime.InferenceSession = onnxruntime.InferenceSession(
+            onnx_path, session_options
+        )
+        lhs: np.ndarray = np.random.random((1, 4, 128, 2)).astype(np.float32)
+        rhs: np.ndarray = np.random.random((1, 4, 128, 6)).astype(np.float32)
+        output: np.ndarray = np.zeros((1, 4, 128, 8)).astype(np.float32)
+        start: int = time.time_ns()
+        onnx_output_tuple: Tuple[np.ndarray] = session.run(
+            ["output"],
+            {
+                "lhs": lhs,
+                "rhs": rhs,
+            },
+        )
+        (onnx_output,) = onnx_output_tuple
+        end: int = time.time_ns()
+        executor: cpu_transformers.Executor = (
+            cpu_transformers.Executor.make_plain_greedy(name)
+        )
+        executor.compile(onnx_path)
+        timecost: int = executor.invoke(
+            {
+                "lhs": lhs,
+                "rhs": rhs,
                 "output": output,
             }
         )
@@ -495,6 +534,42 @@ class NodeTest(unittest.TestCase):
             f"{name}, onnxruntime timecost: {end - start}, timecost: {timecost}"
         )
 
+    def test_neg(self):
+        name: str = "neg"
+        onnx_path: str = os.environ.get(f"ONNX_{name}_PATH")
+        self.assertIsNotNone(onnx_path)
+        session_options: onnxruntime.SessionOptions = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session: onnxruntime.InferenceSession = onnxruntime.InferenceSession(
+            onnx_path, session_options
+        )
+        input: np.ndarray = np.random.random((1, 4, 128, 1)).astype(np.float32)
+        output: np.ndarray = np.zeros((1, 4, 128, 1)).astype(np.float32)
+        start: int = time.time_ns()
+        onnx_output_tuple: Tuple[np.ndarray] = session.run(
+            ["output"],
+            {
+                "input": input,
+            },
+        )
+        (onnx_output,) = onnx_output_tuple
+        end: int = time.time_ns()
+        executor: cpu_transformers.Executor = (
+            cpu_transformers.Executor.make_plain_greedy(name)
+        )
+        executor.compile(onnx_path)
+        timecost: int = executor.invoke(
+            {
+                "input": input,
+                "output": output,
+            }
+        )
+        self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"{name}, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
+
     def test_pow(self):
         name: str = "pow"
         onnx_path: str = os.environ.get(f"ONNX_{name}_PATH")
@@ -565,6 +640,42 @@ class NodeTest(unittest.TestCase):
         self.assertTrue(np.allclose(onnx_output, output))
         self.logger.info(
             f"reshape, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
+
+    def test_slice(self):
+        name: str = "slice"
+        onnx_path: str = os.environ.get(f"ONNX_{name}_PATH")
+        self.assertIsNotNone(onnx_path)
+        session_options: onnxruntime.SessionOptions = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session: onnxruntime.InferenceSession = onnxruntime.InferenceSession(
+            onnx_path, session_options
+        )
+        input: np.ndarray = np.random.random((1, 128, 4, 24)).astype(np.float32)
+        output: np.ndarray = np.zeros((1, 128, 4, 8)).astype(np.float32)
+        start: int = time.time_ns()
+        onnx_output_tuple: Tuple[np.ndarray] = session.run(
+            ["output"],
+            {
+                "input": input,
+            },
+        )
+        (onnx_output,) = onnx_output_tuple
+        end: int = time.time_ns()
+        executor: cpu_transformers.Executor = (
+            cpu_transformers.Executor.make_plain_greedy(name)
+        )
+        executor.compile(onnx_path)
+        timecost: int = executor.invoke(
+            {
+                "input": input,
+                "output": output,
+            }
+        )
+        self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"{name}, onnxruntime timecost: {end - start}, timecost: {timecost}"
         )
 
     def test_softmax(self):

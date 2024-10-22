@@ -8,23 +8,24 @@ if __name__ == "__main__":
         opset_import=[onnx.helper.make_opsetid("", 18)],
     )
     graph = model.graph
-    graph.name = "add0"
-    lhs = onnx.helper.make_tensor_value_info(
-        "lhs", onnx.TensorProto.FLOAT, [1, 128, 768]
-    )
-    rhs = onnx.helper.make_tensor_value_info(
-        "rhs", onnx.TensorProto.FLOAT, [1, 128, 768]
+    graph.name = "neg"
+    input = onnx.helper.make_tensor_value_info(
+        "input",
+        onnx.TensorProto.FLOAT,
+        [1, 4, 128, 1],
     )
     output = onnx.helper.make_tensor_value_info(
-        "output", onnx.TensorProto.FLOAT, [1, 128, 768]
+        "output",
+        onnx.TensorProto.FLOAT,
+        [1, 4, 128, 1],
     )
-    graph.input.extend([lhs, rhs])
+    graph.input.extend([input])
     graph.output.extend([output])
     node = onnx.helper.make_node(
-        "Add",
-        inputs=["lhs", "rhs"],
+        "Neg",
+        inputs=["input"],
         outputs=["output"],
-        name="add",
+        name="neg",
     )
     graph.node.extend([node])
     onnx.checker.check_model(model)

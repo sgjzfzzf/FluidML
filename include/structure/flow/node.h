@@ -151,7 +151,7 @@ public:
   AddConstantNode(const AddConstantNode &node) = delete;
   AddConstantNode(AddConstantNode &&node) = default;
   virtual ~AddConstantNode() = default;
-  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
   std::shared_ptr<AddConstantNode> Clone() const;
   Type GetType() const noexcept;
@@ -170,7 +170,7 @@ public:
   AddCommonNode(const AddCommonNode &node) = delete;
   AddCommonNode(AddCommonNode &&node) = default;
   virtual ~AddCommonNode() = default;
-  virtual std::shared_ptr<DoubleInputsWithoutBufferNode>
+  std::shared_ptr<DoubleInputsWithoutBufferNode>
   CloneAsDoubleInputsWithoutBufferNode() const override;
   std::shared_ptr<AddCommonNode> Clone() const;
 };
@@ -185,7 +185,7 @@ public:
   AddDivErfAddMulMulNode(const AddDivErfAddMulMulNode &node) = delete;
   AddDivErfAddMulMulNode(AddDivErfAddMulMulNode &&node) = default;
   virtual ~AddDivErfAddMulMulNode() = default;
-  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
   std::shared_ptr<AddDivErfAddMulMulNode> Clone() const;
   const Tensor &GetAdd0Weight() const noexcept;
@@ -206,6 +206,33 @@ private:
   const float64_t mul1_weight_;
 };
 
+class ConcatNode : virtual public Node {
+public:
+  constexpr static const char *kAxisAttrName = "axis";
+  ConcatNode(std::string &&name);
+  ConcatNode(const ConcatNode &node) = delete;
+  ConcatNode(ConcatNode &&node) = default;
+  virtual ~ConcatNode() = default;
+};
+
+class Concat2CommonNode : public ConcatNode,
+                          public DoubleInputsWithoutBufferNode {
+public:
+  Concat2CommonNode(std::string &&name, std::shared_ptr<Region> &&lhs,
+                    std::shared_ptr<Region> &&rhs,
+                    std::shared_ptr<Region> &&output, int64_t axis);
+  Concat2CommonNode(const Concat2CommonNode &node) = delete;
+  Concat2CommonNode(Concat2CommonNode &&node) = default;
+  virtual ~Concat2CommonNode() = default;
+  std::shared_ptr<DoubleInputsWithoutBufferNode>
+  CloneAsDoubleInputsWithoutBufferNode() const override;
+  std::shared_ptr<Concat2CommonNode> Clone() const;
+  int64_t GetAxis() const noexcept;
+
+protected:
+  const int64_t axis_;
+};
+
 class DivNode : virtual public Node {
 public:
   DivNode(std::string &&name);
@@ -223,7 +250,7 @@ public:
   DivConstantScalarNode(const DivConstantScalarNode &node) = delete;
   DivConstantScalarNode(DivConstantScalarNode &&node) = default;
   virtual ~DivConstantScalarNode() = default;
-  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
   std::shared_ptr<DivConstantScalarNode> Clone() const;
   Type GetType() const noexcept;
@@ -241,7 +268,7 @@ public:
   ErfNode(const ErfNode &node) = delete;
   ErfNode(ErfNode &&node) = default;
   virtual ~ErfNode() = default;
-  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
   std::shared_ptr<ErfNode> Clone() const;
 };
@@ -267,7 +294,7 @@ public:
       delete;
   GatherConstantIndexScalarNode(GatherConstantIndexScalarNode &&node) = default;
   virtual ~GatherConstantIndexScalarNode() = default;
-  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
   std::shared_ptr<GatherConstantIndexScalarNode> Clone() const;
   int64_t GetAxis() const noexcept;
@@ -289,7 +316,7 @@ public:
       delete;
   GatherConstantDataTensorNode(GatherConstantDataTensorNode &&node) = default;
   virtual ~GatherConstantDataTensorNode() = default;
-  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
   std::shared_ptr<GatherConstantDataTensorNode> Clone() const;
   int64_t GetAxis() const noexcept;
@@ -313,7 +340,7 @@ public:
   GatherConstantDataTensorAddTensorLhsAddTensorLhsNode(
       GatherConstantDataTensorAddTensorLhsAddTensorLhsNode &&node) = default;
   virtual ~GatherConstantDataTensorAddTensorLhsAddTensorLhsNode() = default;
-  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
   std::shared_ptr<GatherConstantDataTensorAddTensorLhsAddTensorLhsNode>
   Clone() const;
@@ -365,7 +392,7 @@ public:
   GemmConstantWeightsBiasNode(const GemmConstantWeightsBiasNode &node) = delete;
   GemmConstantWeightsBiasNode(GemmConstantWeightsBiasNode &&node) = default;
   virtual ~GemmConstantWeightsBiasNode() = default;
-  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
   std::shared_ptr<GemmConstantWeightsBiasNode> Clone() const;
   const Tensor &GetWeights() const noexcept;
@@ -409,7 +436,7 @@ public:
   LayerNormalizationConstantScaleBiasNode(
       LayerNormalizationConstantScaleBiasNode &&node) = default;
   virtual ~LayerNormalizationConstantScaleBiasNode() = default;
-  virtual std::shared_ptr<SingleInputWithBufferNode>
+  std::shared_ptr<SingleInputWithBufferNode>
   CloneAsSingleInputWithBufferNode() const override;
   std::shared_ptr<LayerNormalizationConstantScaleBiasNode> Clone() const;
   size_t GetBufferSize() const noexcept override;
@@ -429,7 +456,7 @@ public:
   MatMulNode(const MatMulNode &node) = delete;
   MatMulNode(MatMulNode &&node) = default;
   virtual ~MatMulNode() = default;
-  virtual std::shared_ptr<DoubleInputsWithoutBufferNode>
+  std::shared_ptr<DoubleInputsWithoutBufferNode>
   CloneAsDoubleInputsWithoutBufferNode() const override;
   std::shared_ptr<MatMulNode> Clone() const;
 };
@@ -449,7 +476,7 @@ public:
   MulConstantNode(const MulConstantNode &node) = delete;
   MulConstantNode(MulConstantNode &&node) = default;
   virtual ~MulConstantNode() = default;
-  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
   std::shared_ptr<MulConstantNode> Clone() const;
   Type GetType() const noexcept;
@@ -468,9 +495,21 @@ public:
   MulCommonNode(const MulCommonNode &node) = delete;
   MulCommonNode(MulCommonNode &&node) = default;
   virtual ~MulCommonNode() = default;
-  virtual std::shared_ptr<DoubleInputsWithoutBufferNode>
+  std::shared_ptr<DoubleInputsWithoutBufferNode>
   CloneAsDoubleInputsWithoutBufferNode() const override;
   std::shared_ptr<MulCommonNode> Clone() const;
+};
+
+class NegNode : public SingleInputWithoutBufferNode {
+public:
+  NegNode(std::string &&name, std::shared_ptr<Region> &&input,
+          std::shared_ptr<Region> &&output);
+  NegNode(const NegNode &node) = delete;
+  NegNode(NegNode &&node) = default;
+  virtual ~NegNode() = default;
+  std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<NegNode> Clone() const;
 };
 
 class PowNode : public SingleInputWithoutBufferNode {
@@ -480,7 +519,7 @@ public:
   PowNode(const PowNode &node) = delete;
   PowNode(PowNode &&node) = default;
   virtual ~PowNode() = default;
-  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
   std::shared_ptr<PowNode> Clone() const;
   Type GetType() const noexcept;
@@ -498,9 +537,33 @@ public:
   ReshapeNode(const ReshapeNode &node) = delete;
   ReshapeNode(ReshapeNode &&node) = default;
   virtual ~ReshapeNode() = default;
-  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
   std::shared_ptr<ReshapeNode> Clone() const;
+};
+
+class SliceNode : public SingleInputWithoutBufferNode {
+public:
+  SliceNode(std::string &&name, std::vector<int64_t> &&starts,
+            std::vector<int64_t> &&ends, std::vector<int64_t> &&axes,
+            std::vector<int64_t> &&steps, std::shared_ptr<Region> &&input,
+            std::shared_ptr<Region> &&output);
+  SliceNode(const SliceNode &node) = delete;
+  SliceNode(SliceNode &&node) = default;
+  virtual ~SliceNode() = default;
+  std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<SliceNode> Clone() const;
+  const std::vector<int64_t> &GetStarts() const noexcept;
+  const std::vector<int64_t> &GetEnds() const noexcept;
+  const std::vector<int64_t> &GetAxes() const noexcept;
+  const std::vector<int64_t> &GetSteps() const noexcept;
+
+private:
+  const std::vector<int64_t> starts_;
+  const std::vector<int64_t> ends_;
+  const std::vector<int64_t> axes_;
+  const std::vector<int64_t> steps_;
 };
 
 class SoftmaxNode : public SingleInputWithBufferNode {
@@ -512,7 +575,7 @@ public:
   SoftmaxNode(const SoftmaxNode &node) = delete;
   SoftmaxNode(SoftmaxNode &&node) = default;
   virtual ~SoftmaxNode() = default;
-  virtual std::shared_ptr<SingleInputWithBufferNode>
+  std::shared_ptr<SingleInputWithBufferNode>
   CloneAsSingleInputWithBufferNode() const override;
   std::shared_ptr<SoftmaxNode> Clone() const;
   size_t GetBufferSize() const noexcept override;
@@ -540,7 +603,7 @@ public:
   SubConstantScalarLhsNode(const SubConstantScalarLhsNode &node) = delete;
   SubConstantScalarLhsNode(SubConstantScalarLhsNode &&node) = default;
   virtual ~SubConstantScalarLhsNode() = default;
-  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
   std::shared_ptr<SubConstantScalarLhsNode> Clone() const;
   Type GetType() const noexcept;
@@ -558,7 +621,7 @@ public:
   TanhNode(const TanhNode &node) = delete;
   TanhNode(TanhNode &&node) = default;
   virtual ~TanhNode() = default;
-  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
   std::shared_ptr<TanhNode> Clone() const;
 };
@@ -572,7 +635,7 @@ public:
   TransposeNode(const TransposeNode &node) = delete;
   TransposeNode(TransposeNode &&node) = default;
   virtual ~TransposeNode() = default;
-  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
   std::shared_ptr<TransposeNode> Clone() const;
   const std::vector<int64_t> &GetPerm() const noexcept;
@@ -589,7 +652,7 @@ public:
   UnsqueezeNode(const UnsqueezeNode &node) = delete;
   UnsqueezeNode(UnsqueezeNode &&node) = default;
   virtual ~UnsqueezeNode() = default;
-  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
   std::shared_ptr<UnsqueezeNode> Clone() const;
   const std::vector<int64_t> &GetAxes() const noexcept;
@@ -612,7 +675,7 @@ public:
   UnsqueezeSubLhsScalarMulRhsScalarNode(
       UnsqueezeSubLhsScalarMulRhsScalarNode &&node) = default;
   virtual ~UnsqueezeSubLhsScalarMulRhsScalarNode() = default;
-  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
   std::shared_ptr<UnsqueezeSubLhsScalarMulRhsScalarNode> Clone() const;
   const std::vector<int64_t> &GetUnsqueezeAxes() const noexcept;
@@ -650,7 +713,7 @@ public:
   WhereConstantCondConstantScalarYNode(
       WhereConstantCondConstantScalarYNode &&node) = default;
   virtual ~WhereConstantCondConstantScalarYNode() = default;
-  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
   std::shared_ptr<WhereConstantCondConstantScalarYNode> Clone() const;
   const Tensor &GetCond() const noexcept;
@@ -676,7 +739,7 @@ public:
   WhereConstantCondConstantTensorYNode(
       WhereConstantCondConstantTensorYNode &&node) = default;
   virtual ~WhereConstantCondConstantTensorYNode() = default;
-  virtual std::shared_ptr<SingleInputWithoutBufferNode>
+  std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
   std::shared_ptr<WhereConstantCondConstantTensorYNode> Clone() const;
   const Tensor &GetCond() const noexcept;

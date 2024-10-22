@@ -265,6 +265,8 @@ Graph ParserImpl::Run(onnx::ModelProto &model_proto) {
       createNode(graph, node, Node::Op::Add);
     } else if (node.op_type() == "Cast") {
       createNode(graph, node, Node::Op::Cast);
+    } else if (node.op_type() == "Concat") {
+      createNode(graph, node, Node::Op::Concat);
     } else if (node.op_type() == "ConstantOfShape") {
       createNode(graph, node, Node::Op::ConstantOfShape);
     } else if (node.op_type() == "Div") {
@@ -283,10 +285,14 @@ Graph ParserImpl::Run(onnx::ModelProto &model_proto) {
       createNode(graph, node, Node::Op::MatMul);
     } else if (node.op_type() == "Mul") {
       createNode(graph, node, Node::Op::Mul);
+    } else if (node.op_type() == "Neg") {
+      createNode(graph, node, Node::Op::Neg);
     } else if (node.op_type() == "Pow") {
       createNode(graph, node, Node::Op::Pow);
     } else if (node.op_type() == "Reshape") {
       createNode(graph, node, Node::Op::Reshape);
+    } else if (node.op_type() == "Slice") {
+      createNode(graph, node, Node::Op::Slice);
     } else if (node.op_type() == "Softmax") {
       createNode(graph, node, Node::Op::Softmax);
     } else if (node.op_type() == "Sub") {
