@@ -144,9 +144,9 @@ std::string MatMulKernelGeneratorImpl::GetKernelName() const {
 
 size_t MatMulKernelGeneratorImpl::GetHashCode() const {
   size_t hash = typeid(MatMulKernelGeneratorImpl).hash_code();
-  hash ^= lhs_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
-  hash ^= rhs_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
-  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetLhsMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetRhsMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetOutputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   return hash;
 }
 

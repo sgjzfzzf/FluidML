@@ -129,8 +129,8 @@ WhereConstantCondConstantScalarYKernelGeneratorImpl::GetHashCode() const {
   std::hash<float64_t> f64_hash;
   size_t hash =
       typeid(WhereConstantCondConstantScalarYKernelGeneratorImpl).hash_code();
-  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
-  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetInputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetOutputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= type_hash(type_) + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= f64_hash(y_) + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= cond_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
@@ -205,8 +205,8 @@ size_t
 WhereConstantCondConstantTensorYKernelGeneratorImpl::GetHashCode() const {
   size_t hash =
       typeid(WhereConstantCondConstantTensorYKernelGeneratorImpl).hash_code();
-  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
-  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetInputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetOutputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= cond_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= y_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   return hash;

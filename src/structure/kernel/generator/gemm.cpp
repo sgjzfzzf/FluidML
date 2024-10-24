@@ -170,8 +170,8 @@ size_t GemmConstantBiasKernelGeneratorImpl::GetHashCode() const {
   std::hash<float64_t> f64_hash;
   std::hash<bool> bool_hash;
   size_t hash = typeid(GemmConstantBiasKernelGeneratorImpl).hash_code();
-  hash ^= lhs_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
-  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetLhsMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetOutputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= f64_hash(alpha_) + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= f64_hash(beta_) + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= bool_hash(transA_) + kHashSeed + (hash << 6) + (hash >> 2);

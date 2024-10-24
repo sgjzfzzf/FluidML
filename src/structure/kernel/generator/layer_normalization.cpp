@@ -90,8 +90,10 @@ size_t
 LayerNormalizationConstantScaleBiasKernelGeneratorImpl::GetHashCode() const {
   std::hash<int64_t> i64_hash;
   std::hash<float64_t> f64_hash;
-  size_t hash = input_meta_.GetHashCode();
-  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  size_t hash = typeid(LayerNormalizationConstantScaleBiasKernelGeneratorImpl)
+                    .hash_code();
+  hash ^= GetInputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetOutputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= i64_hash(axis_) + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= f64_hash(epsilon_) + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= scale_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);

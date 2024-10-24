@@ -108,11 +108,10 @@ size_t MulConstantKernelGeneratorImpl::GetHashCode() const {
   std::hash<Type> type_hash;
   std::hash<float64_t> f64_hash;
   size_t hash = typeid(MulConstantKernelGeneratorImpl).hash_code();
-  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
-  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
-  hash ^= std::hash<Type>()(type_) + kHashSeed + (hash << 6) + (hash >> 2);
-  hash ^=
-      std::hash<float64_t>()(constant_) + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetInputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetOutputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= type_hash(type_) + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= f64_hash(constant_) + kHashSeed + (hash << 6) + (hash >> 2);
   return hash;
 }
 
@@ -170,9 +169,10 @@ std::string MulCommonKernelGeneratorImpl::GetKernelName() const {
 }
 
 size_t MulCommonKernelGeneratorImpl::GetHashCode() const {
-  size_t hash = lhs_meta_.GetHashCode();
-  hash ^= rhs_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
-  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  size_t hash = typeid(MulCommonKernelGeneratorImpl).hash_code();
+  hash ^= GetLhsMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetRhsMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetOutputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   return hash;
 }
 

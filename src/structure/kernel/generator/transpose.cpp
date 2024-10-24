@@ -71,8 +71,8 @@ std::string TransposeKernelGeneratorImpl::GetKernelName() const {
 size_t TransposeKernelGeneratorImpl::GetHashCode() const {
   std::hash<int64_t> i64_hash;
   size_t hash = typeid(TransposeKernelGeneratorImpl).hash_code();
-  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
-  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetInputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetOutputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   for (int64_t perm : perms_) {
     hash ^= i64_hash(perm) + kHashSeed + (hash << 6) + (hash >> 2);
   }

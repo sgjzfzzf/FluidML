@@ -106,8 +106,8 @@ std::string AddConstantKernelGeneratorImpl::GetKernelName() const {
 
 size_t AddConstantKernelGeneratorImpl::GetHashCode() const {
   size_t hash = typeid(AddConstantKernelGeneratorImpl).hash_code();
-  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
-  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetInputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetOutputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= std::hash<Type>()(type_) + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^=
       std::hash<float64_t>()(constant_) + kHashSeed + (hash << 6) + (hash >> 2);
@@ -169,9 +169,9 @@ std::string AddCommonKernelGeneratorImpl::GetKernelName() const {
 
 size_t AddCommonKernelGeneratorImpl::GetHashCode() const {
   size_t hash = typeid(AddCommonKernelGeneratorImpl).hash_code();
-  hash ^= lhs_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
-  hash ^= rhs_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
-  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetLhsMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetRhsMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetOutputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   return hash;
 }
 

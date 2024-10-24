@@ -109,8 +109,8 @@ size_t SubConstantLhsKernelGeneratorImpl::GetHashCode() const {
   size_t hash = typeid(SubConstantLhsKernelGeneratorImpl).hash_code();
   std::hash<Type> type_hash;
   std::hash<float64_t> f64_hash;
-  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
-  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetInputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetOutputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= type_hash(type_) + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= f64_hash(value_) + kHashSeed + (hash << 6) + (hash >> 2);
   return hash;

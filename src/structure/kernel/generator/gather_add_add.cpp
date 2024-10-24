@@ -102,8 +102,8 @@ size_t GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl::
       typeid(
           GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl)
           .hash_code();
-  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
-  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetInputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetOutputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= data_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= add0_weight_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= add1_weight_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);

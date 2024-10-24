@@ -76,8 +76,8 @@ size_t CumSumKernelGeneratorImpl::GetHashCode() const {
   std::hash<int64_t> i64_hash;
   std::hash<bool> bool_hash;
   size_t hash = typeid(CumSumKernelGeneratorImpl).hash_code();
-  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
-  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetInputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetOutputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= i64_hash(axis_) + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= bool_hash(exclusive_) + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= bool_hash(reverse_) + kHashSeed + (hash << 6) + (hash >> 2);

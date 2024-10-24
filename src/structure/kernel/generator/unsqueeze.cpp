@@ -1,4 +1,5 @@
 #include "structure/kernel/generator/unsqueeze.h"
+#include "utils/hash.h"
 
 namespace cpu_transformers {
 namespace kernel {
@@ -70,10 +71,10 @@ std::string UnSqueezeKernelGeneratorImpl::GetKernelName() const {
 size_t UnSqueezeKernelGeneratorImpl::GetHashCode() const {
   size_t hash = typeid(UnSqueezeKernelGeneratorImpl).hash_code();
   std::hash<int64_t> i64_hash;
-  hash ^= input_meta_.GetHashCode() + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-  hash ^= output_meta_.GetHashCode() + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+  hash ^= GetInputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetOutputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   for (int64_t axis : axes_) {
-    hash ^= i64_hash(axis) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+    hash ^= i64_hash(axis) + kHashSeed + (hash << 6) + (hash >> 2);
   }
   return hash;
 }

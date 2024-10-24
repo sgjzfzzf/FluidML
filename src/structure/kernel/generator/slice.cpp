@@ -73,10 +73,10 @@ std::string SliceKernelGeneratorImpl::GetKernelName() const {
 size_t SliceKernelGeneratorImpl::GetHashCode() const {
   std::hash<int64_t> hasher;
   size_t hash = typeid(SliceKernelGeneratorImpl).hash_code();
-  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
-  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
-  for (const auto &information : informations_) {
-    for (const auto &value : information) {
+  hash ^= GetInputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetOutputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  for (llvm::ArrayRef information : informations_) {
+    for (int64_t value : information) {
       hash ^= hasher(value) + kHashSeed + (hash << 6) + (hash >> 2);
     }
   }

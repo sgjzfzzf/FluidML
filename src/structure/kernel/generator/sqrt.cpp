@@ -65,8 +65,8 @@ std::string SqrtKernelGeneratorImpl::GetKernelName() const {
 
 size_t SqrtKernelGeneratorImpl::GetHashCode() const {
   size_t hash = typeid(SqrtKernelGeneratorImpl).hash_code();
-  hash ^= input_meta_.GetHashCode();
-  hash ^= output_meta_.GetHashCode();
+  hash ^= GetInputMeta().GetHashCode();
+  hash ^= GetOutputMeta().GetHashCode();
   return hash;
 }
 

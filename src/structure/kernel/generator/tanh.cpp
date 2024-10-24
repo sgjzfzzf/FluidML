@@ -66,8 +66,8 @@ std::string TanhKernelGeneratorImpl::GetKernelName() const {
 
 size_t TanhKernelGeneratorImpl::GetHashCode() const {
   size_t hash = typeid(TanhKernelGeneratorImpl).hash_code();
-  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
-  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetInputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetOutputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   return hash;
 }
 

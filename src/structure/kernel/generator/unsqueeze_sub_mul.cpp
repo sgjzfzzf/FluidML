@@ -1,4 +1,5 @@
 #include "structure/kernel/generator/unsqueeze_sub_mul.h"
+#include <cstdint>
 
 namespace cpu_transformers {
 namespace kernel {
@@ -92,13 +93,14 @@ UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl::GetKernelName() const {
 size_t
 UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl::GetHashCode() const {
   std::hash<Type> type_hash;
+  std::hash<int64_t> i64_hash;
   std::hash<float64_t> f64_hash;
   size_t hash =
       typeid(UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl).hash_code();
-  hash ^= input_meta_.GetHashCode();
-  hash ^= output_meta_.GetHashCode();
+  hash ^= GetInputMeta().GetHashCode();
+  hash ^= GetOutputMeta().GetHashCode();
   for (int64_t unsqueeze_axis : unsqueeze_axes_) {
-    hash ^= std::hash<int64_t>()(unsqueeze_axis);
+    hash ^= i64_hash(unsqueeze_axis);
   }
   hash ^= type_hash(sub_type_);
   hash ^= f64_hash(sub_val_);

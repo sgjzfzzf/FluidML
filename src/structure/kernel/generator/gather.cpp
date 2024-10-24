@@ -118,8 +118,8 @@ GatherConstantIndexScalarKernelGeneratorImpl::GetKernelName() const {
 }
 
 size_t GatherConstantIndexScalarKernelGeneratorImpl::GetHashCode() const {
-  size_t hash = input_meta_.GetHashCode();
-  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  size_t hash = GetInputMeta().GetHashCode();
+  hash ^= GetOutputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= axis_ + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= index_ + kHashSeed + (hash << 6) + (hash >> 2);
   return hash;
@@ -178,8 +178,8 @@ std::string GatherConstantDataTensorKernelGeneratorImpl::GetKernelName() const {
 
 size_t GatherConstantDataTensorKernelGeneratorImpl::GetHashCode() const {
   size_t hash = typeid(GatherConstantDataTensorKernelGeneratorImpl).hash_code();
-  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
-  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetInputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetOutputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= data_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   return hash;
 }

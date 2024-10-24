@@ -95,8 +95,8 @@ size_t AddDivErfAddMulMulKernelGeneratorImpl::GetHashCode() const {
   std::hash<Type> type_hash;
   std::hash<float64_t> f64_hash;
   size_t hash = typeid(AddDivErfAddMulMulKernelGeneratorImpl).hash_code();
-  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
-  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetInputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetOutputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= add0_weight_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= type_hash(div_type_) + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= f64_hash(div_weight_) + kHashSeed + (hash << 6) + (hash >> 2);

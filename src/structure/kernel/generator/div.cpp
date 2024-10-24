@@ -107,8 +107,8 @@ std::string DivConstantRhsKernelGeneratorImpl::GetKernelName() const {
 
 size_t DivConstantRhsKernelGeneratorImpl::GetHashCode() const {
   size_t hash = typeid(DivConstantRhsKernelGeneratorImpl).hash_code();
-  hash ^= input_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
-  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetInputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetOutputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= std::hash<Type>()(type_) + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^=
       std::hash<float64_t>()(constant_) + kHashSeed + (hash << 6) + (hash >> 2);

@@ -78,9 +78,9 @@ std::string Concat2KernelGeneratorImpl::GetKernelName() const {
 size_t Concat2KernelGeneratorImpl::GetHashCode() const {
   std::hash<size_t> u64_hash;
   size_t hash = typeid(Concat2KernelGeneratorImpl).hash_code();
-  hash ^= lhs_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
-  hash ^= rhs_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
-  hash ^= output_meta_.GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetLhsMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetRhsMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
+  hash ^= GetOutputMeta().GetHashCode() + kHashSeed + (hash << 6) + (hash >> 2);
   hash ^= u64_hash(axis_) + kHashSeed + (hash << 6) + (hash >> 2);
   return hash;
 }
