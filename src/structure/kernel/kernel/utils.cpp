@@ -1,4 +1,5 @@
 #include "structure/kernel/kernel/utils.h"
+#include "mlir/Dialect/Utils/StructuredOpsUtils.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "structure/kernel/kernel/utils.h"
 
@@ -49,17 +50,21 @@ GetBroadcastAffineMaps(mlir::Builder &builder,
   return maps;
 }
 
-llvm::SmallVector<mlir::AffineMap> GetBroadcastMatMulAffineMaps(
-    mlir::MLIRContext *context, const mlir::MemRefType &lhs_type,
-    const mlir::MemRefType &rhs_type, const mlir::MemRefType &output_type) {
-  return GetBroadcastMatMulAffineMaps(context, lhs_type, rhs_type, output_type,
-                                      {Axis::i, Axis::j, Axis::k});
+std::tuple<llvm::SmallVector<mlir::AffineMap>,
+           llvm::SmallVector<mlir::utils::IteratorType>>
+GetBroadcastMatMul(mlir::MLIRContext *context, const mlir::MemRefType &lhs_type,
+                   const mlir::MemRefType &rhs_type,
+                   const mlir::MemRefType &output_type) {
+  return GetBroadcastMatMul(context, lhs_type, rhs_type, output_type,
+                            {Axis::i, Axis::j, Axis::k});
 }
 
-llvm::SmallVector<mlir::AffineMap> GetBroadcastMatMulAffineMaps(
-    mlir::MLIRContext *context, const mlir::MemRefType &lhs_type,
-    const mlir::MemRefType &rhs_type, const mlir::MemRefType &output_type,
-    llvm::ArrayRef<Axis> axes) {
+std::tuple<llvm::SmallVector<mlir::AffineMap>,
+           llvm::SmallVector<mlir::utils::IteratorType>>
+GetBroadcastMatMul(mlir::MLIRContext *context, const mlir::MemRefType &lhs_type,
+                   const mlir::MemRefType &rhs_type,
+                   const mlir::MemRefType &output_type,
+                   llvm::ArrayRef<Axis> axes) {
 #ifdef DEBUG
   assert(axes.size() == 3);
   assert(std::find(axes.begin(), axes.end(), Axis::i) != axes.end());
@@ -79,6 +84,8 @@ llvm::SmallVector<mlir::AffineMap> GetBroadcastMatMulAffineMaps(
   assert(rhs_rank <= output_rank);
 #endif
   llvm::SmallVector<mlir::AffineExpr> lhs_exprs, rhs_exprs, output_exprs;
+  llvm::SmallVector<mlir::utils::IteratorType> iterator_types(
+      output_rank + 1, mlir::utils::IteratorType::parallel);
   for (size_t i = 0; i < output_rank - 2; ++i) {
     const int64_t lhs_index = lhs_rank - output_rank + i,
                   rhs_index = rhs_rank - output_rank + i, output_index = i,
@@ -131,7 +138,11 @@ llvm::SmallVector<mlir::AffineMap> GetBroadcastMatMulAffineMaps(
                                                  context),
                   output_map = mlir::AffineMap::get(output_rank + 1, 0,
                                                     output_exprs, context);
-  return {lhs_map, rhs_map, output_map};
+  const size_t k_index =
+      std::find(axes.begin(), axes.end(), Axis::k) - axes.begin();
+  iterator_types[output_rank - 2 + k_index] =
+      mlir::utils::IteratorType::reduction;
+  return {{lhs_map, rhs_map, output_map}, iterator_types};
 }
 
 } // namespace kernel

@@ -29,18 +29,15 @@ void MatMulKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
   mlir::MemRefType lhs_type = mlir::cast<mlir::MemRefType>(lhs.getType()),
                    rhs_type = mlir::cast<mlir::MemRefType>(rhs.getType()),
                    output_type = mlir::cast<mlir::MemRefType>(output.getType());
-  llvm::SmallVector<mlir::AffineMap> maps = GetBroadcastMatMulAffineMaps(
-      context, lhs_type, rhs_type, output_type, axes_);
+  auto [maps, iterator_types] =
+      GetBroadcastMatMul(context, lhs_type, rhs_type, output_type, axes_);
   const int64_t rank = output_type.getRank();
 #ifdef DEBUG
   assert(rank >= 2);
 #endif
-  llvm::SmallVector<mlir::utils::IteratorType> iterator_types(
-      rank + 1, mlir::utils::IteratorType::parallel);
   size_t k_index =
       std::find(axes_.begin(), axes_.end(), Axis::k) - axes_.begin();
   std::vector<int64_t> a(axes_.begin(), axes_.end());
-  iterator_types[rank - 2 + k_index] = mlir::utils::IteratorType::reduction;
   mlir::Value c0f = builder.create<mlir::arith::ConstantOp>(
       builder.getUnknownLoc(),
       builder.getFloatAttr(output_type.getElementType(), 0.0));

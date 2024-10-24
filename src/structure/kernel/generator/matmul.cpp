@@ -122,11 +122,11 @@ MatMulKernelGeneratorImpl::Yield(llvm::ArrayRef<size_t> lhs_layout,
       min_kernel = kernel;
     }
   }
-  kernels_.insert_or_assign({lhs_layout, rhs_layout, output_layout},
-                            min_kernel);
 #ifdef DEBUG
   assert(min_kernel != nullptr);
 #endif
+  kernels_.insert_or_assign({lhs_layout, rhs_layout, output_layout},
+                            min_kernel);
   return min_kernel;
 }
 
