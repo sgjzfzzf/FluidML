@@ -16,6 +16,7 @@ public:
   MatMulKernel(MatMulKernel &&) = default;
   virtual ~MatMulKernel() = default;
   std::string GetKernelName() const override;
+  llvm::ArrayRef<Axis> GetAxes();
   void Run(mlir::OpBuilder &builder, mlir::Value &lhs, mlir::Value &rhs,
            mlir::Value &output) const override;
 

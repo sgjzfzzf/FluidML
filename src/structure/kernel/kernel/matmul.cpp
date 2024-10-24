@@ -23,6 +23,8 @@ MatMulKernel::MatMulKernel(llvm::SmallVector<Axis, 3> &&axes)
 
 std::string MatMulKernel::GetKernelName() const { return kKernelName; }
 
+llvm::ArrayRef<Axis> MatMulKernel::GetAxes() { return axes_; }
+
 void MatMulKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
                        mlir::Value &rhs, mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();

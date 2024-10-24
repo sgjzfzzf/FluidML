@@ -34,6 +34,8 @@ std::string GemmConstantBiasKernel::GetKernelName() const {
   return kKernelName;
 }
 
+llvm::ArrayRef<Axis> GemmConstantBiasKernel::GetAxes() { return axes_; }
+
 void GemmConstantBiasKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
                                  mlir::Value &rhs, mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
