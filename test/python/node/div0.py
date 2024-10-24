@@ -8,23 +8,21 @@ if __name__ == "__main__":
         opset_import=[onnx.helper.make_opsetid("", 18)],
     )
     graph = model.graph
-    graph.name = "cast"
-    input = onnx.helper.make_tensor_value_info(
-        "input",
-        onnx.TensorProto.BOOL,
-        [1, 128],
+    graph.name = "div0"
+    lhs = onnx.helper.make_tensor_value_info(
+        "lhs", onnx.TensorProto.FLOAT, [1, 128, 768]
     )
+    rhs = onnx.helper.make_tensor_value_info("rhs", onnx.TensorProto.FLOAT, [1, 128, 1])
     output = onnx.helper.make_tensor_value_info(
-        "output", onnx.TensorProto.INT32, [1, 128]
+        "output", onnx.TensorProto.FLOAT, [1, 128, 768]
     )
-    graph.input.extend([input])
+    graph.input.extend([lhs, rhs])
     graph.output.extend([output])
     node = onnx.helper.make_node(
-        "Cast",
-        inputs=["input"],
+        "Div",
+        inputs=["lhs", "rhs"],
         outputs=["output"],
-        name="cast",
-        to=onnx.TensorProto.INT32,
+        name="div",
     )
     graph.node.extend([node])
     onnx.checker.check_model(model)

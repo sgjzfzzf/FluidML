@@ -8,7 +8,16 @@
 namespace cpu_transformers {
 namespace kernel {
 
-class DivConstantRhsKernel : public SingleInputWithoutBufferKernel {
+class DivKernel : virtual public Kernel {
+public:
+  DivKernel() = default;
+  DivKernel(const DivKernel &) = delete;
+  DivKernel(DivKernel &&) = default;
+  virtual ~DivKernel() = default;
+};
+
+class DivConstantRhsKernel : public DivKernel,
+                             public SingleInputWithoutBufferKernel {
 public:
   static constexpr char kKernelName[] = "DivConstantRhsKernel";
   DivConstantRhsKernel(Type type, float64_t constant);
@@ -22,6 +31,19 @@ public:
 private:
   const Type type_;
   const float64_t constant_;
+};
+
+class DivCommonKernel : public DivKernel,
+                        public DoubleInputsWithoutBufferKernel {
+public:
+  static constexpr char kKernelName[] = "DivCommonKernel";
+  DivCommonKernel() = default;
+  DivCommonKernel(const DivCommonKernel &) = delete;
+  DivCommonKernel(DivCommonKernel &&) = default;
+  virtual ~DivCommonKernel() = default;
+  std::string GetKernelName() const override;
+  void Run(mlir::OpBuilder &builder, mlir::Value &lhs, mlir::Value &rhs,
+           mlir::Value &output) const override;
 };
 
 } // namespace kernel

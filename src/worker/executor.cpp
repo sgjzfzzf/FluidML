@@ -1,5 +1,4 @@
 #include "worker/executor.h"
-#include "optimization/graph/manager.h"
 #include "structure/context/context.h"
 #include "worker/builder.h"
 #include "worker/converter.h"
@@ -103,13 +102,10 @@ void ExecutorImpl::Compile(std::istream &input, std::ofstream *mlir,
                            std::ofstream *llvm) {
   {
     std::unique_ptr<worker::Parser> parser = worker::Parser::Make();
-    optimization::GraphPassesManager pm;
     std::unique_ptr<worker::Converter> converter = worker::Converter::Make();
     std::unique_ptr<worker::GeneralBuilder> builder = makeBuilder();
     std::unique_ptr<worker::Lower> lower = context_.MakeLower();
     graph::Graph graph = parser->Run(input);
-    pm.RegisterAllPasses();
-    pm.Run(graph);
     flow::Flow flow = converter->Run(graph);
     std::unique_ptr<worker::Planner> planner = makePlanner();
     auto [sequence, index] = planner->Run(flow);

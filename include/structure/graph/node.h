@@ -11,14 +11,14 @@ namespace graph {
 
 class Node {
 public:
-  // TODO: Cast, ConstantOfShape, Equal aren't in the current implementation
-  // plan.
+  // TODO: ConstantOfShape aren't in the current implementation plan.
   enum class Op {
     Add,
     AddDivErfAddMulMul,
     Cast,
     Concat,
     ConstantOfShape,
+    CumSum,
     Div,
     Equal,
     Erf,
@@ -29,10 +29,13 @@ public:
     MatMul,
     Mul,
     Neg,
+    Not,
     Pow,
+    ReduceMean,
     Reshape,
     Slice,
     Softmax,
+    Sqrt,
     Sub,
     Tanh,
     Transpose,

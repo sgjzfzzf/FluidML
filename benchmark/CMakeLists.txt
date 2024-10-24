@@ -5,10 +5,11 @@ include_directories(${CMAKE_BINARY_DIR}/external/include)
 
 link_directories(${CMAKE_BINARY_DIR}/external/lib)
 
-add_executable(bert bert.cpp)
-add_dependencies(bert prepare_bert)
-target_link_libraries(bert LIB_STATIC benchmark glog)
+set(Models "bert" "gptneox" "ibert")
 
-add_executable(gptneox gptneox.cpp)
-add_dependencies(gptneox prepare_gptneox)
-target_link_libraries(gptneox LIB_STATIC benchmark glog)
+foreach(Model IN LISTS Models)
+    add_executable(${Model} ${Model}.cpp)
+    add_dependencies(${Model} prepare_${Model})
+    target_link_libraries(${Model} LIB_STATIC benchmark glog)
+    install(TARGETS ${Model} DESTINATION bin)
+endforeach()

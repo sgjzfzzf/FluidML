@@ -24,6 +24,22 @@ protected:
   SubConstantLhsKernelGenerator(SubConstantLhsKernelGenerator &&) = default;
 };
 
+class SubCommonKernelGenerator
+    : public DoubleInputsWithoutBufferKernelGenerator {
+public:
+  virtual ~SubCommonKernelGenerator() = default;
+  virtual std::shared_ptr<SubCommonKernel>
+  Yield(llvm::ArrayRef<size_t> lhs_layout, llvm::ArrayRef<size_t> rhs_layout,
+        llvm::ArrayRef<size_t> output_layout) = 0;
+  static std::unique_ptr<SubCommonKernelGenerator>
+  Make(Meta &&lhs_meta, Meta &&rhs_meta, Meta &&output_meta);
+
+protected:
+  SubCommonKernelGenerator() = default;
+  SubCommonKernelGenerator(const SubCommonKernelGenerator &) = delete;
+  SubCommonKernelGenerator(SubCommonKernelGenerator &&) = default;
+};
+
 } // namespace kernel
 } // namespace cpu_transformers
 

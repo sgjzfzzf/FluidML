@@ -3,6 +3,8 @@
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/Utils/StructuredOpsUtils.h"
 #include "mlir/IR/AffineMap.h"
+#include "mlir/IR/Builders.h"
+#include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/MLIRContext.h"
 #include "structure/kernel/kernel/utils.h"
 
@@ -59,8 +61,8 @@ void MulCommonKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
                    output_type = mlir::cast<mlir::MemRefType>(output.getType());
   const size_t rank = output_type.getRank();
 #ifdef DEBUG
-  assert(rank <= lhs_type.getRank());
-  assert(rank <= rhs_type.getRank());
+  assert(rank >= lhs_type.getRank());
+  assert(rank >= rhs_type.getRank());
 #endif
   llvm::SmallVector<mlir::AffineMap> maps =
       GetBroadcastAffineMaps(builder, {lhs_type, rhs_type}, output_type);
@@ -73,8 +75,25 @@ void MulCommonKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
 #ifdef DEBUG
         assert(inputs.size() == 3);
 #endif
-        mlir::Value lhs = inputs[0], rhs = inputs[1],
-                    mul_op = b.create<mlir::arith::MulFOp>(loc, lhs, rhs);
+        mlir::Value lhs = inputs[0], rhs = inputs[1], mul_op;
+        mlir::Type lhs_elem_type = lhs_type.getElementType(),
+                   rhs_elem_type = rhs_type.getElementType(),
+                   output_elem_type = output_type.getElementType();
+        if (lhs_elem_type.isa<mlir::IntegerType>() &&
+            rhs_elem_type.isa<mlir::IntegerType>() &&
+            output_elem_type.isa<mlir::IntegerType>()) {
+          mul_op = b.create<mlir::arith::MulIOp>(loc, lhs, rhs);
+        } else if (lhs_elem_type.isa<mlir::FloatType>() &&
+                   rhs_elem_type.isa<mlir::FloatType>() &&
+                   output_elem_type.isa<mlir::FloatType>()) {
+          mul_op = b.create<mlir::arith::MulFOp>(loc, lhs, rhs);
+        } else {
+#ifdef DEBUG
+          assert(false && "unimplemented");
+#else
+          __builtin_unreachable();
+#endif
+        }
         b.create<mlir::linalg::YieldOp>(loc, mul_op);
       });
 }

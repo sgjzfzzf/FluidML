@@ -23,7 +23,13 @@ void AddConstantKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                             mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::Value constant;
-  if (type_ == Type::kFloat32) {
+  if (type_ == Type::kInt32) {
+    constant = builder.create<mlir::arith::ConstantOp>(
+        builder.getUnknownLoc(), builder.getI32IntegerAttr(constant_));
+  } else if (type_ == Type::kInt64) {
+    constant = builder.create<mlir::arith::ConstantOp>(
+        builder.getUnknownLoc(), builder.getI64IntegerAttr(constant_));
+  } else if (type_ == Type::kFloat32) {
     constant = builder.create<mlir::arith::ConstantOp>(
         builder.getUnknownLoc(), builder.getF32FloatAttr(constant_));
   } else {
@@ -39,23 +45,28 @@ void AddConstantKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 #ifdef DEBUG
   assert(rank == output_type.getRank());
 #endif
-  Type input_raw_type = GetType(input_type.getElementType()),
-       output_raw_type = GetType(output_type.getElementType());
-  mlir::AffineMap input_map = builder.getMultiDimIdentityMap(rank),
-                  output_map = builder.getMultiDimIdentityMap(rank);
-  llvm::SmallVector<mlir::AffineMap> maps = {input_map, output_map};
   llvm::SmallVector<mlir::utils::IteratorType> iterator_types(
       rank, mlir::utils::IteratorType::parallel);
   builder.create<mlir::linalg::GenericOp>(
       builder.getUnknownLoc(), mlir::TypeRange{}, mlir::ValueRange{input},
-      mlir::ValueRange{output}, maps, iterator_types,
+      mlir::ValueRange{output},
+      llvm::SmallVector(2, builder.getMultiDimIdentityMap(rank)),
+      iterator_types,
       [&](mlir::OpBuilder &b, mlir::Location loc, mlir::ValueRange inputs) {
 #ifdef DEBUG
         assert(inputs.size() == 2);
 #endif
         mlir::Value input = inputs[0], add_op;
-        if (input_raw_type == Type::kFloat32 &&
-            output_raw_type == Type::kFloat32 && type_ == Type::kFloat32) {
+        mlir::Type input_elem_type = input_type.getElementType(),
+                   output_elem_type = output_type.getElementType(),
+                   constant_type = constant.getType();
+        if (input_elem_type.isa<mlir::IntegerType>() &&
+            constant_type.isa<mlir::IntegerType>() &&
+            output_elem_type.isa<mlir::IntegerType>()) {
+          add_op = b.create<mlir::arith::AddIOp>(loc, input, constant);
+        } else if (input_elem_type.isa<mlir::FloatType>() &&
+                   constant_type.isa<mlir::FloatType>() &&
+                   output_elem_type.isa<mlir::FloatType>()) {
           add_op = b.create<mlir::arith::AddFOp>(loc, input, constant);
         } else {
 #ifdef DEBUG

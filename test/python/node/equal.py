@@ -9,19 +9,24 @@ if __name__ == "__main__":
     )
     graph = model.graph
     graph.name = "equal"
-    input0 = onnx.helper.make_tensor("input0", onnx.TensorProto.INT64, [2], [1, 128])
-    input1 = onnx.helper.make_tensor_value_info(
-        "input1",
-        onnx.TensorProto.INT64,
-        [2],
+    input = onnx.helper.make_tensor_value_info(
+        "input", onnx.TensorProto.INT64, [1, 128]
     )
-    output = onnx.helper.make_tensor_value_info("output", onnx.TensorProto.BOOL, [2])
-    graph.initializer.extend([input0])
-    graph.input.extend([input1])
+    value = onnx.helper.make_tensor(
+        "value",
+        onnx.TensorProto.INT64,
+        [],
+        [1],
+    )
+    output = onnx.helper.make_tensor_value_info(
+        "output", onnx.TensorProto.BOOL, [1, 128]
+    )
+    graph.initializer.extend([value])
+    graph.input.extend([input])
     graph.output.extend([output])
     node = onnx.helper.make_node(
         "Equal",
-        inputs=["input0", "input1"],
+        inputs=["input", "value"],
         outputs=["output"],
         name="equal",
     )

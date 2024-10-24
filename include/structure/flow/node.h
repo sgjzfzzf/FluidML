@@ -206,21 +206,34 @@ private:
   const float64_t mul1_weight_;
 };
 
+class CastNode : public SingleInputWithoutBufferNode {
+public:
+  CastNode(std::string &&name, std::shared_ptr<Region> &&input,
+           std::shared_ptr<Region> &&output);
+  CastNode(const CastNode &node) = delete;
+  CastNode(CastNode &&node) = default;
+  virtual ~CastNode() = default;
+  std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<CastNode> Clone() const;
+};
+
 class ConcatNode : virtual public Node {
 public:
-  constexpr static const char *kAxisAttrName = "axis";
   ConcatNode(std::string &&name);
   ConcatNode(const ConcatNode &node) = delete;
   ConcatNode(ConcatNode &&node) = default;
   virtual ~ConcatNode() = default;
+  static constexpr const char *kAxisAttrName = "axis";
 };
 
 class Concat2CommonNode : public ConcatNode,
                           public DoubleInputsWithoutBufferNode {
 public:
-  Concat2CommonNode(std::string &&name, std::shared_ptr<Region> &&lhs,
+  Concat2CommonNode(std::string &&name, int64_t axis,
+                    std::shared_ptr<Region> &&lhs,
                     std::shared_ptr<Region> &&rhs,
-                    std::shared_ptr<Region> &&output, int64_t axis);
+                    std::shared_ptr<Region> &&output);
   Concat2CommonNode(const Concat2CommonNode &node) = delete;
   Concat2CommonNode(Concat2CommonNode &&node) = default;
   virtual ~Concat2CommonNode() = default;
@@ -233,6 +246,32 @@ protected:
   const int64_t axis_;
 };
 
+class CumSumNode : public SingleInputWithoutBufferNode {
+public:
+  CumSumNode(std::string &&name, int64_t axis, bool exclusive, bool reverse,
+             std::shared_ptr<Region> &&input, std::shared_ptr<Region> &&output);
+  CumSumNode(const CumSumNode &node) = delete;
+  CumSumNode(CumSumNode &&node) = default;
+  virtual ~CumSumNode() = default;
+  static constexpr int64_t kAxis = 0;
+  static constexpr bool kExclusive = false;
+  static constexpr bool kReverse = false;
+  static constexpr const char *kAxisAttrName = "axis";
+  static constexpr const char *kExclusiveAttrName = "exclusive";
+  static constexpr const char *kReverseAttrName = "reverse";
+  std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<CumSumNode> Clone() const;
+  int64_t GetAxis() const noexcept;
+  bool GetExclusive() const noexcept;
+  bool GetReverse() const noexcept;
+
+private:
+  const int64_t axis_;
+  const bool exclusive_;
+  const bool reverse_;
+};
+
 class DivNode : virtual public Node {
 public:
   DivNode(std::string &&name);
@@ -241,18 +280,48 @@ public:
   virtual ~DivNode() = default;
 };
 
-class DivConstantScalarNode : public DivNode,
-                              public SingleInputWithoutBufferNode {
+class DivConstantRhsNode : public DivNode, public SingleInputWithoutBufferNode {
 public:
-  DivConstantScalarNode(std::string &&name, Type type, float64_t value,
-                        std::shared_ptr<Region> &&input,
-                        std::shared_ptr<Region> &&output);
-  DivConstantScalarNode(const DivConstantScalarNode &node) = delete;
-  DivConstantScalarNode(DivConstantScalarNode &&node) = default;
-  virtual ~DivConstantScalarNode() = default;
+  DivConstantRhsNode(std::string &&name, Type type, float64_t value,
+                     std::shared_ptr<Region> &&input,
+                     std::shared_ptr<Region> &&output);
+  DivConstantRhsNode(const DivConstantRhsNode &node) = delete;
+  DivConstantRhsNode(DivConstantRhsNode &&node) = default;
+  virtual ~DivConstantRhsNode() = default;
   std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
-  std::shared_ptr<DivConstantScalarNode> Clone() const;
+  std::shared_ptr<DivConstantRhsNode> Clone() const;
+  Type GetType() const noexcept;
+  float64_t GetValue() const noexcept;
+
+private:
+  const Type type_;
+  const float64_t value_;
+};
+
+class DivCommonNode : public DivNode, public DoubleInputsWithoutBufferNode {
+public:
+  DivCommonNode(std::string &&name, std::shared_ptr<Region> &&lhs,
+                std::shared_ptr<Region> &&rhs,
+                std::shared_ptr<Region> &&output);
+  DivCommonNode(const DivCommonNode &node) = delete;
+  DivCommonNode(DivCommonNode &&node) = default;
+  virtual ~DivCommonNode() = default;
+  std::shared_ptr<DoubleInputsWithoutBufferNode>
+  CloneAsDoubleInputsWithoutBufferNode() const override;
+  std::shared_ptr<DivCommonNode> Clone() const;
+};
+
+class EqualNode : public SingleInputWithoutBufferNode {
+public:
+  EqualNode(std::string &&name, Type type, float64_t value,
+            std::shared_ptr<Region> &&input, std::shared_ptr<Region> &&output);
+  EqualNode(const EqualNode &node) = delete;
+  EqualNode(EqualNode &&node) = default;
+  virtual ~EqualNode() = default;
+  std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<EqualNode> Clone() const;
   Type GetType() const noexcept;
   float64_t GetValue() const noexcept;
 
@@ -275,8 +344,8 @@ public:
 
 class GatherNode : virtual public Node {
 public:
-  constexpr static int64_t kAxis = 0;
-  constexpr static const char *kAxisAttrName = "axis";
+  static constexpr int64_t kAxis = 0;
+  static constexpr const char *kAxisAttrName = "axis";
   GatherNode(std::string &&name);
   GatherNode(const GatherNode &node) = delete;
   GatherNode(GatherNode &&node) = default;
@@ -365,10 +434,10 @@ public:
   static constexpr float64_t kBeta = 1.0;
   static constexpr bool kTransA = false;
   static constexpr bool kTransB = false;
-  static constexpr const char *kAlphaAttrName = "alpha";
-  static constexpr const char *kBetaAttrName = "beta";
-  static constexpr const char *kTransAAttrName = "transA";
-  static constexpr const char *kTransBAttrName = "transB";
+  static constexpr const char kAlphaAttrName[] = "alpha";
+  static constexpr const char kBetaAttrName[] = "beta";
+  static constexpr const char kTransAAttrName[] = "transA";
+  static constexpr const char kTransBAttrName[] = "transB";
   float64_t GetAlpha() const noexcept;
   float64_t GetBeta() const noexcept;
   bool GetTransA() const noexcept;
@@ -409,8 +478,8 @@ public:
   virtual ~LayerNormalizationNode() = default;
   static constexpr int64_t kAxis = 1;
   static constexpr float64_t kEpsilon = 1e-5;
-  static constexpr const char *kAxisAttrName = "axis";
-  static constexpr const char *kEpsilonAttrName = "epsilon";
+  static constexpr const char kAxisAttrName[] = "axis";
+  static constexpr const char kEpsilonAttrName[] = "epsilon";
   virtual const Meta &GetMeta() const noexcept = 0;
   int64_t GetAxis() const noexcept;
   float64_t GetEpsilon() const noexcept;
@@ -510,6 +579,18 @@ public:
   std::shared_ptr<NegNode> Clone() const;
 };
 
+class NotNode : public SingleInputWithoutBufferNode {
+public:
+  NotNode(std::string &&name, std::shared_ptr<Region> &&input,
+          std::shared_ptr<Region> &&output);
+  NotNode(const NotNode &node) = delete;
+  NotNode(NotNode &&node) = default;
+  virtual ~NotNode() = default;
+  std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<NotNode> Clone() const;
+};
+
 class PowNode : public SingleInputWithoutBufferNode {
 public:
   PowNode(std::string &&name, Type type, float64_t exp,
@@ -526,6 +607,25 @@ public:
 private:
   const Type type_;
   const float64_t exp_;
+};
+
+class ReduceMeanNode : public SingleInputWithoutBufferNode {
+public:
+  ReduceMeanNode(std::string &&name, std::shared_ptr<Region> &&input,
+                 std::shared_ptr<Region> &&output, std::vector<int64_t> &&axes,
+                 bool keepdims);
+  ReduceMeanNode(const ReduceMeanNode &node) = delete;
+  ReduceMeanNode(ReduceMeanNode &&node) = default;
+  virtual ~ReduceMeanNode() = default;
+  std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<ReduceMeanNode> Clone() const;
+  const std::vector<int64_t> &GetAxes() const noexcept;
+  bool GetKeepDims() const noexcept;
+
+private:
+  const std::vector<int64_t> axes_;
+  const bool keepdims_;
 };
 
 class ReshapeNode : public SingleInputWithoutBufferNode {
@@ -566,8 +666,8 @@ private:
 
 class SoftmaxNode : public SingleInputWithBufferNode {
 public:
-  constexpr static int64_t kAxis = -1;
-  constexpr static const char *kAxisAttrName = "axis";
+  static constexpr int64_t kAxis = -1;
+  static constexpr const char *kAxisAttrName = "axis";
   SoftmaxNode(std::string &&name, std::shared_ptr<Region> &&input,
               std::shared_ptr<Region> &&output, int64_t axis = kAxis);
   SoftmaxNode(const SoftmaxNode &node) = delete;
@@ -584,6 +684,18 @@ private:
   const int64_t axis_;
 };
 
+class SqrtNode : public SingleInputWithoutBufferNode {
+public:
+  SqrtNode(std::string &&name, std::shared_ptr<Region> &&input,
+           std::shared_ptr<Region> &&output);
+  SqrtNode(const SqrtNode &node) = delete;
+  SqrtNode(SqrtNode &&node) = default;
+  virtual ~SqrtNode() = default;
+  std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<SqrtNode> Clone() const;
+};
+
 class SubNode : virtual public Node {
 public:
   SubNode(std::string &&name);
@@ -592,24 +704,36 @@ public:
   virtual ~SubNode() = default;
 };
 
-class SubConstantScalarLhsNode : public SubNode,
-                                 public SingleInputWithoutBufferNode {
+class SubConstantLhsNode : public SubNode, public SingleInputWithoutBufferNode {
 public:
-  SubConstantScalarLhsNode(std::string &&name, Type type, float64_t value,
-                           std::shared_ptr<Region> &&input,
-                           std::shared_ptr<Region> &&output);
-  SubConstantScalarLhsNode(const SubConstantScalarLhsNode &node) = delete;
-  SubConstantScalarLhsNode(SubConstantScalarLhsNode &&node) = default;
-  virtual ~SubConstantScalarLhsNode() = default;
+  SubConstantLhsNode(std::string &&name, Type type, float64_t value,
+                     std::shared_ptr<Region> &&input,
+                     std::shared_ptr<Region> &&output);
+  SubConstantLhsNode(const SubConstantLhsNode &node) = delete;
+  SubConstantLhsNode(SubConstantLhsNode &&node) = default;
+  virtual ~SubConstantLhsNode() = default;
   std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
-  std::shared_ptr<SubConstantScalarLhsNode> Clone() const;
+  std::shared_ptr<SubConstantLhsNode> Clone() const;
   Type GetType() const noexcept;
   float64_t GetValue() const noexcept;
 
 private:
   const Type type_;
   const float64_t value_;
+};
+
+class SubCommonNode : public SubNode, public DoubleInputsWithoutBufferNode {
+public:
+  SubCommonNode(std::string &&name, std::shared_ptr<Region> &&lhs,
+                std::shared_ptr<Region> &&rhs,
+                std::shared_ptr<Region> &&output);
+  SubCommonNode(const SubCommonNode &node) = delete;
+  SubCommonNode(SubCommonNode &&node) = default;
+  virtual ~SubCommonNode() = default;
+  std::shared_ptr<DoubleInputsWithoutBufferNode>
+  CloneAsDoubleInputsWithoutBufferNode() const override;
+  std::shared_ptr<SubCommonNode> Clone() const;
 };
 
 class TanhNode : public SingleInputWithoutBufferNode {
@@ -626,7 +750,7 @@ public:
 
 class TransposeNode : public SingleInputWithoutBufferNode {
 public:
-  constexpr static const char *kPermAttrName = "perm";
+  static constexpr const char *kPermAttrName = "perm";
   TransposeNode(std::string &&name, std::vector<int64_t> &&perm,
                 std::shared_ptr<Region> &&input,
                 std::shared_ptr<Region> &&output);

@@ -71,10 +71,12 @@ size_t NegKernelGeneratorImpl::GetHashCode() const {
 }
 
 bool NegKernelGeneratorImpl::Equals(const KernelGenerator &other) const {
-  if (typeid(*this) != typeid(other)) {
+  if (const NegKernelGeneratorImpl *other_ptr =
+          dynamic_cast<const NegKernelGeneratorImpl *>(&other)) {
     return false;
+  } else {
+    return Equals(static_cast<const NegKernelGeneratorImpl &>(other));
   }
-  return Equals(static_cast<const NegKernelGeneratorImpl &>(other));
 }
 
 bool NegKernelGeneratorImpl::Equals(const NegKernelGeneratorImpl &other) const {

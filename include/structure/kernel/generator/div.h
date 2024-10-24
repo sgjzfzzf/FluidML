@@ -24,6 +24,22 @@ protected:
   DivConstantRhsKernelGenerator(DivConstantRhsKernelGenerator &&) = default;
 };
 
+class DivCommonKernelGenerator
+    : public DoubleInputsWithoutBufferKernelGenerator {
+public:
+  virtual ~DivCommonKernelGenerator() = default;
+  virtual std::shared_ptr<DivCommonKernel>
+  Yield(llvm::ArrayRef<size_t> lhs_layout, llvm::ArrayRef<size_t> rhs_layout,
+        llvm::ArrayRef<size_t> output_layout) = 0;
+  static std::unique_ptr<DoubleInputsWithoutBufferKernelGenerator>
+  Make(Meta &&lhs_meta, Meta &&rhs_meta, Meta &&output_meta);
+
+protected:
+  DivCommonKernelGenerator() = default;
+  DivCommonKernelGenerator(const DivCommonKernelGenerator &) = delete;
+  DivCommonKernelGenerator(DivCommonKernelGenerator &&) = default;
+};
+
 } // namespace kernel
 } // namespace cpu_transformers
 

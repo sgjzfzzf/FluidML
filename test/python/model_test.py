@@ -60,7 +60,7 @@ class ModelTest(unittest.TestCase):
             }
         )
         self.logger.info(
-            f"bert:\nTime cost: {time_cost} ns\nONNX time cost: {onnx_time_cost} ns"
+            f"{name}:\nTime cost: {time_cost} ns\nONNX time cost: {onnx_time_cost} ns"
         )
 
     def test_gptneox(self):
@@ -132,7 +132,52 @@ class ModelTest(unittest.TestCase):
             }
         )
         self.logger.info(
-            f"gptneox:\nTime cost: {time_cost} ns\nONNX time cost: {onnx_time_cost} ns"
+            f"{name}:\nTime cost: {time_cost} ns\nONNX time cost: {onnx_time_cost} ns"
+        )
+
+    def test_ibert(self):
+        name: str = "ibert"
+        input: Optional[str] = os.environ.get("IBERT_MODEL_PATH")
+        self.assertIsNotNone(input)
+        mlir: str = f"{name}.mlir"
+        llvm: str = f"{name}-llvm.mlir"
+        executor: cpu_transformers.Executor = (
+            cpu_transformers.Executor.make_plain_greedy(name)
+        )
+        executor.compile(input, mlir, llvm)
+        input_ids: np.ndarray = np.random.randint(0, 50265, (1, 128), dtype=np.int64)
+        attention_mask: np.ndarray = np.ones((1, 128), dtype=np.float32)
+        output0: np.ndarray = np.zeros((1, 128, 768), dtype=np.float32)
+        output1: np.ndarray = np.zeros((1, 768), dtype=np.float32)
+        session_options: onnxruntime.SessionOptions = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session: onnxruntime.InferenceSession = onnxruntime.InferenceSession(
+            input, session_options
+        )
+        start: int = time.time_ns()
+        session.run(
+            [
+                "onnx::Gather_2276",
+                "2279",
+            ],
+            {
+                "input_ids": input_ids,
+                "attention_mask": attention_mask,
+            },
+        )
+        end: int = time.time_ns()
+        onnx_time_cost: int = end - start
+        time_cost: int = executor.invoke(
+            {
+                "input_ids": input_ids,
+                "attention_mask": attention_mask,
+                "onnx::Gather_2276": output0,
+                "2279": output1,
+            }
+        )
+        self.logger.info(
+            f"{name}:\nTime cost: {time_cost} ns\nONNX time cost: {onnx_time_cost} ns"
         )
 
 

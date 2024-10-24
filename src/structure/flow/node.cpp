@@ -277,13 +277,28 @@ float64_t AddDivErfAddMulMulNode::GetMul1Weight() const noexcept {
   return mul1_weight_;
 }
 
+CastNode::CastNode(std::string &&name, std::shared_ptr<Region> &&input,
+                   std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)) {}
+
+std::shared_ptr<SingleInputWithoutBufferNode>
+CastNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<CastNode> CastNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<CastNode>(std::move(name), GetInput(), GetOutput());
+}
+
 ConcatNode::ConcatNode(std::string &&name) : Node(std::move(name)) {}
 
-Concat2CommonNode::Concat2CommonNode(std::string &&name,
+Concat2CommonNode::Concat2CommonNode(std::string &&name, int64_t axis,
                                      std::shared_ptr<Region> &&lhs,
                                      std::shared_ptr<Region> &&rhs,
-                                     std::shared_ptr<Region> &&output,
-                                     int64_t axis)
+                                     std::shared_ptr<Region> &&output)
     : Node(std::move(name)),
       DoubleInputsWithoutBufferNode(std::move(name), std::move(lhs),
                                     std::move(rhs), std::move(output)),
@@ -311,8 +326,8 @@ Concat2CommonNode::CloneAsDoubleInputsWithoutBufferNode() const {
 
 std::shared_ptr<Concat2CommonNode> Concat2CommonNode::Clone() const {
   std::string name = GetName();
-  return std::make_shared<Concat2CommonNode>(std::move(name), GetLhs(),
-                                             GetRhs(), GetOutput(), GetAxis());
+  return std::make_shared<Concat2CommonNode>(std::move(name), GetAxis(),
+                                             GetLhs(), GetRhs(), GetOutput());
 }
 
 int64_t Concat2CommonNode::GetAxis() const noexcept {
@@ -326,12 +341,38 @@ int64_t Concat2CommonNode::GetAxis() const noexcept {
   return axis_ >= 0 ? axis_ : rank + axis_;
 }
 
+CumSumNode::CumSumNode(std::string &&name, int64_t axis, bool exclusive,
+                       bool reverse, std::shared_ptr<Region> &&input,
+                       std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      axis_(axis), exclusive_(exclusive), reverse_(reverse) {}
+
+std::shared_ptr<SingleInputWithoutBufferNode>
+CumSumNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<CumSumNode> CumSumNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<CumSumNode>(std::move(name), GetAxis(),
+                                      GetExclusive(), GetReverse(), GetInput(),
+                                      GetOutput());
+}
+
+int64_t CumSumNode::GetAxis() const noexcept { return axis_; }
+
+bool CumSumNode::GetExclusive() const noexcept { return exclusive_; }
+
+bool CumSumNode::GetReverse() const noexcept { return reverse_; }
+
 DivNode::DivNode(std::string &&name) : Node(std::move(name)) {}
 
-DivConstantScalarNode::DivConstantScalarNode(std::string &&name, Type type,
-                                             float64_t value,
-                                             std::shared_ptr<Region> &&input,
-                                             std::shared_ptr<Region> &&output)
+DivConstantRhsNode::DivConstantRhsNode(std::string &&name, Type type,
+                                       float64_t value,
+                                       std::shared_ptr<Region> &&input,
+                                       std::shared_ptr<Region> &&output)
     : Node(std::move(name)),
       SingleInputWithoutBufferNode(std::move(name), std::move(input),
                                    std::move(output)),
@@ -344,19 +385,61 @@ DivConstantScalarNode::DivConstantScalarNode(std::string &&name, Type type,
 }
 
 std::shared_ptr<SingleInputWithoutBufferNode>
-DivConstantScalarNode::CloneAsSingleInputWithoutBufferNode() const {
+DivConstantRhsNode::CloneAsSingleInputWithoutBufferNode() const {
   return Clone();
 }
 
-std::shared_ptr<DivConstantScalarNode> DivConstantScalarNode::Clone() const {
+std::shared_ptr<DivConstantRhsNode> DivConstantRhsNode::Clone() const {
   std::string name = GetName();
-  return std::make_shared<DivConstantScalarNode>(
+  return std::make_shared<DivConstantRhsNode>(
       std::move(name), GetType(), GetValue(), GetInput(), GetOutput());
 }
 
-Type DivConstantScalarNode::GetType() const noexcept { return type_; }
+Type DivConstantRhsNode::GetType() const noexcept { return type_; }
 
-float64_t DivConstantScalarNode::GetValue() const noexcept { return value_; }
+float64_t DivConstantRhsNode::GetValue() const noexcept { return value_; }
+
+DivCommonNode::DivCommonNode(std::string &&name, std::shared_ptr<Region> &&lhs,
+                             std::shared_ptr<Region> &&rhs,
+                             std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      DoubleInputsWithoutBufferNode(std::move(name), std::move(lhs),
+                                    std::move(rhs), std::move(output)),
+      DivNode(std::move(name)) {}
+
+std::shared_ptr<DoubleInputsWithoutBufferNode>
+DivCommonNode::CloneAsDoubleInputsWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<DivCommonNode> DivCommonNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<DivCommonNode>(std::move(name), GetLhs(), GetRhs(),
+                                         GetOutput());
+}
+
+EqualNode::EqualNode(std::string &&name, Type type, float64_t value,
+                     std::shared_ptr<Region> &&input,
+                     std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      type_(type), value_(value) {}
+
+std::shared_ptr<SingleInputWithoutBufferNode>
+EqualNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<EqualNode> EqualNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<EqualNode>(std::move(name), GetType(), GetValue(),
+                                     GetInput(), GetOutput());
+}
+
+Type EqualNode::GetType() const noexcept { return type_; }
+
+float64_t EqualNode::GetValue() const noexcept { return value_; }
 
 ErfNode::ErfNode(std::string &&name, std::shared_ptr<Region> &&input,
                  std::shared_ptr<Region> &&output)
@@ -759,6 +842,22 @@ std::shared_ptr<NegNode> NegNode::Clone() const {
   return std::make_shared<NegNode>(std::move(name), GetInput(), GetOutput());
 }
 
+NotNode::NotNode(std::string &&name, std::shared_ptr<Region> &&input,
+                 std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)) {}
+
+std::shared_ptr<SingleInputWithoutBufferNode>
+NotNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<NotNode> NotNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<NotNode>(std::move(name), GetInput(), GetOutput());
+}
+
 PowNode::PowNode(std::string &&name, Type type, float64_t exp,
                  std::shared_ptr<Region> &&input,
                  std::shared_ptr<Region> &&output)
@@ -781,6 +880,33 @@ std::shared_ptr<PowNode> PowNode::Clone() const {
 Type PowNode::GetType() const noexcept { return type_; }
 
 float64_t PowNode::GetExp() const noexcept { return exp_; }
+
+ReduceMeanNode::ReduceMeanNode(std::string &&name,
+                               std::shared_ptr<Region> &&input,
+                               std::shared_ptr<Region> &&output,
+                               std::vector<int64_t> &&axes, bool keepdims)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      axes_(std::move(axes)), keepdims_(keepdims) {}
+
+std::shared_ptr<SingleInputWithoutBufferNode>
+ReduceMeanNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<ReduceMeanNode> ReduceMeanNode::Clone() const {
+  std::string name = GetName();
+  std::vector<int64_t> axes = GetAxes();
+  return std::make_shared<ReduceMeanNode>(
+      std::move(name), GetInput(), GetOutput(), std::move(axes), GetKeepDims());
+}
+
+const std::vector<int64_t> &ReduceMeanNode::GetAxes() const noexcept {
+  return axes_;
+}
+
+bool ReduceMeanNode::GetKeepDims() const noexcept { return keepdims_; }
 
 ReshapeNode::ReshapeNode(std::string &&name, std::shared_ptr<Region> &&input,
                          std::shared_ptr<Region> &&output)
@@ -910,31 +1036,65 @@ const Meta &SoftmaxNode::GetMeta() const noexcept {
   return input_->GetMeta();
 }
 
+SqrtNode::SqrtNode(std::string &&name, std::shared_ptr<Region> &&input,
+                   std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)) {}
+
+std::shared_ptr<SingleInputWithoutBufferNode>
+SqrtNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<SqrtNode> SqrtNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<SqrtNode>(std::move(name), GetInput(), GetOutput());
+}
+
 SubNode::SubNode(std::string &&name) : Node(std::move(name)) {}
 
-SubConstantScalarLhsNode::SubConstantScalarLhsNode(
-    std::string &&name, Type type, float64_t value,
-    std::shared_ptr<Region> &&input, std::shared_ptr<Region> &&output)
+SubConstantLhsNode::SubConstantLhsNode(std::string &&name, Type type,
+                                       float64_t value,
+                                       std::shared_ptr<Region> &&input,
+                                       std::shared_ptr<Region> &&output)
     : Node(std::move(name)), SubNode(std::move(name)),
       SingleInputWithoutBufferNode(std::move(name), std::move(input),
                                    std::move(output)),
       type_(type), value_(value) {}
 
 std::shared_ptr<SingleInputWithoutBufferNode>
-SubConstantScalarLhsNode::CloneAsSingleInputWithoutBufferNode() const {
+SubConstantLhsNode::CloneAsSingleInputWithoutBufferNode() const {
   return Clone();
 }
 
-std::shared_ptr<SubConstantScalarLhsNode>
-SubConstantScalarLhsNode::Clone() const {
+std::shared_ptr<SubConstantLhsNode> SubConstantLhsNode::Clone() const {
   std::string name = GetName();
-  return std::make_shared<SubConstantScalarLhsNode>(
+  return std::make_shared<SubConstantLhsNode>(
       std::move(name), GetType(), GetValue(), GetInput(), GetOutput());
 }
 
-Type SubConstantScalarLhsNode::GetType() const noexcept { return type_; }
+Type SubConstantLhsNode::GetType() const noexcept { return type_; }
 
-float64_t SubConstantScalarLhsNode::GetValue() const noexcept { return value_; }
+float64_t SubConstantLhsNode::GetValue() const noexcept { return value_; }
+
+SubCommonNode::SubCommonNode(std::string &&name, std::shared_ptr<Region> &&lhs,
+                             std::shared_ptr<Region> &&rhs,
+                             std::shared_ptr<Region> &&output)
+    : Node(std::move(name)), SubNode(std::move(name)),
+      DoubleInputsWithoutBufferNode(std::move(name), std::move(lhs),
+                                    std::move(rhs), std::move(output)) {}
+
+std::shared_ptr<DoubleInputsWithoutBufferNode>
+SubCommonNode::CloneAsDoubleInputsWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<SubCommonNode> SubCommonNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<SubCommonNode>(std::move(name), GetLhs(), GetRhs(),
+                                         GetOutput());
+}
 
 TanhNode::TanhNode(std::string &&name, std::shared_ptr<Region> &&input,
                    std::shared_ptr<Region> &&output)

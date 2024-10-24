@@ -8,23 +8,24 @@ if __name__ == "__main__":
         opset_import=[onnx.helper.make_opsetid("", 18)],
     )
     graph = model.graph
-    graph.name = "cast"
+    graph.name = "not"
     input = onnx.helper.make_tensor_value_info(
         "input",
         onnx.TensorProto.BOOL,
         [1, 128],
     )
     output = onnx.helper.make_tensor_value_info(
-        "output", onnx.TensorProto.INT32, [1, 128]
+        "output",
+        onnx.TensorProto.BOOL,
+        [1, 128],
     )
     graph.input.extend([input])
     graph.output.extend([output])
     node = onnx.helper.make_node(
-        "Cast",
+        "Not",
         inputs=["input"],
         outputs=["output"],
-        name="cast",
-        to=onnx.TensorProto.INT32,
+        name="not",
     )
     graph.node.extend([node])
     onnx.checker.check_model(model)

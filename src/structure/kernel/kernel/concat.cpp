@@ -21,13 +21,13 @@ void Concat2Kernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
                    rhs_type = mlir::cast<mlir::MemRefType>(rhs.getType()),
                    output_type = mlir::cast<mlir::MemRefType>(output.getType());
   const int64_t rank = lhs_type.getRank();
+  llvm::ArrayRef<int64_t> lhs_shape = lhs_type.getShape(),
+                          rhs_shape = rhs_type.getShape(),
+                          output_shape = output_type.getShape();
 #ifdef DEBUG
   assert(axis_ >= 0 && axis_ < rank);
   assert(rank == rhs_type.getRank());
   assert(rank == output_type.getRank());
-  llvm::ArrayRef<int64_t> lhs_shape = lhs_type.getShape(),
-                          rhs_shape = rhs_type.getShape(),
-                          output_shape = output_type.getShape();
   const int64_t lhs_axis_dim = lhs_shape[axis_],
                 rhs_axis_dim = rhs_shape[axis_],
                 output_axis_dim = output_shape[axis_];

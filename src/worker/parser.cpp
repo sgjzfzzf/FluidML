@@ -126,6 +126,9 @@ void createNode(Graph &graph, const onnx::NodeProto &node_proto, Node::Op op) {
       case Type::kBool:
         data = getTensorProtoAs<bool>(tensor);
         break;
+      case Type::kInt32:
+        data = getTensorProtoAs<int32_t>(tensor);
+        break;
       case Type::kInt64:
         data = getTensorProtoAs<int64_t>(tensor);
         break;
@@ -227,6 +230,8 @@ Graph ParserImpl::Run(onnx::ModelProto &model_proto) {
     // size is too large, it's stored in raw_data.
     if (type == Type::kBool) {
       data = getTensorProtoAs<bool>(initializer);
+    } else if (type == Type::kInt32) {
+      data = getTensorProtoAs<int32_t>(initializer);
     } else if (type == Type::kInt64) {
       data = getTensorProtoAs<int64_t>(initializer);
     } else if (type == Type::kFloat32) {
@@ -269,6 +274,8 @@ Graph ParserImpl::Run(onnx::ModelProto &model_proto) {
       createNode(graph, node, Node::Op::Concat);
     } else if (node.op_type() == "ConstantOfShape") {
       createNode(graph, node, Node::Op::ConstantOfShape);
+    } else if (node.op_type() == "CumSum") {
+      createNode(graph, node, Node::Op::CumSum);
     } else if (node.op_type() == "Div") {
       createNode(graph, node, Node::Op::Div);
     } else if (node.op_type() == "Equal") {
@@ -287,14 +294,20 @@ Graph ParserImpl::Run(onnx::ModelProto &model_proto) {
       createNode(graph, node, Node::Op::Mul);
     } else if (node.op_type() == "Neg") {
       createNode(graph, node, Node::Op::Neg);
+    } else if (node.op_type() == "Not") {
+      createNode(graph, node, Node::Op::Not);
     } else if (node.op_type() == "Pow") {
       createNode(graph, node, Node::Op::Pow);
+    } else if (node.op_type() == "ReduceMean") {
+      createNode(graph, node, Node::Op::ReduceMean);
     } else if (node.op_type() == "Reshape") {
       createNode(graph, node, Node::Op::Reshape);
     } else if (node.op_type() == "Slice") {
       createNode(graph, node, Node::Op::Slice);
     } else if (node.op_type() == "Softmax") {
       createNode(graph, node, Node::Op::Softmax);
+    } else if (node.op_type() == "Sqrt") {
+      createNode(graph, node, Node::Op::Sqrt);
     } else if (node.op_type() == "Sub") {
       createNode(graph, node, Node::Op::Sub);
     } else if (node.op_type() == "Tanh") {

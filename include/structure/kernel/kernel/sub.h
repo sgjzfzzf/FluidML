@@ -8,7 +8,16 @@
 namespace cpu_transformers {
 namespace kernel {
 
-class SubConstantLhsKernel : public SingleInputWithoutBufferKernel {
+class SubKernel : virtual public Kernel {
+public:
+  SubKernel() = default;
+  SubKernel(const SubKernel &sub_kernel) = delete;
+  SubKernel(SubKernel &&sub_kernel) = default;
+  virtual ~SubKernel() = default;
+};
+
+class SubConstantLhsKernel : public SubKernel,
+                             public SingleInputWithoutBufferKernel {
 public:
   static constexpr char kKernelName[] = "SubConstantLhsKernel";
   SubConstantLhsKernel(Type type, float64_t value);
@@ -22,6 +31,19 @@ public:
 private:
   const Type type_;
   const float64_t value_;
+};
+
+class SubCommonKernel : public SubKernel,
+                        public DoubleInputsWithoutBufferKernel {
+public:
+  static constexpr char kKernelName[] = "SubCommonKernel";
+  SubCommonKernel() = default;
+  SubCommonKernel(const SubCommonKernel &sub_kernel) = delete;
+  SubCommonKernel(SubCommonKernel &&sub_kernel) = default;
+  virtual ~SubCommonKernel() = default;
+  std::string GetKernelName() const override;
+  void Run(mlir::OpBuilder &builder, mlir::Value &lhs, mlir::Value &rhs,
+           mlir::Value &output) const override;
 };
 
 } // namespace kernel
