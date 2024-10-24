@@ -9,5 +9,5 @@ include_directories(${LibArchive_INCLUDE_DIRS})
 link_directories(${CMAKE_BINARY_DIR}/external/lib)
 
 add_executable(compiler compiler.cpp)
-target_link_libraries(compiler fmt LIB_STATIC ${Boost_LIBRARIES} ${LibArchive_LIBRARIES})
+target_link_libraries(compiler fmt LibStatic ${Boost_LIBRARIES} ${LibArchive_LIBRARIES})
 install(TARGETS compiler DESTINATION bin)

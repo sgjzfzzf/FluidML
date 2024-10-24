@@ -7,30 +7,30 @@ link_directories(${CMAKE_BINARY_DIR}/external/lib)
 file(GLOB_RECURSE SRCS "evaluation/*.cpp" "optimization/*.cpp" "structure/*.cpp" "utils/*.cpp" "worker/*.cpp")
 file(GLOB_RECURSE PYTHON_BINDS "python/*.cpp")
 
-add_library(LIB_STATIC ${SRCS})
-add_dependencies(LIB_STATIC libfmt libglog libjson)
-target_link_libraries(LIB_STATIC fmt onnx LLVM MLIR)
+add_library(LibStatic ${SRCS})
+add_dependencies(LibStatic libfmt libglog libjson)
+target_link_libraries(LibStatic fmt onnx LLVM MLIR)
 if(${BUILD_PYTHON} STREQUAL "ON")
-    target_link_libraries(LIB_STATIC ${Python3_LIBRARIES})
+    target_link_libraries(LibStatic ${Python3_LIBRARIES})
 endif()
-set_target_properties(LIB_STATIC PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
+set_target_properties(LibStatic PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/empty.cpp "")
-add_library(LIB_SHARED SHARED ${CMAKE_CURRENT_BINARY_DIR}/empty.cpp)
-add_dependencies(LIB_SHARED libfmt libglog libjson)
-target_link_libraries(LIB_SHARED LIB_STATIC)
-set_target_properties(LIB_SHARED PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
+add_library(LibShared SHARED ${CMAKE_CURRENT_BINARY_DIR}/empty.cpp)
+add_dependencies(LibShared libfmt libglog libjson)
+target_link_libraries(LibShared LibStatic)
+set_target_properties(LibShared PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 
 if(${BUILD_PYTHON} STREQUAL "ON")
-    add_library(PYTHON_SO SHARED ${PYTHON_BINDS})
-    target_link_libraries(PYTHON_SO LIB_SHARED)
-    set_target_properties(PYTHON_SO PROPERTIES
+    add_library(PythonSo SHARED ${PYTHON_BINDS})
+    target_link_libraries(PythonSo LibShared)
+    set_target_properties(PythonSo PROPERTIES
         OUTPUT_NAME ${PYTHON_PROJECT_NAME}
         PREFIX ""
         SUFFIX ".so")
 endif()
 
 install(
-    TARGETS LIB_STATIC LIB_SHARED
+    TARGETS LibStatic LibShared
     DESTINATION lib
 )
