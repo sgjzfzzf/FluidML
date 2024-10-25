@@ -116,6 +116,7 @@ public:
   DynamicProgrammingTableImpl(DynamicProgrammingTableImpl &&table) = default;
   virtual ~DynamicProgrammingTableImpl() = default;
   DynamicProgrammingPlan Run(const flow::Flow &flow) override;
+  nlohmann::json ToJson() const override;
 
 private:
   std::shared_ptr<worker::Evaluator> getEvaluator(const flow::Flow &flow);
@@ -898,6 +899,14 @@ DynamicProgrammingTableImpl::Run(const flow::Flow &flow) {
     plan = Merge(plan, worker.Run(subflow));
   }
   return plan;
+}
+
+nlohmann::json DynamicProgrammingTableImpl::ToJson() const {
+  nlohmann::json json;
+  if (evaluator_ != nullptr) {
+    json["evaluator"] = evaluator_->ToJson();
+  }
+  return json;
 }
 
 std::shared_ptr<worker::Evaluator>

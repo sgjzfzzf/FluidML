@@ -1,6 +1,7 @@
 #ifndef CPU_TRANSFORMERS_WORKER_PLANNER_H_
 #define CPU_TRANSFORMERS_WORKER_PLANNER_H_
 
+#include "nlohmann/json.hpp"
 #include "structure/context/context.h"
 #include "structure/flow/flow.h"
 #include "structure/flow/sequence.h"
@@ -15,7 +16,7 @@ namespace worker {
 class Planner {
 public:
   virtual ~Planner() = default;
-  virtual std::tuple<flow::Sequence, memory::Index>
+  virtual std::tuple<flow::Sequence, memory::Index, nlohmann::json>
   Run(const flow::Flow &flow) = 0;
   static std::unique_ptr<Planner>
   MakePlainLinearPlanner(context::Context &&context);

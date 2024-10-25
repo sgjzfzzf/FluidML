@@ -27,32 +27,33 @@ namespace evaluation {
 
 KernelEval::KernelEval(size_t epoch) : epoch(epoch) {}
 
-SingleInputKernelEval::Key::Key(const std::vector<size_t> &input_shape,
-                                const std::vector<size_t> &output_shape)
-    : input_shape_(input_shape), output_shape_(output_shape) {}
+SingleInputKernelEval::Key::Key(const std::vector<size_t> &input_layout,
+                                const std::vector<size_t> &output_layout)
+    : input_layout_(input_layout), output_layout_(output_layout) {}
 
-SingleInputKernelEval::Key::Key(std::vector<size_t> &&input_shape,
-                                std::vector<size_t> &&output_shape)
-    : input_shape_(std::move(input_shape)),
-      output_shape_(std::move(output_shape)) {}
+SingleInputKernelEval::Key::Key(std::vector<size_t> &&input_layout,
+                                std::vector<size_t> &&output_layout)
+    : input_layout_(std::move(input_layout)),
+      output_layout_(std::move(output_layout)) {}
 
 bool SingleInputKernelEval::Key::operator==(const Key &rhs) const {
-  return input_shape_ == rhs.input_shape_ && output_shape_ == rhs.output_shape_;
+  return input_layout_ == rhs.input_layout_ &&
+         output_layout_ == rhs.output_layout_;
 }
 
 std::ostream &operator<<(std::ostream &os,
                          const SingleInputKernelEval::Key &key) {
-  os << fmt::format("{},{}", key.input_shape_, key.output_shape_);
+  os << fmt::format("{},{}", key.input_layout_, key.output_layout_);
   return os;
 }
 
 size_t SingleInputKernelEval::KeyHash::operator()(const Key &key) const {
   size_t hash = 0;
   std::hash<int64_t> hasher;
-  for (int64_t i : key.input_shape_) {
+  for (int64_t i : key.input_layout_) {
     hash ^= hasher(i) + kHashSeed + (hash << 6) + (hash >> 2);
   }
-  for (int64_t i : key.output_shape_) {
+  for (int64_t i : key.output_layout_) {
     hash ^= hasher(i) + kHashSeed + (hash << 6) + (hash >> 2);
   }
   return hash;
@@ -135,10 +136,15 @@ const Meta &SingleInputKernelEval::GetOutputMeta() const {
 
 nlohmann::json SingleInputKernelEval::ToJson() const {
   nlohmann::json json;
+  const Meta &input_meta = GetInputMeta(), output_meta = GetOutputMeta();
+  const std::vector<int64_t> &input_shape = input_meta.GetShape(),
+                             &output_shape = output_meta.GetShape();
   for (const auto &[key, value] : time_costs_) {
     nlohmann::json elem = {
-        {"input_shape", key.input_shape_},
-        {"output_shape", key.output_shape_},
+        {"input_shape", input_shape},
+        {"output_shape", output_shape},
+        {"input_layout", key.input_layout_},
+        {"output_layout", key.output_layout_},
         {"time_cost", value},
     };
     json.push_back(std::move(elem));
@@ -211,40 +217,40 @@ void SingleInputWithBufferKernelEval::runKernel(
                                     output_meta, output_layout, buffer_size_);
 }
 
-DoubleInputsKernelEval::Key::Key(const std::vector<size_t> &lhs_shape,
-                                 const std::vector<size_t> &rhs_shape,
-                                 const std::vector<size_t> &output_shape)
-    : lhs_shape_(lhs_shape), rhs_shape_(rhs_shape),
-      output_shape_(output_shape) {}
+DoubleInputsKernelEval::Key::Key(const std::vector<size_t> &lhs_layout,
+                                 const std::vector<size_t> &rhs_layout,
+                                 const std::vector<size_t> &output_layout)
+    : lhs_layout_(lhs_layout), rhs_layout_(rhs_layout),
+      output_layout_(output_layout) {}
 
-DoubleInputsKernelEval::Key::Key(std::vector<size_t> &&lhs_shape,
-                                 std::vector<size_t> &&rhs_shape,
-                                 std::vector<size_t> &&output_shape)
-    : lhs_shape_(std::move(lhs_shape)), rhs_shape_(std::move(rhs_shape)),
-      output_shape_(std::move(output_shape)) {}
+DoubleInputsKernelEval::Key::Key(std::vector<size_t> &&lhs_layout,
+                                 std::vector<size_t> &&rhs_layout,
+                                 std::vector<size_t> &&output_layout)
+    : lhs_layout_(std::move(lhs_layout)), rhs_layout_(std::move(rhs_layout)),
+      output_layout_(std::move(output_layout)) {}
 
 bool DoubleInputsKernelEval::Key::operator==(const Key &rhs) const {
-  return lhs_shape_ == rhs.lhs_shape_ && rhs_shape_ == rhs.rhs_shape_ &&
-         output_shape_ == rhs.output_shape_;
+  return lhs_layout_ == rhs.lhs_layout_ && rhs_layout_ == rhs.rhs_layout_ &&
+         output_layout_ == rhs.output_layout_;
 }
 
 std::ostream &operator<<(std::ostream &os,
                          const DoubleInputsKernelEval::Key &key) {
-  os << fmt::format("{},{},{}", key.lhs_shape_, key.rhs_shape_,
-                    key.output_shape_);
+  os << fmt::format("{},{},{}", key.lhs_layout_, key.rhs_layout_,
+                    key.output_layout_);
   return os;
 }
 
 size_t DoubleInputsKernelEval::KeyHash::operator()(const Key &key) const {
   size_t hash = 0;
   std::hash<int64_t> hasher;
-  for (int64_t i : key.lhs_shape_) {
+  for (int64_t i : key.lhs_layout_) {
     hash ^= hasher(i) + kHashSeed + (hash << 6) + (hash >> 2);
   }
-  for (int64_t i : key.rhs_shape_) {
+  for (int64_t i : key.rhs_layout_) {
     hash ^= hasher(i) + kHashSeed + (hash << 6) + (hash >> 2);
   }
-  for (int64_t i : key.output_shape_) {
+  for (int64_t i : key.output_layout_) {
     hash ^= hasher(i) + kHashSeed + (hash << 6) + (hash >> 2);
   }
   return hash;
@@ -346,11 +352,19 @@ const Meta &DoubleInputsKernelEval::GetOutputMeta() const {
 
 nlohmann::json DoubleInputsKernelEval::ToJson() const {
   nlohmann::json json;
+  const Meta &lhs_meta = GetLhsMeta(), rhs_meta = GetRhsMeta(),
+             output_meta = GetOutputMeta();
+  const std::vector<int64_t> &lhs_shape = lhs_meta.GetShape(),
+                             &rhs_shape = rhs_meta.GetShape(),
+                             &output_shape = output_meta.GetShape();
   for (const auto &[key, value] : time_costs_) {
     nlohmann::json elem = {
-        {"lhs_shape", key.lhs_shape_},
-        {"rhs_shape", key.rhs_shape_},
-        {"output_shape", key.output_shape_},
+        {"lhs_shape", lhs_shape},
+        {"rhs_shape", rhs_shape},
+        {"output_shape", output_shape},
+        {"lhs_layout", key.lhs_layout_},
+        {"rhs_layout", key.rhs_layout_},
+        {"output_layout", key.output_layout_},
         {"time_cost", value},
     };
     json.push_back(std::move(elem));

@@ -40,7 +40,11 @@ class Converter:
 class Executor:
     @classmethod
     def compile(
-        self, input: str, mlir: Optional[str] = None, device: Optional[str] = None
+        self,
+        input: str,
+        mlir: Optional[str] = None,
+        llvm: Optional[str] = None,
+        json: Optional[str] = None,
     ) -> None: ...
     @classmethod
     def invoke(self, args: Dict[str, np.ndarray]) -> int: ...
@@ -53,7 +57,7 @@ class Executor:
 
 class Lower:
     @classmethod
-    def run(self, graph: Graph) -> Tuple[Sequence, Index]: ...
+    def run(self, graph: Graph) -> Tuple[Sequence, Index, Dict]: ...
 
 class Parser:
     @classmethod

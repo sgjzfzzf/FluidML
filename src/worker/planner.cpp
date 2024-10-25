@@ -115,14 +115,15 @@ namespace worker {
 class PlannerImpl : public Planner {
 public:
   virtual ~PlannerImpl() = default;
-  std::tuple<flow::Sequence, memory::Index>
+  std::tuple<flow::Sequence, memory::Index, nlohmann::json>
   Run(const flow::Flow &flow) override;
 
 protected:
   PlannerImpl(context::Context &&context);
   PlannerImpl(const PlannerImpl &) = delete;
   PlannerImpl(PlannerImpl &&) = default;
-  virtual flow::Sequence transform(const flow::Flow &flow) = 0;
+  virtual std::tuple<flow::Sequence, nlohmann::json>
+  transform(const flow::Flow &flow) = 0;
   virtual std::unique_ptr<memory::Infos>
   makeInfos(const flow::Sequence &sequence) = 0;
   virtual std::unique_ptr<memory::Plan> makePlan() = 0;
@@ -138,7 +139,8 @@ protected:
   using PlannerImpl::PlannerImpl;
   PlainPlannerImpl(const PlainPlannerImpl &) = delete;
   PlainPlannerImpl(PlainPlannerImpl &&) = default;
-  flow::Sequence transform(const flow::Flow &flow) override;
+  std::tuple<flow::Sequence, nlohmann::json>
+  transform(const flow::Flow &flow) override;
 };
 
 class DynamicProgrammingPlannerImpl : virtual public PlannerImpl {
@@ -149,7 +151,8 @@ protected:
   using PlannerImpl::PlannerImpl;
   DynamicProgrammingPlannerImpl(const DynamicProgrammingPlannerImpl &) = delete;
   DynamicProgrammingPlannerImpl(DynamicProgrammingPlannerImpl &&) = default;
-  flow::Sequence transform(const flow::Flow &flow) override;
+  std::tuple<flow::Sequence, nlohmann::json>
+  transform(const flow::Flow &flow) override;
 };
 
 class LinearPlannerImpl : virtual public PlannerImpl {
@@ -205,11 +208,11 @@ public:
   virtual ~DPGreedyPlannerImpl() = default;
 };
 
-std::tuple<flow::Sequence, memory::Index>
+std::tuple<flow::Sequence, memory::Index, nlohmann::json>
 PlannerImpl::Run(const flow::Flow &flow) {
-  flow::Sequence sequence = transform(flow);
+  auto [sequence, json] = transform(flow);
   memory::Index index = run(sequence);
-  return {std::move(sequence), std::move(index)};
+  return {std::move(sequence), std::move(index), json};
 }
 
 std::unique_ptr<Planner>
@@ -289,11 +292,12 @@ memory::Index PlannerImpl::run(const flow::Sequence &sequence) {
   return index;
 }
 
-flow::Sequence PlainPlannerImpl::transform(const flow::Flow &flow) {
-  return TopologicalSort(flow);
+std::tuple<flow::Sequence, nlohmann::json>
+PlainPlannerImpl::transform(const flow::Flow &flow) {
+  return {TopologicalSort(flow), nlohmann::json()};
 }
 
-flow::Sequence
+std::tuple<flow::Sequence, nlohmann::json>
 DynamicProgrammingPlannerImpl::transform(const flow::Flow &flow) {
   flow::Sequence sequence = TopologicalSort(flow);
   context::Context context = context_;
@@ -308,7 +312,11 @@ DynamicProgrammingPlannerImpl::transform(const flow::Flow &flow) {
       region->SetLayout(std::move(layout));
     }
   }
-  return sequence;
+  nlohmann::json json = {
+      {"dp_table", dp_table->ToJson()},
+      {"plan", plan.ToJson()},
+  };
+  return {std::move(sequence), std::move(json)};
 }
 
 std::unique_ptr<memory::Infos>

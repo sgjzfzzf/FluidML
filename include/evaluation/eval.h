@@ -42,9 +42,10 @@ public:
 
   class Key {
   public:
-    Key(const std::vector<size_t> &input_shape,
-        const std::vector<size_t> &output_shape);
-    Key(std::vector<size_t> &&input_shape, std::vector<size_t> &&output_shape);
+    Key(const std::vector<size_t> &input_layout,
+        const std::vector<size_t> &output_layout);
+    Key(std::vector<size_t> &&input_layout,
+        std::vector<size_t> &&output_layout);
     Key(const Key &) = default;
     Key(Key &&) = default;
     ~Key() = default;
@@ -54,8 +55,8 @@ public:
     friend std::ostream &operator<<(std::ostream &os, const Key &key);
 
   private:
-    const std::vector<size_t> input_shape_;
-    const std::vector<size_t> output_shape_;
+    const std::vector<size_t> input_layout_;
+    const std::vector<size_t> output_layout_;
   };
 
   struct KeyHash {
@@ -148,9 +149,9 @@ public:
     friend std::ostream &operator<<(std::ostream &os, const Key &key);
 
   private:
-    const std::vector<size_t> lhs_shape_;
-    const std::vector<size_t> rhs_shape_;
-    const std::vector<size_t> output_shape_;
+    const std::vector<size_t> lhs_layout_;
+    const std::vector<size_t> rhs_layout_;
+    const std::vector<size_t> output_layout_;
   };
 
   struct KeyHash {

@@ -37,6 +37,7 @@ class DynamicProgrammingTable {
 public:
   virtual ~DynamicProgrammingTable() = default;
   virtual DynamicProgrammingPlan Run(const flow::Flow &flow) = 0;
+  virtual nlohmann::json ToJson() const = 0;
   static std::unique_ptr<DynamicProgrammingTable>
   Make(context::Context &&context);
 

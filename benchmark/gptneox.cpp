@@ -13,10 +13,11 @@ static void BM_RunGptNeoxModel(benchmark::State &state) {
   for (auto _ : state) {
     std::string name = "gptneox";
     std::string input = GPTNEOX_MODEL_PATH, mlir = fmt::format("{}.mlir", name),
-                llvm = fmt::format("{}-llvm.mlir", name);
+                llvm = fmt::format("{}-llvm.mlir", name),
+                json = fmt::format("{}.json", name);
     std::unique_ptr<worker::Executor> executor =
         worker::Executor::MakeDPGreedy(std::move(name));
-    executor->Compile(input, mlir, llvm);
+    executor->Compile(input, mlir, llvm, json);
     std::vector<int64_t> input_ids(1 * 128, 0);
     std::vector<float32_t> attention_mask(1 * 128, 0), output0(1 * 128 * 32, 0),
         output1(1 * 4 * 128 * 8, 0), output2(1 * 4 * 128 * 8, 0),

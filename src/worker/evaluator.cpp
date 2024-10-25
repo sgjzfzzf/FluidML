@@ -3,6 +3,7 @@
 #include "nlohmann/json.hpp"
 #include "structure/kernel/generator/generator.h"
 #include <cassert>
+#include <iostream>
 #include <memory>
 #include <unordered_set>
 
@@ -126,7 +127,14 @@ nlohmann::json EvaluatorImpl::ToJson() const {
   for (const std::shared_ptr<evaluation::KernelEval> &eval : eval_set_) {
     const kernel::KernelGenerator &generator = eval->GetKernelGenerator();
     const std::string kernel_name = generator.GetKernelName();
-    json.push_back({kernel_name, eval->ToJson()});
+    nlohmann::json sub_json = eval->ToJson();
+    if (json.contains(kernel_name)) {
+      for (auto &elem : sub_json) {
+        json[kernel_name].push_back(std::move(elem));
+      }
+    } else {
+      json[kernel_name] = sub_json;
+    }
   }
   return json;
 }

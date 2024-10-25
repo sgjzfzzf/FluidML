@@ -1,4 +1,3 @@
-#include "evaluation/dp.h"
 #include "pybind11/cast.h"
 #include "pybind11/detail/common.h"
 #include "pybind11/pybind11.h"
@@ -24,7 +23,6 @@ using namespace cpu_transformers;
 PYBIND11_MODULE(cpu_transformers, m) {
   pybind11::class_<context::Context>(m, "Context")
       .def(pybind11::init<>())
-      .def("make_dp_table", &context::Context::MakeDynamicProgrammingTable)
       .def("make_plain_general_builder",
            &context::Context::MakePlainGeneralBuilder,
            pybind11::arg("function_name"))
@@ -67,13 +65,15 @@ PYBIND11_MODULE(cpu_transformers, m) {
 
   pybind11::class_<worker::Executor, std::unique_ptr<worker::Executor>>(
       m, "Executor")
-      .def("compile",
-           pybind11::overload_cast<std::string_view,
-                                   std::optional<std::string_view>,
-                                   std::optional<std::string_view>>(
-               &worker::Executor::Compile),
-           pybind11::arg("input"), pybind11::arg("mlir") = std::nullopt,
-           pybind11::arg("llvm") = std::nullopt)
+      .def(
+          "compile",
+          pybind11::overload_cast<
+              std::string_view, std::optional<std::string_view>,
+              std::optional<std::string_view>, std::optional<std::string_view>>(
+              &worker::Executor::Compile),
+          pybind11::arg("input"), pybind11::arg("mlir") = std::nullopt,
+          pybind11::arg("llvm") = std::nullopt,
+          pybind11::arg("json") = std::nullopt)
       .def("invoke",
            pybind11::overload_cast<
                const std::unordered_map<std::string, pybind11::array> &>(
@@ -97,7 +97,7 @@ PYBIND11_MODULE(cpu_transformers, m) {
 
   pybind11::class_<worker::Planner, std::unique_ptr<worker::Planner>>(m,
                                                                       "Planner")
-      .def("run", &worker::Planner::Run);
+      .def("run", &worker::Planner::Run, pybind11::arg("flow"));
 
   pybind11::class_<worker::Runner, std::unique_ptr<worker::Runner>>(m, "Runner")
       .def(

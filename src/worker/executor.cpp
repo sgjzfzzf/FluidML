@@ -17,8 +17,12 @@ public:
   ExecutorImpl(const ExecutorImpl &) = delete;
   ExecutorImpl(ExecutorImpl &&) = default;
   virtual ~ExecutorImpl() = default;
-  void Compile(std::istream &input, std::ofstream *mlir,
-               std::ofstream *llvm) override;
+  void Compile(std::istream &input, std::ofstream *mlir, std::ofstream *llvm,
+               std::ofstream *json) override;
+  void Compile(std::string_view inpupt,
+               std::optional<std::string_view> mlir = std::nullopt,
+               std::optional<std::string_view> llvm = std::nullopt,
+               std::optional<std::string_view> json = std::nullopt) override;
   size_t Invoke(const std::unordered_map<std::string, void *> &args) override;
 #ifdef BUILD_PYTHON
   size_t
@@ -69,20 +73,6 @@ private:
   std::unique_ptr<worker::Planner> makePlanner() override;
 };
 
-void Executor::Compile(std::string_view input,
-                       std::optional<std::string_view> mlir,
-                       std::optional<std::string_view> llvm) {
-  std::ifstream ifs(input.data());
-  std::ofstream mlir_ofs, llvm_ofs;
-  if (mlir) {
-    mlir_ofs.open(mlir->data());
-  }
-  if (llvm) {
-    llvm_ofs.open(llvm->data());
-  }
-  Compile(ifs, mlir ? &mlir_ofs : nullptr, llvm ? &llvm_ofs : nullptr);
-}
-
 std::unique_ptr<Executor> Executor::MakePlainLinear(std::string &&name,
                                                     size_t epoch) {
   return std::make_unique<PlainLinearExecutor>(std::move(name), epoch);
@@ -99,7 +89,7 @@ std::unique_ptr<Executor> Executor::MakeDPGreedy(std::string &&name,
 }
 
 void ExecutorImpl::Compile(std::istream &input, std::ofstream *mlir,
-                           std::ofstream *llvm) {
+                           std::ofstream *llvm, std::ofstream *json) {
   {
     std::unique_ptr<worker::Parser> parser = worker::Parser::Make();
     std::unique_ptr<worker::Converter> converter = worker::Converter::Make();
@@ -108,7 +98,10 @@ void ExecutorImpl::Compile(std::istream &input, std::ofstream *mlir,
     graph::Graph graph = parser->Run(input);
     flow::Flow flow = converter->Run(graph);
     std::unique_ptr<worker::Planner> planner = makePlanner();
-    auto [sequence, index] = planner->Run(flow);
+    auto [sequence, index, dp_json] = planner->Run(flow);
+    if (json) {
+      *json << dp_json;
+    }
     builder->Run(sequence, index);
     if (mlir) {
       *mlir << context_;
@@ -118,6 +111,25 @@ void ExecutorImpl::Compile(std::istream &input, std::ofstream *mlir,
       *llvm << context_;
     }
   }
+}
+
+void ExecutorImpl::Compile(std::string_view input,
+                           std::optional<std::string_view> mlir,
+                           std::optional<std::string_view> llvm,
+                           std::optional<std::string_view> json) {
+  std::ifstream ifs(input.data());
+  std::ofstream mlir_ofs, llvm_ofs, json_ofs;
+  if (mlir) {
+    mlir_ofs.open(mlir->data());
+  }
+  if (llvm) {
+    llvm_ofs.open(llvm->data());
+  }
+  if (json) {
+    json_ofs.open(json->data());
+  }
+  Compile(ifs, mlir ? &mlir_ofs : nullptr, llvm ? &llvm_ofs : nullptr,
+          json ? &json_ofs : nullptr);
 }
 
 size_t
