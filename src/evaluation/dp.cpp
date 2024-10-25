@@ -700,31 +700,33 @@ DynamicProgrammingPlan DPOnNoOverlapFlowWoker::Run(
   for (std::shared_ptr<flow::Edge> edge : edges) {
     if (isa<flow::OutputEdge>(edge)) {
       const std::string &name = edge->GetName();
-      const Meta &meta = edge->GetMeta();
       const std::vector<size_t> &layout = edge->GetLayout();
-      runOn(flow, dp_table, edge, layout);
-      std::list<std::tuple<std::shared_ptr<flow::Edge>, std::vector<size_t>>>
-          queue = {{edge, layout}};
-      layout_table.insert({name, layout});
-      while (!queue.empty()) {
-        auto [edge, layout] = std::move(queue.front());
-        queue.pop_front();
-        auto it = dp_table.find({edge, layout});
+      const size_t rank = layout.size();
+      for (std::vector<size_t> layout : utils::GenAllOrders(rank)) {
+        runOn(flow, dp_table, edge, layout);
+        std::list<std::tuple<std::shared_ptr<flow::Edge>, std::vector<size_t>>>
+            queue = {{edge, layout}};
+        layout_table.insert({name, layout});
+        while (!queue.empty()) {
+          auto [edge, layout] = std::move(queue.front());
+          queue.pop_front();
+          auto it = dp_table.find({edge, layout});
 #ifdef DEBUG
-        assert(it != dp_table.end());
+          assert(it != dp_table.end());
 #endif
-        auto [_, deps] = it->second;
-        for (const Key &dep : deps) {
+          auto [_, deps] = it->second;
+          for (const Key &dep : deps) {
 #ifdef DEBUG
-          assert(dep.edge != nullptr);
+            assert(dep.edge != nullptr);
 #endif
-          const std::string &name = dep.edge->GetName();
+            const std::string &name = dep.edge->GetName();
 #ifdef DEBUG
-          auto cannot_exist_it = dp_table.find(dep);
-          assert(cannot_exist_it != dp_table.end());
+            auto cannot_exist_it = dp_table.find(dep);
+            assert(cannot_exist_it != dp_table.end());
 #endif
-          layout_table.insert({name, dep.layout});
-          queue.push_back({dep.edge, dep.layout});
+            layout_table.insert({name, dep.layout});
+            queue.push_back({dep.edge, dep.layout});
+          }
         }
       }
     }
