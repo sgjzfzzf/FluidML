@@ -1,7 +1,9 @@
 black
+matplotlib
 numpy
 onnx
 onnxruntime
 onnxsim
+pandas
 pybind11
 wheel

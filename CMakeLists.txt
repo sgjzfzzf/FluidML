@@ -76,7 +76,7 @@ find_program(CLANG_FORMAT clang-format REQUIRED)
 find_program(BLACK_FORMAT black REQUIRED)
 add_custom_target(
     format
-    COMMAND find ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/test -name "\"*.py\"" -o -name "\"*.pyi\"" | xargs ${BLACK_FORMAT} ${CMAKE_SOURCE_DIR}/setup.py
+    COMMAND find ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/test ${CMAKE_SOURCE_DIR}/tools -name "\"*.py\"" -o -name "\"*.pyi\"" | xargs ${BLACK_FORMAT} ${CMAKE_SOURCE_DIR}/setup.py
     COMMAND find ${CMAKE_SOURCE_DIR}/bin ${CMAKE_SOURCE_DIR}/benchmark ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/test -name "\"*.cpp\"" -o -name "\"*.h\"" -o -name "\"*.hpp\"" | xargs ${CLANG_FORMAT} -i
 )
 
