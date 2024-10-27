@@ -515,10 +515,10 @@ if __name__ == "__main__":
             [input, _] = node.input
             [output] = node.output
             default_time_cost, time_cost = analyzer.find_single_input(
-                "UnSqueezeKernel", input, output
+                "UnsqueezeKernel", input, output
             )
-            m, n = table["UnSqueezeKernel"]
-            table["UnSqueezeKernel"] = (m + default_time_cost, n + time_cost)
+            m, n = table["UnsqueezeKernel"]
+            table["UnsqueezeKernel"] = (m + default_time_cost, n + time_cost)
         elif node.op_type == "Where":
             assert (
                 len(node.input) == 3

@@ -6,13 +6,13 @@
 namespace cpu_transformers {
 namespace kernel {
 
-class UnSqueezeKernel : public SingleInputWithoutBufferKernel {
+class UnsqueezeKernel : public SingleInputWithoutBufferKernel {
 public:
-  static constexpr char kKernelName[] = "UnSqueezeKernel";
-  UnSqueezeKernel(std::vector<int64_t> &&axes);
-  UnSqueezeKernel(const UnSqueezeKernel &) = delete;
-  UnSqueezeKernel(UnSqueezeKernel &&) = default;
-  virtual ~UnSqueezeKernel() = default;
+  static constexpr char kKernelName[] = "UnsqueezeKernel";
+  UnsqueezeKernel(std::vector<int64_t> &&axes);
+  UnsqueezeKernel(const UnsqueezeKernel &) = delete;
+  UnsqueezeKernel(UnsqueezeKernel &&) = default;
+  virtual ~UnsqueezeKernel() = default;
   std::string GetKernelName() const override;
   void Run(mlir::OpBuilder &builder, mlir::Value &input,
            mlir::Value &output) const override;

@@ -220,7 +220,7 @@ std::unique_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
   } else if (const flow::UnsqueezeNode *ptr =
                  dynamic_cast<const flow::UnsqueezeNode *>(node)) {
     std::vector<int64_t> axes = ptr->GetAxes();
-    kernel = std::make_unique<kernel::UnSqueezeKernel>(std::move(axes));
+    kernel = std::make_unique<kernel::UnsqueezeKernel>(std::move(axes));
   } else if (const flow::UnsqueezeSubLhsScalarMulRhsScalarNode *ptr =
                  dynamic_cast<const flow::UnsqueezeSubLhsScalarMulRhsScalarNode
                                   *>(node)) {
@@ -674,7 +674,7 @@ SelectKernelGenerator(const flow::Node *node) {
 #endif
     Meta input_meta = input->GetMeta(), output_meta = output->GetMeta();
     std::vector<int64_t> axes = ptr->GetAxes();
-    generator = kernel::UnSqueezeKernelGenerator::Make(
+    generator = kernel::UnsqueezeKernelGenerator::Make(
         std::move(input_meta), std::move(output_meta), std::move(axes));
   } else if (const flow::UnsqueezeSubLhsScalarMulRhsScalarNode *ptr =
                  dynamic_cast<const flow::UnsqueezeSubLhsScalarMulRhsScalarNode

@@ -12,12 +12,12 @@
 namespace cpu_transformers {
 namespace kernel {
 
-UnSqueezeKernel::UnSqueezeKernel(std::vector<int64_t> &&axes)
+UnsqueezeKernel::UnsqueezeKernel(std::vector<int64_t> &&axes)
     : axes_(std::move(axes)) {}
 
-std::string UnSqueezeKernel::GetKernelName() const { return kKernelName; }
+std::string UnsqueezeKernel::GetKernelName() const { return kKernelName; }
 
-void UnSqueezeKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
+void UnsqueezeKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                           mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
   mlir::MemRefType output_type = mlir::cast<mlir::MemRefType>(output.getType());

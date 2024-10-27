@@ -8,20 +8,20 @@
 namespace cpu_transformers {
 namespace kernel {
 
-class UnSqueezeKernelGenerator
+class UnsqueezeKernelGenerator
     : public SingleInputWithoutBufferKernelGenerator {
 public:
-  virtual ~UnSqueezeKernelGenerator() = default;
-  virtual std::shared_ptr<UnSqueezeKernel>
+  virtual ~UnsqueezeKernelGenerator() = default;
+  virtual std::shared_ptr<UnsqueezeKernel>
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) = 0;
-  static std::unique_ptr<UnSqueezeKernelGenerator>
+  static std::unique_ptr<UnsqueezeKernelGenerator>
   Make(Meta &&input_meta, Meta &&output_meta, std::vector<int64_t> &&axes);
 
 protected:
-  UnSqueezeKernelGenerator() = default;
-  UnSqueezeKernelGenerator(const UnSqueezeKernelGenerator &) = delete;
-  UnSqueezeKernelGenerator(UnSqueezeKernelGenerator &&) = default;
+  UnsqueezeKernelGenerator() = default;
+  UnsqueezeKernelGenerator(const UnsqueezeKernelGenerator &) = delete;
+  UnsqueezeKernelGenerator(UnsqueezeKernelGenerator &&) = default;
 };
 
 } // namespace kernel
