@@ -97,29 +97,72 @@ MatMulKernelGeneratorImpl::Yield(llvm::ArrayRef<size_t> lhs_layout,
   }
   size_t min_time_cost = std::numeric_limits<size_t>::max();
   std::shared_ptr<MatMulKernel> min_kernel = nullptr;
-  for (llvm::SmallVector<Axis, 3> axes : GetAxesInAllOrders()) {
-    std::shared_ptr<MatMulKernel> kernel =
-        std::make_shared<MatMulKernel>(std::move(axes));
-    std::string kernel_name = kernel->GetKernelName();
+  const size_t lhs_layout_len = lhs_layout.size(),
+               rhs_layout_len = rhs_layout.size(),
+               output_layout_len = output_layout.size();
+  bool is_lhs_default = true, is_rhs_default = true, is_output_default = true;
+  for (size_t i = 0; i < lhs_layout_len; ++i) {
+    if (lhs_layout[i] != i) {
+      is_lhs_default = false;
+      break;
+    }
+  }
+  for (size_t i = 0; i < rhs_layout_len; ++i) {
+    if (rhs_layout[i] != i) {
+      is_rhs_default = false;
+      break;
+    }
+  }
+  for (size_t i = 0; i < output_layout_len; ++i) {
+    if (output_layout[i] != i) {
+      is_output_default = false;
+      break;
+    }
+  }
+  if (is_lhs_default && is_rhs_default && is_output_default) {
+    min_kernel = std::make_shared<MatMulKernel>();
+    std::string kernel_name = min_kernel->GetKernelName();
     context::Context context;
     std::unique_ptr<worker::KernelBuilder> builder =
         context.MakeKernelBuilder(std::move(kernel_name));
     std::unique_ptr<worker::Lower> lower = context.MakeLower();
     std::unique_ptr<worker::Runner> runner = context.MakeRunner();
-    builder->RunOnDoubleInputsWithoutBuffer(*kernel, lhs_meta, rhs_meta,
+    builder->RunOnDoubleInputsWithoutBuffer(*min_kernel, lhs_meta, rhs_meta,
                                             output_meta);
     lower->Run();
     std::vector<uint8_t> lhs = utils::FillBuffer(lhs_meta),
                          rhs = utils::FillBuffer(rhs_meta),
                          output = utils::FillBuffer(output_meta);
-    const size_t time_cost = runner->Run({
+    min_time_cost = runner->Run({
         {worker::KernelBuilder::kLhsKey, lhs.data()},
         {worker::KernelBuilder::kRhsKey, rhs.data()},
         {worker::KernelBuilder::kOutputKey, output.data()},
     });
-    if (time_cost < min_time_cost) {
-      min_time_cost = time_cost;
-      min_kernel = kernel;
+  } else {
+    for (llvm::SmallVector<Axis, 3> axes : GetAxesInAllOrders()) {
+      std::shared_ptr<MatMulKernel> kernel =
+          std::make_shared<MatMulKernel>(std::move(axes));
+      std::string kernel_name = kernel->GetKernelName();
+      context::Context context;
+      std::unique_ptr<worker::KernelBuilder> builder =
+          context.MakeKernelBuilder(std::move(kernel_name));
+      std::unique_ptr<worker::Lower> lower = context.MakeLower();
+      std::unique_ptr<worker::Runner> runner = context.MakeRunner();
+      builder->RunOnDoubleInputsWithoutBuffer(*kernel, lhs_meta, rhs_meta,
+                                              output_meta);
+      lower->Run();
+      std::vector<uint8_t> lhs = utils::FillBuffer(lhs_meta),
+                           rhs = utils::FillBuffer(rhs_meta),
+                           output = utils::FillBuffer(output_meta);
+      const size_t time_cost = runner->Run({
+          {worker::KernelBuilder::kLhsKey, lhs.data()},
+          {worker::KernelBuilder::kRhsKey, rhs.data()},
+          {worker::KernelBuilder::kOutputKey, output.data()},
+      });
+      if (time_cost < min_time_cost) {
+        min_time_cost = time_cost;
+        min_kernel = kernel;
+      }
     }
   }
 #ifdef DEBUG
