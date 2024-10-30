@@ -17,6 +17,9 @@ public:
          std::vector<float64_t> &&data);
   Tensor(const Tensor &) = default;
   Tensor(Tensor &&) = default;
+  ~Tensor() = default;
+  Tensor &operator=(const Tensor &) = default;
+  Tensor &operator=(Tensor &&) = default;
   const std::vector<float64_t> &Get() const;
   float64_t &Get(const std::vector<size_t> &indices);
   const float64_t &Get(const std::vector<size_t> &indices) const;

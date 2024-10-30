@@ -274,6 +274,8 @@ Graph ParserImpl::Run(onnx::ModelProto &model_proto) {
       createNode(graph, node, Node::Op::Concat);
     } else if (node.op_type() == "ConstantOfShape") {
       createNode(graph, node, Node::Op::ConstantOfShape);
+    } else if (node.op_type() == "Conv") {
+      createNode(graph, node, Node::Op::Conv);
     } else if (node.op_type() == "CumSum") {
       createNode(graph, node, Node::Op::CumSum);
     } else if (node.op_type() == "Div") {
@@ -296,6 +298,8 @@ Graph ParserImpl::Run(onnx::ModelProto &model_proto) {
       createNode(graph, node, Node::Op::Neg);
     } else if (node.op_type() == "Not") {
       createNode(graph, node, Node::Op::Not);
+    } else if (node.op_type() == "Pad") {
+      createNode(graph, node, Node::Op::Pad);
     } else if (node.op_type() == "Pow") {
       createNode(graph, node, Node::Op::Pow);
     } else if (node.op_type() == "ReduceMean") {

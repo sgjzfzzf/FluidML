@@ -4,8 +4,6 @@
 #include "mlir/IR/BuiltinTypes.h"
 
 namespace {
-
-using namespace cpu_transformers::kernel;
 using LastLoopBodyFn =
     std::function<void(mlir::OpBuilder &, mlir::Location, mlir::ValueRange,
                        llvm::SmallVector<mlir::Value> &&)>;

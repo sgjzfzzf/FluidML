@@ -206,8 +206,29 @@ private:
   std::shared_ptr<kernel::DoubleInputsWithoutBufferKernelGenerator> generator_;
 };
 
-// TODO: based on the current implementation, there is still no
-// `DoubleInputsWithBufferKernelEval` class yet, so it's not included here
+class DoubleInputsWithBufferKernelEval : public DoubleInputsKernelEval {
+public:
+  DoubleInputsWithBufferKernelEval(
+      std::shared_ptr<kernel::DoubleInputsWithBufferKernelGenerator>
+          &&generator,
+      size_t buffer_size, size_t epoch = 1);
+  DoubleInputsWithBufferKernelEval(const DoubleInputsWithBufferKernelEval &) =
+      delete;
+  DoubleInputsWithBufferKernelEval(DoubleInputsWithBufferKernelEval &&) =
+      default;
+  virtual ~DoubleInputsWithBufferKernelEval() = default;
+  const kernel::DoubleInputsWithBufferKernelGenerator &
+  GetKernelGenerator() const override;
+  kernel::DoubleInputsWithBufferKernelGenerator &GetKernelGenerator() override;
+
+private:
+  void runKernel(worker::KernelBuilder &builer,
+                 const std::vector<size_t> &lhs_layout,
+                 const std::vector<size_t> &rhs_layout,
+                 const std::vector<size_t> &output_layout) const override;
+  std::shared_ptr<kernel::DoubleInputsWithBufferKernelGenerator> generator_;
+  const size_t buffer_size_;
+};
 
 } // namespace evaluation
 } // namespace cpu_transformers

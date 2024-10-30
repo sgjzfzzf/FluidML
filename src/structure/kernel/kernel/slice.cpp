@@ -49,7 +49,7 @@ void SliceKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 #ifdef DEBUG
         assert(inputs.size() == 2);
 #endif
-        mlir::Value input = inputs[0], output = inputs[1];
+        mlir::Value input = inputs[0];
         b.create<mlir::linalg::YieldOp>(loc, input);
       });
 }

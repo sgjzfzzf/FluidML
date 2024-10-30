@@ -108,6 +108,15 @@ public:
       const Meta &rhs_meta, const std::vector<size_t> &rhs_layout,
       const Meta &output_meta,
       const std::vector<size_t> &output_layout) override;
+  void RunOnDoubleInputsWithBuffer(
+      const kernel::DoubleInputsWithBufferKernel &kernel, const Meta &lhs_meta,
+      const Meta &rhs_meta, const Meta &output_meta,
+      size_t buffer_size) override;
+  void RunOnDoubleInputsWithBuffer(
+      const kernel::DoubleInputsWithBufferKernel &kernel, const Meta &lhs_meta,
+      const std::vector<size_t> &lhs_layout, const Meta &rhs_meta,
+      const std::vector<size_t> &rhs_layout, const Meta &output_meta,
+      const std::vector<size_t> &output_layout, size_t buffer_size) override;
 
 private:
   std::string function_name_;
@@ -406,8 +415,6 @@ void PlainGeneralBuilderImpl::schedule(
                   &output = symbol_table.at(output_name);
       std::shared_ptr<flow::Region> input_region = ptr->GetInput(),
                                     output_region = ptr->GetOutput();
-      llvm::ArrayRef<size_t> input_layout = input_region->GetLayout(),
-                             output_layout = output_region->GetLayout();
       kernel->Run(builder, input, output);
     } else if (std::shared_ptr<flow::SingleInputWithBufferNode> ptr =
                    std::dynamic_pointer_cast<flow::SingleInputWithBufferNode>(
@@ -426,8 +433,6 @@ void PlainGeneralBuilderImpl::schedule(
                   &buffer = symbol_table.at(buffer_name);
       std::shared_ptr<flow::Region> input_region = ptr->GetInput(),
                                     output_region = ptr->GetOutput();
-      llvm::ArrayRef<size_t> input_layout = input_region->GetLayout(),
-                             output_layout = output_region->GetLayout();
       kernel->Run(builder, input, output, buffer);
     } else if (std::shared_ptr<flow::DoubleInputsWithoutBufferNode> ptr =
                    std::dynamic_pointer_cast<
@@ -447,10 +452,28 @@ void PlainGeneralBuilderImpl::schedule(
       std::shared_ptr<flow::Region> lhs_region = ptr->GetLhs(),
                                     rhs_region = ptr->GetRhs(),
                                     output_region = ptr->GetOutput();
-      llvm::ArrayRef<size_t> lhs_layout = lhs_region->GetLayout(),
-                             rhs_layout = rhs_region->GetLayout(),
-                             output_layout = output_region->GetLayout();
       kernel->Run(builder, lhs, rhs, output);
+    } else if (std::shared_ptr<flow::DoubleInputsWithBufferNode> ptr =
+                   std::dynamic_pointer_cast<flow::DoubleInputsWithBufferNode>(
+                       node)) {
+      std::shared_ptr<kernel::DoubleInputsWithBufferKernel> kernel =
+          std::dynamic_pointer_cast<kernel::DoubleInputsWithBufferKernel>(
+              mkernel);
+#ifdef DEBUG
+      assert(kernel != nullptr);
+#endif
+      const std::string &lhs_name = ptr->GetLhsAsString(),
+                        &rhs_name = ptr->GetRhsAsString(),
+                        &output_name = ptr->GetOutputAsString(),
+                        &buffer_name = ptr->GetName();
+      mlir::Value &lhs = symbol_table.at(lhs_name),
+                  &rhs = symbol_table.at(rhs_name),
+                  &output = symbol_table.at(output_name),
+                  &buffer = symbol_table.at(buffer_name);
+      std::shared_ptr<flow::Region> lhs_region = ptr->GetLhs(),
+                                    rhs_region = ptr->GetRhs(),
+                                    output_region = ptr->GetOutput();
+      kernel->Run(builder, lhs, rhs, output, buffer);
     } else {
 #ifdef DEBUG
       assert(false && "unreachable");
@@ -541,6 +564,33 @@ void DynamicProgrammingGeneralBuilderImpl::schedule(
           generator->YieldDoubleInputsWithoutBufferKernel(
               lhs_layout, rhs_layout, output_layout);
       kernel->Run(builder, lhs, rhs, output);
+    } else if (const std::shared_ptr<flow::DoubleInputsWithBufferNode> ptr =
+                   std::dynamic_pointer_cast<flow::DoubleInputsWithBufferNode>(
+                       node)) {
+      std::shared_ptr<kernel::DoubleInputsWithBufferKernelGenerator> generator =
+          std::dynamic_pointer_cast<
+              kernel::DoubleInputsWithBufferKernelGenerator>(kgenerator);
+#ifdef DEBUG
+      assert(generator != nullptr);
+#endif
+      const std::string &lhs_name = ptr->GetLhsAsString(),
+                        &rhs_name = ptr->GetRhsAsString(),
+                        &output_name = ptr->GetOutputAsString(),
+                        &buffer_name = ptr->GetName();
+      mlir::Value &lhs = symbol_table.at(lhs_name),
+                  &rhs = symbol_table.at(rhs_name),
+                  &output = symbol_table.at(output_name),
+                  &buffer = symbol_table.at(buffer_name);
+      std::shared_ptr<flow::Region> lhs_region = ptr->GetLhs(),
+                                    rhs_region = ptr->GetRhs(),
+                                    output_region = ptr->GetOutput();
+      llvm::ArrayRef<size_t> lhs_layout = lhs_region->GetLayout(),
+                             rhs_layout = rhs_region->GetLayout(),
+                             output_layout = output_region->GetLayout();
+      std::shared_ptr<kernel::DoubleInputsWithBufferKernel> kernel =
+          generator->YieldDoubleInputsWithBufferKernel(lhs_layout, rhs_layout,
+                                                       output_layout);
+      kernel->Run(builder, lhs, rhs, output, buffer);
     } else {
 #ifdef DEBUG
       assert(false && "unreachable");
@@ -691,9 +741,8 @@ void KernelBuilderImpl::RunOnSingleInputWithBuffer(
                     builder.getUnitAttr());
   mlir::Block *block = function.addEntryBlock();
   builder.setInsertionPointToStart(block);
-  mlir::Value input = block->getArgument(0);
-  mlir::Value output = block->getArgument(1);
-  mlir::Value buffer = block->getArgument(2);
+  mlir::Value input = block->getArgument(0), output = block->getArgument(1),
+              buffer = block->getArgument(2);
   kernel.Run(builder, input, output, buffer);
   builder.create<mlir::func::ReturnOp>(builder.getUnknownLoc());
   module->push_back(std::move(function));
@@ -793,6 +842,105 @@ void KernelBuilderImpl::RunOnDoubleInputsWithoutBuffer(
                output_size = output_memref_type.getNumElements();
   std::string function_name = function_name_;
   context::FuncAttr func_attr(std::move(function_name), 0);
+  context::ArgumentAttr lhs_arg_attr(context::ArgumentAttr::Type::Input,
+                                     kLhsKey, std::move(lhs_memref_type)),
+      rhs_arg_attr(context::ArgumentAttr::Type::Input, kRhsKey,
+                   std::move(rhs_memref_type)),
+      output_arg_attr(context::ArgumentAttr::Type::Output, kOutputKey,
+                      std::move(output_memref_type));
+  func_attr.PutArgument(std::move(lhs_arg_attr));
+  func_attr.PutArgument(std::move(rhs_arg_attr));
+  func_attr.PutArgument(std::move(output_arg_attr));
+  context_->SetFuncAttr(std::move(func_attr));
+}
+
+void KernelBuilderImpl::RunOnDoubleInputsWithBuffer(
+    const kernel::DoubleInputsWithBufferKernel &kernel, const Meta &lhs_meta,
+    const Meta &rhs_meta, const Meta &output_meta, size_t buffer_size) {
+  const std::vector<int64_t> lhs_shape = lhs_meta.GetShape(),
+                             rhs_shape = rhs_meta.GetShape(),
+                             output_shape = output_meta.GetShape();
+  const size_t lhs_len = lhs_shape.size(), rhs_len = rhs_shape.size(),
+               output_len = output_shape.size();
+  std::vector<size_t> lhs_layout(lhs_len), rhs_layout(rhs_len),
+      output_layout(output_len);
+  for (size_t i = 0; i < lhs_len; ++i) {
+    lhs_layout[i] = i;
+  }
+  for (size_t i = 0; i < rhs_len; ++i) {
+    rhs_layout[i] = i;
+  }
+  for (size_t i = 0; i < output_len; ++i) {
+    output_layout[i] = i;
+  }
+  RunOnDoubleInputsWithBuffer(kernel, lhs_meta, lhs_layout, rhs_meta,
+                              rhs_layout, output_meta, output_layout,
+                              buffer_size);
+}
+
+void KernelBuilderImpl::RunOnDoubleInputsWithBuffer(
+    const kernel::DoubleInputsWithBufferKernel &kernel, const Meta &lhs_meta,
+    const std::vector<size_t> &lhs_layout, const Meta &rhs_meta,
+    const std::vector<size_t> &rhs_layout, const Meta &output_meta,
+    const std::vector<size_t> &output_layout, size_t buffer_size) {
+  mlir::MLIRContext &mlir_context = context_->GetMLIRContext();
+  mlir::OpBuilder builder(&mlir_context);
+  mlir::OwningOpRef<mlir::ModuleOp> module =
+      mlir::ModuleOp::create(builder.getUnknownLoc());
+  mlir::Type lhs_elem_type = GetMLIRType(lhs_meta.GetType(), builder),
+             rhs_elem_type = GetMLIRType(rhs_meta.GetType(), builder),
+             output_elem_type = GetMLIRType(output_meta.GetType(), builder);
+  const std::vector<int64_t> &lhs_shape = lhs_meta.GetShape(),
+                             &rhs_shape = rhs_meta.GetShape(),
+                             &output_shape = output_meta.GetShape();
+  std::vector<int64_t> lhs_strides = utils::GenStrides(lhs_shape, lhs_layout),
+                       rhs_strides = utils::GenStrides(rhs_shape, rhs_layout),
+                       output_strides =
+                           utils::GenStrides(output_shape, output_layout);
+  mlir::StridedLayoutAttr lhs_strided_layout = mlir::StridedLayoutAttr::get(
+                              &mlir_context, 0, lhs_strides),
+                          rhs_strided_layout = mlir::StridedLayoutAttr::get(
+                              &mlir_context, 0, rhs_strides),
+                          output_strided_layout = mlir::StridedLayoutAttr::get(
+                              &mlir_context, 0, output_strides);
+  mlir::MemRefType lhs_memref_type = mlir::MemRefType::get(
+                       lhs_meta.GetShape(), lhs_elem_type, lhs_strided_layout),
+                   rhs_memref_type = mlir::MemRefType::get(
+                       rhs_meta.GetShape(), rhs_elem_type, rhs_strided_layout),
+                   output_memref_type = mlir::MemRefType::get(
+                       output_meta.GetShape(), output_elem_type,
+                       output_strided_layout),
+                   buffer_memref_type = mlir::MemRefType::get(
+                       llvm::ArrayRef<int64_t>{
+                           static_cast<int64_t>(buffer_size)},
+                       builder.getI8Type());
+  mlir::FunctionType function_type =
+      mlir::FunctionType::get(&mlir_context,
+                              {lhs_memref_type, rhs_memref_type,
+                               output_memref_type, buffer_memref_type},
+                              {});
+  mlir::func::FuncOp function = builder.create<mlir::func::FuncOp>(
+      builder.getUnknownLoc(), function_name_, function_type);
+  function->setAttr(mlir::LLVM::LLVMDialect::getEmitCWrapperAttrName(),
+                    builder.getUnitAttr());
+  mlir::Block *block = function.addEntryBlock();
+  builder.setInsertionPointToStart(block);
+  mlir::Value lhs = block->getArgument(0);
+  mlir::Value rhs = block->getArgument(1);
+  mlir::Value output = block->getArgument(2);
+  mlir::Value buffer = block->getArgument(3);
+  kernel.Run(builder, lhs, rhs, output, buffer);
+  builder.create<mlir::func::ReturnOp>(builder.getUnknownLoc());
+  module->push_back(std::move(function));
+#ifdef DEBUG
+  assert(mlir::verify(*module).succeeded());
+#endif
+  context_->SetModule(std::move(module));
+  const size_t lhs_size = lhs_memref_type.getNumElements(),
+               rhs_size = rhs_memref_type.getNumElements(),
+               output_size = output_memref_type.getNumElements();
+  std::string function_name = function_name_;
+  context::FuncAttr func_attr(std::move(function_name), buffer_size);
   context::ArgumentAttr lhs_arg_attr(context::ArgumentAttr::Type::Input,
                                      kLhsKey, std::move(lhs_memref_type)),
       rhs_arg_attr(context::ArgumentAttr::Type::Input, kRhsKey,

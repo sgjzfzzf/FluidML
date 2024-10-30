@@ -7,6 +7,7 @@
 #include "utils/type.h"
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 
 // TODO: We only implements part of the cases in the ONNX. Our current target is
@@ -121,7 +122,7 @@ public:
   CloneAsDoubleInputsWithoutBufferNode() const = 0;
 };
 
-class DoubleInputsWithBufferNode : virtual public DoubleInputsNode {
+class DoubleInputsWithBufferNode : public DoubleInputsNode {
 public:
   DoubleInputsWithBufferNode(std::string &&name, std::shared_ptr<Region> &&lhs,
                              std::shared_ptr<Region> &&rhs,
@@ -244,6 +245,75 @@ public:
 
 protected:
   const int64_t axis_;
+};
+
+class ConvNode : virtual public Node {
+public:
+  ConvNode(std::string &&name, std::vector<int64_t> &&dilations, int64_t group,
+           std::vector<int64_t> &&kernel_shape, std::vector<int64_t> &&strides,
+           std::optional<Tensor> &&bias);
+  ConvNode(const ConvNode &node) = delete;
+  ConvNode(ConvNode &&node) = default;
+  virtual ~ConvNode() = default;
+  static constexpr int64_t kGroup = 1;
+  static constexpr const char kDilationsAttrName[] = "dilations";
+  static constexpr const char kGroupAttrName[] = "group";
+  static constexpr const char kKernelShapeAttrName[] = "kernel_shape";
+  static constexpr const char kPadsAttrName[] = "pads";
+  static constexpr const char kStridesAttrName[] = "strides";
+  const std::vector<int64_t> &GetDilations() const noexcept;
+  int64_t GetGroup() const noexcept;
+  const std::vector<int64_t> &GetKernelShape() const noexcept;
+  const std::vector<int64_t> &GetStrides() const noexcept;
+  const std::optional<Tensor> &GetBias() const noexcept;
+
+protected:
+  const std::vector<int64_t> dilations_;
+  const int64_t group_;
+  const std::vector<int64_t> kernel_shape_;
+  const std::vector<int64_t> strides_;
+  const std::optional<Tensor> bias_;
+};
+
+class ConvWithoutPaddingNode : public ConvNode,
+                               public DoubleInputsWithoutBufferNode {
+public:
+  ConvWithoutPaddingNode(std::string &&name, std::vector<int64_t> &&dilations,
+                         int64_t group, std::vector<int64_t> &&kernel_shape,
+                         std::vector<int64_t> &&strides,
+                         std::optional<Tensor> &&bias,
+                         std::shared_ptr<Region> &&input,
+                         std::shared_ptr<Region> &&weights,
+                         std::shared_ptr<Region> &&output);
+  ConvWithoutPaddingNode(const ConvWithoutPaddingNode &node) = delete;
+  ConvWithoutPaddingNode(ConvWithoutPaddingNode &&node) = default;
+  virtual ~ConvWithoutPaddingNode() = default;
+  std::shared_ptr<DoubleInputsWithoutBufferNode>
+  CloneAsDoubleInputsWithoutBufferNode() const override;
+  std::shared_ptr<ConvWithoutPaddingNode> Clone() const;
+};
+
+class ConvWithPaddingNode : public ConvNode, public DoubleInputsWithBufferNode {
+public:
+  ConvWithPaddingNode(std::string &&name, std::vector<int64_t> &&dilations,
+                      int64_t group, std::vector<int64_t> &&kernel_shape,
+                      std::vector<int64_t> &&pads,
+                      std::vector<int64_t> &&strides,
+                      std::optional<Tensor> &&bias,
+                      std::shared_ptr<Region> &&input,
+                      std::shared_ptr<Region> &&weights,
+                      std::shared_ptr<Region> &&output);
+  ConvWithPaddingNode(const ConvWithPaddingNode &node) = delete;
+  ConvWithPaddingNode(ConvWithPaddingNode &&node) = default;
+  virtual ~ConvWithPaddingNode() = default;
+  std::shared_ptr<DoubleInputsWithBufferNode>
+  CloneAsDoubleInputsWithBufferNode() const override;
+  std::shared_ptr<ConvWithPaddingNode> Clone() const;
+  size_t GetBufferSize() const noexcept override;
+  const std::vector<int64_t> &GetPads() const noexcept;
+
+private:
+  const std::vector<int64_t> pads_;
 };
 
 class CumSumNode : public SingleInputWithoutBufferNode {
@@ -372,6 +442,29 @@ public:
 private:
   const int64_t axis_;
   const int64_t index_;
+};
+
+class GatherConstantIndicesTensorNode : public GatherNode,
+                                        public SingleInputWithoutBufferNode {
+public:
+  GatherConstantIndicesTensorNode(std::string &&name,
+                                  std::shared_ptr<Region> &&input,
+                                  std::shared_ptr<Region> &&output,
+                                  Tensor &&indices, int64_t axis = kAxis);
+  GatherConstantIndicesTensorNode(const GatherConstantIndicesTensorNode &node) =
+      delete;
+  GatherConstantIndicesTensorNode(GatherConstantIndicesTensorNode &&node) =
+      default;
+  virtual ~GatherConstantIndicesTensorNode() = default;
+  std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<GatherConstantIndicesTensorNode> Clone() const;
+  int64_t GetAxis() const noexcept;
+  const Tensor &GetIndices() const noexcept;
+
+private:
+  const Tensor indices_;
+  const int64_t axis_;
 };
 
 class GatherConstantDataTensorNode : public GatherNode,
@@ -589,6 +682,22 @@ public:
   std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
   std::shared_ptr<NotNode> Clone() const;
+};
+
+class PadNode : public SingleInputWithoutBufferNode {
+public:
+  PadNode(std::string &&name, std::vector<std::tuple<int64_t, int64_t>> &&pads,
+          std::shared_ptr<Region> &&input, std::shared_ptr<Region> &&output);
+  PadNode(const PadNode &node) = delete;
+  PadNode(PadNode &&node) = default;
+  virtual ~PadNode() = default;
+  std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<PadNode> Clone() const;
+  const std::vector<std::tuple<int64_t, int64_t>> &GetPads() const noexcept;
+
+private:
+  const std::vector<std::tuple<int64_t, int64_t>> pads_;
 };
 
 class PowNode : public SingleInputWithoutBufferNode {

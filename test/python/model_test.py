@@ -63,6 +63,48 @@ class ModelTest(unittest.TestCase):
             f"{name}:\nTime cost: {time_cost} ns\nONNX time cost: {onnx_time_cost} ns"
         )
 
+    def test_convbert(self):
+        name: str = "convbert"
+        input: Optional[str] = os.environ.get("CONVBERT_MODEL_PATH")
+        self.assertIsNotNone(input)
+        mlir: str = f"{name}.mlir"
+        llvm: str = f"{name}-llvm.mlir"
+        executor: cpu_transformers.Executor = (
+            cpu_transformers.Executor.make_plain_greedy(name)
+        )
+        executor.compile(input, mlir, llvm)
+        input_ids: np.ndarray = np.random.randint(0, 30522, (1, 128), dtype=np.int64)
+        attention_mask: np.ndarray = np.ones((1, 128), dtype=np.float32)
+        output: np.ndarray = np.zeros((1, 128, 768), dtype=np.float32)
+        session_options: onnxruntime.SessionOptions = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session: onnxruntime.InferenceSession = onnxruntime.InferenceSession(
+            input, session_options
+        )
+        start: int = time.time_ns()
+        session.run(
+            [
+                "2625",
+            ],
+            {
+                "input_ids": input_ids,
+                "attention_mask": attention_mask,
+            },
+        )
+        end: int = time.time_ns()
+        onnx_time_cost: int = end - start
+        time_cost: int = executor.invoke(
+            {
+                "input_ids": input_ids,
+                "attention_mask": attention_mask,
+                "2625": output,
+            }
+        )
+        self.logger.info(
+            f"{name}:\nTime cost: {time_cost} ns\nONNX time cost: {onnx_time_cost} ns"
+        )
+
     def test_gptneox(self):
         name: str = "gptneox"
         input: Optional[str] = os.environ.get("GPTNEOX_MODEL_PATH")

@@ -29,9 +29,8 @@ void SqrtKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 #ifdef DEBUG
         assert(inputs.size() == 2);
 #endif
-        mlir::Value input = inputs[0], output = inputs[1],
-                    sqrt_op = b.create<mlir::math::SqrtOp>(
-                        builder.getUnknownLoc(), input);
+        mlir::Value input = inputs[0], sqrt_op = b.create<mlir::math::SqrtOp>(
+                                           builder.getUnknownLoc(), input);
         b.create<mlir::linalg::YieldOp>(loc, sqrt_op);
       });
 }

@@ -100,6 +100,8 @@ ConstantTensorEdge::ConstantTensorEdge(std::string &&name, Type type,
                                        Tensor &&tensor)
     : ConstantEdge(std::move(name)), tensor_(std::move(tensor)) {}
 
+const Meta &ConstantTensorEdge::GetMeta() const { return tensor_.GetMeta(); }
+
 Type ConstantTensorEdge::GetType() const { return tensor_.GetType(); }
 
 const std::vector<int64_t> &ConstantTensorEdge::GetShape() const {

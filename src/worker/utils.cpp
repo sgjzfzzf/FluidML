@@ -5,6 +5,7 @@
 #include "structure/kernel/generator/add_div_erf_add_mul_mul.h"
 #include "structure/kernel/generator/cast.h"
 #include "structure/kernel/generator/concat.h"
+#include "structure/kernel/generator/conv.h"
 #include "structure/kernel/generator/cum_sum.h"
 #include "structure/kernel/generator/div.h"
 #include "structure/kernel/generator/equal.h"
@@ -17,6 +18,7 @@
 #include "structure/kernel/generator/mul.h"
 #include "structure/kernel/generator/neg.h"
 #include "structure/kernel/generator/not.h"
+#include "structure/kernel/generator/pad.h"
 #include "structure/kernel/generator/pow.h"
 #include "structure/kernel/generator/reduce_mean.h"
 #include "structure/kernel/generator/reshape.h"
@@ -32,12 +34,14 @@
 #include "structure/kernel/kernel/add.h"
 #include "structure/kernel/kernel/cast.h"
 #include "structure/kernel/kernel/concat.h"
+#include "structure/kernel/kernel/conv.h"
 #include "structure/kernel/kernel/cum_sum.h"
 #include "structure/kernel/kernel/div.h"
 #include "structure/kernel/kernel/equal.h"
 #include "structure/kernel/kernel/mul.h"
 #include "structure/kernel/kernel/neg.h"
 #include "structure/kernel/kernel/not.h"
+#include "structure/kernel/kernel/pad.h"
 #include "structure/kernel/kernel/reduce_mean.h"
 #include "structure/kernel/kernel/slice.h"
 #include "structure/kernel/kernel/sqrt.h"
@@ -82,6 +86,26 @@ std::unique_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
                  dynamic_cast<const flow::Concat2CommonNode *>(node)) {
     int64_t axis = ptr->GetAxis();
     kernel = std::make_unique<kernel::Concat2Kernel>(axis);
+  } else if (const flow::ConvWithoutPaddingNode *ptr =
+                 dynamic_cast<const flow::ConvWithoutPaddingNode *>(node)) {
+    std::vector<int64_t> dilations = ptr->GetDilations(),
+                         kernel_shape = ptr->GetKernelShape(),
+                         strides = ptr->GetStrides();
+    const int64_t group = ptr->GetGroup();
+    std::optional<Tensor> bias = ptr->GetBias();
+    kernel = std::make_unique<kernel::ConvWithoutPaddingKernel>(
+        std::move(dilations), group, std::move(kernel_shape),
+        std::move(strides), std::move(bias));
+  } else if (const flow::ConvWithPaddingNode *ptr =
+                 dynamic_cast<const flow::ConvWithPaddingNode *>(node)) {
+    std::vector<int64_t> dilations = ptr->GetDilations(),
+                         kernel_shape = ptr->GetKernelShape(),
+                         pads = ptr->GetPads(), strides = ptr->GetStrides();
+    const int64_t group = ptr->GetGroup();
+    std::optional<Tensor> bias = ptr->GetBias();
+    kernel = std::make_unique<kernel::ConvWithPaddingKernel>(
+        std::move(dilations), group, std::move(kernel_shape), std::move(pads),
+        std::move(strides), std::move(bias));
   } else if (const flow::CumSumNode *ptr =
                  dynamic_cast<const flow::CumSumNode *>(node)) {
     int64_t axis = ptr->GetAxis();
@@ -110,6 +134,13 @@ std::unique_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
     int64_t axis = ptr->GetAxis(), index = ptr->GetIndex();
     kernel =
         std::make_unique<kernel::GatherConstantIndexScalarKernel>(axis, index);
+  } else if (const flow::GatherConstantIndicesTensorNode *ptr =
+                 dynamic_cast<const flow::GatherConstantIndicesTensorNode *>(
+                     node)) {
+    Tensor indices = ptr->GetIndices();
+    int64_t axis = ptr->GetAxis();
+    kernel = std::make_unique<kernel::GatherConstantIndicesTensorKernel>(
+        std::move(indices), axis);
   } else if (const flow::GatherConstantDataTensorNode *ptr =
                  dynamic_cast<const flow::GatherConstantDataTensorNode *>(
                      node)) {
@@ -161,6 +192,10 @@ std::unique_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
   } else if (const flow::NotNode *ptr =
                  dynamic_cast<const flow::NotNode *>(node)) {
     kernel = std::make_unique<kernel::NotKernel>();
+  } else if (const flow::PadNode *ptr =
+                 dynamic_cast<const flow::PadNode *>(node)) {
+    std::vector<std::tuple<int64_t, int64_t>> pads = ptr->GetPads();
+    kernel = std::make_unique<kernel::PadKernel>(std::move(pads));
   } else if (const flow::PowNode *ptr =
                  dynamic_cast<const flow::PowNode *>(node)) {
     Type type = ptr->GetType();
@@ -335,6 +370,46 @@ SelectKernelGenerator(const flow::Node *node) {
     generator = kernel::CumSumKernelGenerator::Make(std::move(input_meta),
                                                     std::move(output_meta),
                                                     axis, exclusive, reverse);
+  } else if (const flow::ConvWithoutPaddingNode *ptr =
+                 dynamic_cast<const flow::ConvWithoutPaddingNode *>(node)) {
+    std::shared_ptr<flow::Region> lhs = ptr->GetLhs(), rhs = ptr->GetRhs(),
+                                  output = ptr->GetOutput();
+#ifdef DEBUG
+    assert(lhs != nullptr);
+    assert(rhs != nullptr);
+    assert(output != nullptr);
+#endif
+    Meta lhs_meta = lhs->GetMeta(), rhs_meta = rhs->GetMeta(),
+         output_meta = output->GetMeta();
+    std::vector<int64_t> dilations = ptr->GetDilations(),
+                         kernel_shape = ptr->GetKernelShape(),
+                         strides = ptr->GetStrides();
+    const int64_t group = ptr->GetGroup();
+    std::optional<Tensor> bias = ptr->GetBias();
+    generator = kernel::ConvWithoutPaddingKernelGenerator::Make(
+        std::move(lhs_meta), std::move(rhs_meta), std::move(output_meta),
+        std::move(dilations), group, std::move(kernel_shape),
+        std::move(strides), std::move(bias));
+  } else if (const flow::ConvWithPaddingNode *ptr =
+                 dynamic_cast<const flow::ConvWithPaddingNode *>(node)) {
+    std::shared_ptr<flow::Region> lhs = ptr->GetLhs(), rhs = ptr->GetRhs(),
+                                  output = ptr->GetOutput();
+#ifdef DEBUG
+    assert(lhs != nullptr);
+    assert(rhs != nullptr);
+    assert(output != nullptr);
+#endif
+    Meta lhs_meta = lhs->GetMeta(), rhs_meta = rhs->GetMeta(),
+         output_meta = output->GetMeta();
+    std::vector<int64_t> dilations = ptr->GetDilations(),
+                         kernel_shape = ptr->GetKernelShape(),
+                         pads = ptr->GetPads(), strides = ptr->GetStrides();
+    const int64_t group = ptr->GetGroup();
+    std::optional<Tensor> bias = ptr->GetBias();
+    generator = kernel::ConvWithPaddingKernelGenerator::Make(
+        std::move(lhs_meta), std::move(rhs_meta), std::move(output_meta),
+        std::move(dilations), group, std::move(kernel_shape), std::move(pads),
+        std::move(strides), std::move(bias));
   } else if (const flow::DivConstantRhsNode *ptr =
                  dynamic_cast<const flow::DivConstantRhsNode *>(node)) {
     std::shared_ptr<flow::Region> input = ptr->GetInput(),
@@ -398,6 +473,21 @@ SelectKernelGenerator(const flow::Node *node) {
     int64_t axis = ptr->GetAxis(), index = ptr->GetIndex();
     generator = kernel::GatherConstantIndexScalarKernelGenerator::Make(
         std::move(input_meta), std::move(output_meta), axis, index);
+  } else if (const flow::GatherConstantIndicesTensorNode *ptr =
+                 dynamic_cast<const flow::GatherConstantIndicesTensorNode *>(
+                     node)) {
+    std::shared_ptr<flow::Region> input = ptr->GetInput(),
+                                  output = ptr->GetOutput();
+#ifdef DEBUG
+    assert(input != nullptr);
+    assert(output != nullptr);
+#endif
+    Meta input_meta = input->GetMeta(), output_meta = output->GetMeta();
+    Tensor indices = ptr->GetIndices();
+    int64_t axis = ptr->GetAxis();
+    generator = kernel::GatherConstantIndicesTensorKernelGenerator::Make(
+        std::move(input_meta), std::move(output_meta), std::move(indices),
+        axis);
   } else if (const flow::GatherConstantDataTensorNode *ptr =
                  dynamic_cast<const flow::GatherConstantDataTensorNode *>(
                      node)) {
@@ -526,6 +616,18 @@ SelectKernelGenerator(const flow::Node *node) {
     Meta input_meta = input->GetMeta(), output_meta = output->GetMeta();
     generator = kernel::NotKernelGenerator::Make(std::move(input_meta),
                                                  std::move(output_meta));
+  } else if (const flow::PadNode *ptr =
+                 dynamic_cast<const flow::PadNode *>(node)) {
+    std::shared_ptr<flow::Region> input = ptr->GetInput(),
+                                  output = ptr->GetOutput();
+#ifdef DEBUG
+    assert(input != nullptr);
+    assert(output != nullptr);
+#endif
+    Meta input_meta = input->GetMeta(), output_meta = output->GetMeta();
+    std::vector<std::tuple<int64_t, int64_t>> pads = ptr->GetPads();
+    generator = kernel::PadKernelGenerator::Make(
+        std::move(input_meta), std::move(output_meta), std::move(pads));
   } else if (const flow::PowNode *ptr =
                  dynamic_cast<const flow::PowNode *>(node)) {
     std::shared_ptr<flow::Region> input = ptr->GetInput(),

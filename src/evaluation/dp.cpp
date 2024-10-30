@@ -7,7 +7,7 @@
 #include "structure/flow/flow.h"
 #include "structure/flow/node.h"
 #include "structure/flow/region.h"
-#include "structure/kernel/kernel/kernel.h"
+#include "structure/kernel/generator/generator.h"
 #include "utils/hash.h"
 #include "utils/isa.hpp"
 #include "utils/utils.h"
@@ -931,8 +931,8 @@ DynamicProgrammingTableImpl::getEvaluator(const flow::Flow &flow) {
 #ifdef DEBUG
       assert(ptr != nullptr);
 #endif
-      std::shared_ptr<flow::Region> input = ptr->GetInput();
-      std::shared_ptr<flow::Region> output = ptr->GetOutput();
+      std::shared_ptr<flow::Region> input = ptr->GetInput(),
+                                    output = ptr->GetOutput();
 #ifdef DEBUG
       assert(input != nullptr);
       assert(output != nullptr);
@@ -951,8 +951,8 @@ DynamicProgrammingTableImpl::getEvaluator(const flow::Flow &flow) {
 #ifdef DEBUG
       assert(ptr != nullptr);
 #endif
-      std::shared_ptr<flow::Region> input = ptr->GetInput();
-      std::shared_ptr<flow::Region> output = ptr->GetOutput();
+      std::shared_ptr<flow::Region> input = ptr->GetInput(),
+                                    output = ptr->GetOutput();
 #ifdef DEBUG
       assert(input != nullptr);
       assert(output != nullptr);
@@ -972,9 +972,8 @@ DynamicProgrammingTableImpl::getEvaluator(const flow::Flow &flow) {
 #ifdef DEBUG
       assert(ptr != nullptr);
 #endif
-      std::shared_ptr<flow::Region> lhs = ptr->GetLhs();
-      std::shared_ptr<flow::Region> rhs = ptr->GetRhs();
-      std::shared_ptr<flow::Region> output = ptr->GetOutput();
+      std::shared_ptr<flow::Region> lhs = ptr->GetLhs(), rhs = ptr->GetRhs(),
+                                    output = ptr->GetOutput();
 #ifdef DEBUG
       assert(lhs != nullptr);
       assert(rhs != nullptr);
@@ -985,14 +984,28 @@ DynamicProgrammingTableImpl::getEvaluator(const flow::Flow &flow) {
               std::move(generator));
       std::string name = ptr->GetName();
       evaluator_->RegisterEval(std::move(name), std::move(eval));
-    } else if (std::shared_ptr<kernel::DoubleInputsWithBufferKernel> kernel =
-                   std::dynamic_pointer_cast<
-                       kernel::DoubleInputsWithBufferKernel>(kgenerator)) {
+    } else if (std::shared_ptr<kernel::DoubleInputsWithBufferKernelGenerator>
+                   generator = std::dynamic_pointer_cast<
+                       kernel::DoubleInputsWithBufferKernelGenerator>(
+                       kgenerator)) {
+      std::shared_ptr<flow::DoubleInputsWithBufferNode> ptr =
+          std::dynamic_pointer_cast<flow::DoubleInputsWithBufferNode>(node);
 #ifdef DEBUG
-      assert(false && "unimplemented");
-#else
-      __builtin_unreachable();
+      assert(ptr != nullptr);
 #endif
+      std::shared_ptr<flow::Region> lhs = ptr->GetLhs(), rhs = ptr->GetRhs(),
+                                    output = ptr->GetOutput();
+#ifdef DEBUG
+      assert(lhs != nullptr);
+      assert(rhs != nullptr);
+      assert(output != nullptr);
+#endif
+      const size_t buffer_size = ptr->GetBufferSize();
+      std::shared_ptr<evaluation::DoubleInputsWithBufferKernelEval> eval =
+          std::make_shared<evaluation::DoubleInputsWithBufferKernelEval>(
+              std::move(generator), buffer_size);
+      std::string name = ptr->GetName();
+      evaluator_->RegisterEval(std::move(name), std::move(eval));
     } else {
 #ifdef DEBUG
       assert(false && "unreachable");

@@ -49,7 +49,7 @@ void Concat2Kernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
 #ifdef DEBUG
         assert(inputs.size() == 2);
 #endif
-        mlir::Value input = inputs[0], output = inputs[1];
+        mlir::Value input = inputs[0];
         b.create<mlir::linalg::YieldOp>(loc, input);
       });
   builder.create<mlir::linalg::GenericOp>(
@@ -62,7 +62,7 @@ void Concat2Kernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
 #ifdef DEBUG
         assert(inputs.size() == 2);
 #endif
-        mlir::Value input = inputs[0], output = inputs[1];
+        mlir::Value input = inputs[0];
         b.create<mlir::linalg::YieldOp>(loc, input);
       });
 }

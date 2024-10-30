@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstdint>
 #include <numeric>
+#include <tuple>
 #include <vector>
 #ifdef DEBUG
 #include <cassert>
@@ -341,6 +342,122 @@ int64_t Concat2CommonNode::GetAxis() const noexcept {
   return axis_ >= 0 ? axis_ : rank + axis_;
 }
 
+ConvNode::ConvNode(std::string &&name, std::vector<int64_t> &&dilations,
+                   int64_t group, std::vector<int64_t> &&kernel_shape,
+                   std::vector<int64_t> &&strides, std::optional<Tensor> &&bias)
+    : Node(std::move(name)), dilations_(std::move(dilations)), group_(group),
+      kernel_shape_(std::move(kernel_shape)), strides_(std::move(strides)),
+      bias_(std::move(bias)) {}
+
+const std::vector<int64_t> &ConvNode::GetDilations() const noexcept {
+  return dilations_;
+}
+
+int64_t ConvNode::GetGroup() const noexcept { return group_; }
+
+const std::vector<int64_t> &ConvNode::GetKernelShape() const noexcept {
+  return kernel_shape_;
+}
+
+const std::vector<int64_t> &ConvNode::GetStrides() const noexcept {
+  return strides_;
+}
+
+const std::optional<Tensor> &ConvNode::GetBias() const noexcept {
+  return bias_;
+}
+
+ConvWithoutPaddingNode::ConvWithoutPaddingNode(
+    std::string &&name, std::vector<int64_t> &&dilations, int64_t group,
+    std::vector<int64_t> &&kernel_shape, std::vector<int64_t> &&strides,
+    std::optional<Tensor> &&bias, std::shared_ptr<Region> &&input,
+    std::shared_ptr<Region> &&weights, std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      ConvNode(std::move(name), std::move(dilations), group,
+               std::move(kernel_shape), std::move(strides), std::move(bias)),
+      DoubleInputsWithoutBufferNode(std::move(name), std::move(input),
+                                    std::move(weights), std::move(output)) {
+#ifdef DEBUG
+  const Meta &input_meta = lhs_->GetMeta(), &weights_meta = rhs_->GetMeta(),
+             &output_meta = output_->GetMeta();
+  const std::vector<int64_t> &input_shape = input_meta.GetShape(),
+                             &output_shape = output_meta.GetShape();
+  const int64_t rank = input_shape.size();
+  assert(rank == output_shape.size());
+#endif
+}
+
+std::shared_ptr<DoubleInputsWithoutBufferNode>
+ConvWithoutPaddingNode::CloneAsDoubleInputsWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<ConvWithoutPaddingNode> ConvWithoutPaddingNode::Clone() const {
+  std::string name = GetName();
+  std::vector<int64_t> dilations = GetDilations(),
+                       kernel_shape = GetKernelShape(), strides = GetStrides();
+  std::optional<Tensor> bias = GetBias();
+  return std::make_shared<ConvWithoutPaddingNode>(
+      std::move(name), std::move(dilations), GetGroup(),
+      std::move(kernel_shape), std::move(strides), std::move(bias), GetLhs(),
+      GetRhs(), GetOutput());
+}
+
+ConvWithPaddingNode::ConvWithPaddingNode(
+    std::string &&name, std::vector<int64_t> &&dilations, int64_t group,
+    std::vector<int64_t> &&kernel_shape, std::vector<int64_t> &&pads,
+    std::vector<int64_t> &&strides, std::optional<Tensor> &&bias,
+    std::shared_ptr<Region> &&input, std::shared_ptr<Region> &&weights,
+    std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      ConvNode(std::move(name), std::move(dilations), group,
+               std::move(kernel_shape), std::move(strides), std::move(bias)),
+      DoubleInputsWithBufferNode(std::move(name), std::move(input),
+                                 std::move(weights), std::move(output)),
+      pads_(std::move(pads)) {}
+
+std::shared_ptr<DoubleInputsWithBufferNode>
+ConvWithPaddingNode::CloneAsDoubleInputsWithBufferNode() const {
+  return Clone();
+}
+
+size_t ConvWithPaddingNode::GetBufferSize() const noexcept {
+  std::shared_ptr<Region> input = GetLhs();
+#ifdef DEBUG
+  assert(input != nullptr);
+#endif
+  const Meta &input_meta = input->GetMeta();
+  Type type = input_meta.GetType();
+  size_t bit_width = GetSize(type);
+  std::vector<int64_t> shape = input_meta.GetShape();
+  const int64_t rank = shape.size() - 2;
+#ifdef DEBUG
+  assert(rank >= 0);
+  assert(rank * 2 == pads_.size());
+#endif
+  for (size_t i = 0; i < rank; ++i) {
+    shape[i + 2] += pads_[i] + pads_[i + rank];
+  }
+  return bit_width * std::accumulate(shape.begin(), shape.end(), 1,
+                                     std::multiplies<int64_t>());
+}
+
+const std::vector<int64_t> &ConvWithPaddingNode::GetPads() const noexcept {
+  return pads_;
+}
+
+std::shared_ptr<ConvWithPaddingNode> ConvWithPaddingNode::Clone() const {
+  std::string name = GetName();
+  std::vector<int64_t> dilations = GetDilations(),
+                       kernel_shape = GetKernelShape(), pads = GetPads(),
+                       strides = GetStrides();
+  std::optional<Tensor> bias = GetBias();
+  return std::make_shared<ConvWithPaddingNode>(
+      std::move(name), std::move(dilations), GetGroup(),
+      std::move(kernel_shape), std::move(pads), std::move(strides),
+      std::move(bias), GetLhs(), GetRhs(), GetOutput());
+}
+
 CumSumNode::CumSumNode(std::string &&name, int64_t axis, bool exclusive,
                        bool reverse, std::shared_ptr<Region> &&input,
                        std::shared_ptr<Region> &&output)
@@ -497,6 +614,35 @@ int64_t GatherConstantIndexScalarNode::GetAxis() const noexcept {
 
 int64_t GatherConstantIndexScalarNode::GetIndex() const noexcept {
   return index_;
+}
+
+GatherConstantIndicesTensorNode::GatherConstantIndicesTensorNode(
+    std::string &&name, std::shared_ptr<Region> &&input,
+    std::shared_ptr<Region> &&output, Tensor &&indices, int64_t axis)
+    : Node(std::move(name)), GatherNode(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      indices_(indices), axis_(axis) {}
+
+std::shared_ptr<SingleInputWithoutBufferNode>
+GatherConstantIndicesTensorNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<GatherConstantIndicesTensorNode>
+GatherConstantIndicesTensorNode::Clone() const {
+  std::string name = GetName();
+  Tensor indices = GetIndices();
+  return std::make_shared<GatherConstantIndicesTensorNode>(
+      std::move(name), GetInput(), GetOutput(), std::move(indices), GetAxis());
+}
+
+int64_t GatherConstantIndicesTensorNode::GetAxis() const noexcept {
+  return axis_;
+}
+
+const Tensor &GatherConstantIndicesTensorNode::GetIndices() const noexcept {
+  return indices_;
 }
 
 GatherConstantDataTensorNode::GatherConstantDataTensorNode(
@@ -715,7 +861,7 @@ size_t LayerNormalizationConstantScaleBiasNode::GetBufferSize() const noexcept {
   shape[axis] = 1;
   const int64_t size = std::accumulate(shape.begin(), shape.end(), 1,
                                        std::multiplies<int64_t>()) *
-                       GetSizeFromType(type);
+                       GetSize(type);
   return size;
 }
 
@@ -856,6 +1002,32 @@ NotNode::CloneAsSingleInputWithoutBufferNode() const {
 std::shared_ptr<NotNode> NotNode::Clone() const {
   std::string name = GetName();
   return std::make_shared<NotNode>(std::move(name), GetInput(), GetOutput());
+}
+
+PadNode::PadNode(std::string &&name,
+                 std::vector<std::tuple<int64_t, int64_t>> &&pads,
+                 std::shared_ptr<Region> &&input,
+                 std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      pads_(std::move(pads)) {}
+
+std::shared_ptr<SingleInputWithoutBufferNode>
+PadNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<PadNode> PadNode::Clone() const {
+  std::string name = GetName();
+  std::vector<std::tuple<int64_t, int64_t>> pads = GetPads();
+  return std::make_shared<PadNode>(std::move(name), std::move(pads), GetInput(),
+                                   GetOutput());
+}
+
+const std::vector<std::tuple<int64_t, int64_t>> &
+PadNode::GetPads() const noexcept {
+  return pads_;
 }
 
 PowNode::PowNode(std::string &&name, Type type, float64_t exp,
@@ -1019,7 +1191,7 @@ size_t SoftmaxNode::GetBufferSize() const noexcept {
   shape[axis] = 1;
   const int64_t size = std::accumulate(shape.begin(), shape.end(), 1,
                                        std::multiplies<int64_t>()) *
-                       GetSizeFromType(type);
+                       GetSize(type);
   return size;
 }
 
@@ -1168,13 +1340,6 @@ UnsqueezeNode::UnsqueezeNode(std::string &&name, std::vector<int64_t> &&axes,
   size_t input_shape_len = input_shape.size();
   size_t output_shape_len = output_shape.size();
   assert(output_shape_len == input_shape_len + axes_.size());
-  for (size_t i = 0, j = 0; i < output_shape_len; ++i) {
-    if (j < axes_.size() && axes_[j] == i) {
-      ++j;
-    } else {
-      assert(input_shape[i - j] == output_shape[i]);
-    }
-  }
 #endif
 }
 

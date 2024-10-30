@@ -4,10 +4,10 @@
 #include "mlir/IR/AffineMap.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinAttributes.h"
+#include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Location.h"
 #include "mlir/IR/MLIRContext.h"
 #include "structure/kernel/kernel/utils.h"
-#include "structure/tensor/meta.h"
 #include "utils/float.h"
 #include "utils/type.h"
 
@@ -22,15 +22,15 @@ std::string AddConstantKernel::GetKernelName() const { return kKernelName; }
 void AddConstantKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
                             mlir::Value &output) const {
   mlir::MLIRContext *context = builder.getContext();
-  mlir::Value constant;
+  mlir::Value value;
   if (type_ == Type::kInt32) {
-    constant = builder.create<mlir::arith::ConstantOp>(
+    value = builder.create<mlir::arith::ConstantOp>(
         builder.getUnknownLoc(), builder.getI32IntegerAttr(constant_));
   } else if (type_ == Type::kInt64) {
-    constant = builder.create<mlir::arith::ConstantOp>(
+    value = builder.create<mlir::arith::ConstantOp>(
         builder.getUnknownLoc(), builder.getI64IntegerAttr(constant_));
   } else if (type_ == Type::kFloat32) {
-    constant = builder.create<mlir::arith::ConstantOp>(
+    value = builder.create<mlir::arith::ConstantOp>(
         builder.getUnknownLoc(), builder.getF32FloatAttr(constant_));
   } else {
 #ifdef DEBUG
@@ -56,18 +56,17 @@ void AddConstantKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 #ifdef DEBUG
         assert(inputs.size() == 2);
 #endif
-        mlir::Value input = inputs[0], add_op;
-        mlir::Type input_elem_type = input_type.getElementType(),
-                   output_elem_type = output_type.getElementType(),
-                   constant_type = constant.getType();
-        if (input_elem_type.isa<mlir::IntegerType>() &&
+        mlir::Value input = inputs[0], output = inputs[1], add_op;
+        mlir::Type input_type = input.getType(), output_type = output.getType(),
+                   constant_type = value.getType();
+        if (input_type.isa<mlir::IntegerType>() &&
             constant_type.isa<mlir::IntegerType>() &&
-            output_elem_type.isa<mlir::IntegerType>()) {
-          add_op = b.create<mlir::arith::AddIOp>(loc, input, constant);
-        } else if (input_elem_type.isa<mlir::FloatType>() &&
+            output_type.isa<mlir::IntegerType>()) {
+          add_op = b.create<mlir::arith::AddIOp>(loc, input, value);
+        } else if (input_type.isa<mlir::FloatType>() &&
                    constant_type.isa<mlir::FloatType>() &&
-                   output_elem_type.isa<mlir::FloatType>()) {
-          add_op = b.create<mlir::arith::AddFOp>(loc, input, constant);
+                   output_type.isa<mlir::FloatType>()) {
+          add_op = b.create<mlir::arith::AddFOp>(loc, input, value);
         } else {
 #ifdef DEBUG
           assert(false && "unreachable");
@@ -88,19 +87,9 @@ void AddCommonKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
                    rhs_type = mlir::cast<mlir::MemRefType>(rhs.getType()),
                    output_type = mlir::cast<mlir::MemRefType>(output.getType());
   const size_t rank = output_type.getRank();
-  Type lhs_raw_type = GetType(lhs_type.getElementType()),
-       rhs_raw_type = GetType(rhs_type.getElementType()),
-       output_raw_type = GetType(output_type.getElementType());
 #ifdef DEBUG
   assert(lhs_type.getRank() <= rank);
   assert(rhs_type.getRank() <= rank);
-  Meta lhs_meta(lhs_raw_type, lhs_type.getShape()),
-      rhs_meta(rhs_raw_type, rhs_type.getShape()),
-      output_meta(output_raw_type, output_type.getShape());
-  std::optional<Meta> broadcast_meta_opt =
-      BroadcastShape(lhs_meta, rhs_meta, output_raw_type);
-  assert(broadcast_meta_opt.has_value());
-  assert(*broadcast_meta_opt == output_meta);
 #endif
   llvm::SmallVector<mlir::AffineMap> maps =
       GetBroadcastAffineMaps(builder, {lhs_type, rhs_type}, output_type);
@@ -115,9 +104,13 @@ void AddCommonKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
 #ifdef DEBUG
         assert(inputs.size() == 3);
 #endif
-        mlir::Value lhs = inputs[0], rhs = inputs[1], add_op;
-        if (lhs_raw_type == Type::kFloat32 && rhs_raw_type == Type::kFloat32 &&
-            output_raw_type == Type::kFloat32) {
+        mlir::Value lhs = inputs[0], rhs = inputs[1], output = inputs[2],
+                    add_op;
+        mlir::Type lhs_type = lhs.getType(), rhs_type = rhs.getType(),
+                   output_type = output.getType();
+        if (lhs_type.isa<mlir::FloatType>() &&
+            rhs_type.isa<mlir::FloatType>() &&
+            output_type.isa<mlir::FloatType>()) {
           add_op = b.create<mlir::arith::AddFOp>(loc, lhs, rhs);
         } else {
 #ifdef DEBUG

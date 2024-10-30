@@ -65,6 +65,7 @@ public:
   ConstantTensorEdge(std::string &&name, Type type, Tensor &&tensor);
   ConstantTensorEdge(const ConstantTensorEdge &edge) = delete;
   ConstantTensorEdge(ConstantTensorEdge &&edge) = default;
+  const Meta &GetMeta() const;
   Type GetType() const override;
   const std::vector<int64_t> &GetShape() const override;
   const Tensor &GetValue() const;

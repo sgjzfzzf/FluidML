@@ -9,30 +9,34 @@ if __name__ == "__main__":
         opset_import=[onnx.helper.make_opsetid("", 18)],
     )
     graph = model.graph
-    graph.name = "gather1"
+    graph.name = "conv0"
     input = onnx.helper.make_tensor_value_info(
         "input",
         onnx.TensorProto.FLOAT,
-        [1, 384, 136, 1],
+        [1, 768, 128],
     )
-    graph.input.extend([input])
-    indices = onnx.helper.make_tensor(
-        "indices",
-        onnx.TensorProto.INT64,
-        [9, 128],
-        np.random.randint(0, 136, (9, 128)).astype(np.int64),
+    weights = onnx.helper.make_tensor(
+        "weights",
+        onnx.TensorProto.FLOAT,
+        [768, 1, 9],
+        np.random.rand(768, 1, 9).astype(np.float32),
     )
     output = onnx.helper.make_tensor_value_info(
-        "output", onnx.TensorProto.FLOAT, [1, 384, 9, 128, 1]
+        "output", onnx.TensorProto.FLOAT, [1, 768, 128]
     )
-    graph.initializer.extend([indices])
+    graph.input.extend([input])
+    graph.initializer.extend([weights])
     graph.output.extend([output])
     node = onnx.helper.make_node(
-        "Gather",
-        inputs=["input", "indices"],
+        "Conv",
+        inputs=["input", "weights"],
         outputs=["output"],
-        name="gather",
-        axis=2,
+        name="conv",
+        dilations=[1],
+        group=768,
+        kernel_shape=[9],
+        pads=[4, 4],
+        strides=[1],
     )
     graph.node.extend([node])
     onnx.checker.check_model(model)

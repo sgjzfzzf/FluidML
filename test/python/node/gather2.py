@@ -9,21 +9,16 @@ if __name__ == "__main__":
         opset_import=[onnx.helper.make_opsetid("", 18)],
     )
     graph = model.graph
-    graph.name = "gather1"
+    graph.name = "gather2"
     input = onnx.helper.make_tensor_value_info(
         "input",
         onnx.TensorProto.FLOAT,
-        [1, 384, 136, 1],
+        [1, 128, 768],
     )
     graph.input.extend([input])
-    indices = onnx.helper.make_tensor(
-        "indices",
-        onnx.TensorProto.INT64,
-        [9, 128],
-        np.random.randint(0, 136, (9, 128)).astype(np.int64),
-    )
+    indices = onnx.helper.make_tensor("indices", onnx.TensorProto.INT64, [], [0])
     output = onnx.helper.make_tensor_value_info(
-        "output", onnx.TensorProto.FLOAT, [1, 384, 9, 128, 1]
+        "output", onnx.TensorProto.FLOAT, [1, 768]
     )
     graph.initializer.extend([indices])
     graph.output.extend([output])
@@ -32,7 +27,7 @@ if __name__ == "__main__":
         inputs=["input", "indices"],
         outputs=["output"],
         name="gather",
-        axis=2,
+        axis=1,
     )
     graph.node.extend([node])
     onnx.checker.check_model(model)

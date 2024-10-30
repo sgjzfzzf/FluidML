@@ -2,6 +2,7 @@
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/Math/IR/Math.h"
+#include "mlir/Dialect/Utils/StructuredOpsUtils.h"
 #include "mlir/IR/BuiltinTypes.h"
 
 namespace cpu_transformers {
@@ -32,25 +33,21 @@ void PowKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
   assert(rank == output_type.getRank());
   assert(input_type.getShape() == output_type.getShape());
 #endif
-  Type input_raw_type = GetType(input_type.getElementType()),
-       output_raw_type = GetType(output_type.getElementType());
-  mlir::AffineMap input_map = builder.getMultiDimIdentityMap(rank),
-                  output_map = builder.getMultiDimIdentityMap(rank);
-  llvm::SmallVector<mlir::AffineMap> maps = {input_map, output_map};
-  llvm::SmallVector<mlir::utils::IteratorType> iterator_types;
-  for (size_t i = 0; i < rank; ++i) {
-    iterator_types.push_back(mlir::utils::IteratorType::parallel);
-  }
   builder.create<mlir::linalg::GenericOp>(
       builder.getUnknownLoc(), mlir::TypeRange{}, mlir::ValueRange{input},
-      mlir::ValueRange{output}, maps, iterator_types,
+      mlir::ValueRange{output},
+      mlir::SmallVector(2, builder.getMultiDimIdentityMap(rank)),
+      llvm::SmallVector(rank, mlir::utils::IteratorType::parallel),
       [&](mlir::OpBuilder &b, mlir::Location loc, mlir::ValueRange inputs) {
 #ifdef DEBUG
         assert(inputs.size() == 2);
 #endif
         mlir::Value input = inputs[0], output = inputs[1], pow_op;
-        if (input_raw_type == Type::kFloat32 && type_ == Type::kFloat32 &&
-            output_raw_type == Type::kFloat32) {
+        mlir::Type input_type = input.getType(), exp_type = exp.getType(),
+                   output_type = output.getType();
+        if (input_type.isa<mlir::FloatType>() &&
+            exp_type.isa<mlir::FloatType>() &&
+            output_type.isa<mlir::FloatType>()) {
           pow_op = b.create<mlir::math::PowFOp>(loc, input, exp);
         } else {
 #ifdef DEBUG

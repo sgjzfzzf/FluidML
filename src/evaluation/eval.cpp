@@ -407,5 +407,41 @@ void DoubleInputsWithoutBufferKernelEval::runKernel(
                                         rhs_layout, output_meta, output_layout);
 }
 
+DoubleInputsWithBufferKernelEval::DoubleInputsWithBufferKernelEval(
+    std::shared_ptr<kernel::DoubleInputsWithBufferKernelGenerator> &&generator,
+    size_t buffer_size, size_t epoch)
+    : DoubleInputsKernelEval(epoch), generator_(std::move(generator)),
+      buffer_size_(buffer_size) {}
+
+const kernel::DoubleInputsWithBufferKernelGenerator &
+DoubleInputsWithBufferKernelEval::GetKernelGenerator() const {
+#ifdef DEBUG
+  assert(generator_ != nullptr);
+#endif
+  return *generator_;
+}
+
+kernel::DoubleInputsWithBufferKernelGenerator &
+DoubleInputsWithBufferKernelEval::GetKernelGenerator() {
+#ifdef DEBUG
+  assert(generator_ != nullptr);
+#endif
+  return *generator_;
+}
+
+void DoubleInputsWithBufferKernelEval::runKernel(
+    worker::KernelBuilder &builer, const std::vector<size_t> &lhs_layout,
+    const std::vector<size_t> &rhs_layout,
+    const std::vector<size_t> &output_layout) const {
+  std::shared_ptr<kernel::DoubleInputsWithBufferKernel> kernel =
+      generator_->YieldDoubleInputsWithBufferKernel(lhs_layout, rhs_layout,
+                                                    output_layout);
+  const Meta &lhs_meta = GetLhsMeta(), rhs_meta = GetRhsMeta(),
+             output_meta = GetOutputMeta();
+  builer.RunOnDoubleInputsWithBuffer(*kernel, lhs_meta, lhs_layout, rhs_meta,
+                                     rhs_layout, output_meta, output_layout,
+                                     buffer_size_);
+}
+
 } // namespace evaluation
 } // namespace cpu_transformers

@@ -36,7 +36,7 @@ size_t Meta::GetElementsNum() const {
 }
 
 size_t Meta::GetSize() const {
-  return GetElementsNum() * GetSizeFromType(type_);
+  return GetElementsNum() * cpu_transformers::GetSize(type_);
 }
 
 size_t Meta::GetHashCode() const {

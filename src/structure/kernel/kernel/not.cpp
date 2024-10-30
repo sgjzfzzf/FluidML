@@ -32,7 +32,7 @@ void NotKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 #ifdef DEBUG
         assert(inputs.size() == 2);
 #endif
-        mlir::Value input = inputs[0], output = inputs[1],
+        mlir::Value input = inputs[0],
                     true_op = b.create<mlir::arith::ConstantOp>(
                         loc, i1_type, b.getIntegerAttr(i1_type, 1)),
                     xor_op = b.create<mlir::arith::XOrIOp>(loc, input, true_op);

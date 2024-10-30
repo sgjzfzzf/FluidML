@@ -24,6 +24,25 @@ private:
   const int64_t index_;
 };
 
+class GatherConstantIndicesTensorKernel
+    : public SingleInputWithoutBufferKernel {
+public:
+  static constexpr char kKernelName[] = "GatherConstantIndicesTensorKernel";
+  GatherConstantIndicesTensorKernel(Tensor &&indices, int64_t axis);
+  GatherConstantIndicesTensorKernel(const GatherConstantIndicesTensorKernel &) =
+      delete;
+  GatherConstantIndicesTensorKernel(GatherConstantIndicesTensorKernel &&) =
+      default;
+  virtual ~GatherConstantIndicesTensorKernel() = default;
+  std::string GetKernelName() const override;
+  void Run(mlir::OpBuilder &builder, mlir::Value &input,
+           mlir::Value &output) const override;
+
+private:
+  const Tensor indices_;
+  const int64_t axis_;
+};
+
 class GatherConstantDataTensorKernel : public SingleInputWithoutBufferKernel {
 public:
   static constexpr char kKernelName[] = "GatherConstantDataTensorKernel";

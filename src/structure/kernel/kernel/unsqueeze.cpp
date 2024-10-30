@@ -31,6 +31,7 @@ void UnsqueezeKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
   for (size_t i = 0; i < output_rank; ++i) {
     bool is_axis = false;
     for (int64_t axis : axes_) {
+      axis = axis < 0 ? axis + output_rank : axis;
       if (i == axis) {
         is_axis = true;
         break;
@@ -40,6 +41,9 @@ void UnsqueezeKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
       exprs.push_back(builder.getAffineDimExpr(i));
     }
   }
+#ifdef DEBUG
+  assert(exprs.size() == input_rank);
+#endif
   mlir::AffineMap input_map =
                       mlir::AffineMap::get(output_rank, 0, exprs, context),
                   output_map = builder.getMultiDimIdentityMap(output_rank);

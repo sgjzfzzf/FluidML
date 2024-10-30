@@ -65,6 +65,14 @@ public:
       const Meta &lhs_meta, const std::vector<size_t> &lhs_layout,
       const Meta &rhs_meta, const std::vector<size_t> &rhs_layout,
       const Meta &output_meta, const std::vector<size_t> &output_layout) = 0;
+  virtual void RunOnDoubleInputsWithBuffer(
+      const kernel::DoubleInputsWithBufferKernel &kernel, const Meta &lhs_meta,
+      const Meta &rhs_meta, const Meta &output_meta, size_t buffer_size) = 0;
+  virtual void RunOnDoubleInputsWithBuffer(
+      const kernel::DoubleInputsWithBufferKernel &kernel, const Meta &lhs_meta,
+      const std::vector<size_t> &lhs_layout, const Meta &rhs_meta,
+      const std::vector<size_t> &rhs_layout, const Meta &output_meta,
+      const std::vector<size_t> &output_layout, size_t buffer_size) = 0;
   static constexpr char kInputKey[] = "input";
   static constexpr char kLhsKey[] = "lhs";
   static constexpr char kRhsKey[] = "rhs";

@@ -47,7 +47,7 @@ void MatMulKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
   builder.create<mlir::linalg::GenericOp>(
       builder.getUnknownLoc(), mlir::TypeRange{}, mlir::ValueRange{lhs, rhs},
       mlir::ValueRange{output}, maps, iterator_types,
-      [&](mlir::OpBuilder &b, mlir::Location loc, mlir::ValueRange inputs) {
+      [](mlir::OpBuilder &b, mlir::Location loc, mlir::ValueRange inputs) {
 #ifdef DEBUG
         assert(inputs.size() == 3);
 #endif

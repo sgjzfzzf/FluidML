@@ -71,21 +71,21 @@ void MulCommonKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
   builder.create<mlir::linalg::GenericOp>(
       builder.getUnknownLoc(), mlir::TypeRange{}, mlir::ValueRange{lhs, rhs},
       mlir::ValueRange{output}, maps, iterator_types,
-      [&](mlir::OpBuilder &b, mlir::Location loc, mlir::ValueRange inputs) {
+      [](mlir::OpBuilder &b, mlir::Location loc, mlir::ValueRange inputs) {
 #ifdef DEBUG
         assert(inputs.size() == 3);
 #endif
-        mlir::Value lhs = inputs[0], rhs = inputs[1], mul_op;
-        mlir::Type lhs_elem_type = lhs_type.getElementType(),
-                   rhs_elem_type = rhs_type.getElementType(),
-                   output_elem_type = output_type.getElementType();
-        if (lhs_elem_type.isa<mlir::IntegerType>() &&
-            rhs_elem_type.isa<mlir::IntegerType>() &&
-            output_elem_type.isa<mlir::IntegerType>()) {
+        mlir::Value lhs = inputs[0], rhs = inputs[1], output = inputs[2],
+                    mul_op;
+        mlir::Type lhs_type = lhs.getType(), rhs_type = rhs.getType(),
+                   output_type = output.getType();
+        if (lhs_type.isa<mlir::IntegerType>() &&
+            rhs_type.isa<mlir::IntegerType>() &&
+            output_type.isa<mlir::IntegerType>()) {
           mul_op = b.create<mlir::arith::MulIOp>(loc, lhs, rhs);
-        } else if (lhs_elem_type.isa<mlir::FloatType>() &&
-                   rhs_elem_type.isa<mlir::FloatType>() &&
-                   output_elem_type.isa<mlir::FloatType>()) {
+        } else if (lhs_type.isa<mlir::FloatType>() &&
+                   rhs_type.isa<mlir::FloatType>() &&
+                   output_type.isa<mlir::FloatType>()) {
           mul_op = b.create<mlir::arith::MulFOp>(loc, lhs, rhs);
         } else {
 #ifdef DEBUG

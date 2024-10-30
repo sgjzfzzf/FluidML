@@ -1,4 +1,3 @@
-import numpy as np
 import onnx
 import sys
 
@@ -9,30 +8,29 @@ if __name__ == "__main__":
         opset_import=[onnx.helper.make_opsetid("", 18)],
     )
     graph = model.graph
-    graph.name = "gather1"
+    graph.name = "pad"
     input = onnx.helper.make_tensor_value_info(
         "input",
         onnx.TensorProto.FLOAT,
-        [1, 384, 136, 1],
+        [1, 384, 128, 1],
     )
-    graph.input.extend([input])
-    indices = onnx.helper.make_tensor(
-        "indices",
+    pads = onnx.helper.make_tensor(
+        "pads",
         onnx.TensorProto.INT64,
-        [9, 128],
-        np.random.randint(0, 136, (9, 128)).astype(np.int64),
+        [8],
+        [0, 0, 4, 0, 0, 0, 4, 0],
     )
     output = onnx.helper.make_tensor_value_info(
-        "output", onnx.TensorProto.FLOAT, [1, 384, 9, 128, 1]
+        "output", onnx.TensorProto.FLOAT, [1, 384, 136, 1]
     )
-    graph.initializer.extend([indices])
+    graph.input.extend([input])
+    graph.initializer.extend([pads])
     graph.output.extend([output])
     node = onnx.helper.make_node(
-        "Gather",
-        inputs=["input", "indices"],
+        "Pad",
+        inputs=["input", "pads"],
         outputs=["output"],
-        name="gather",
-        axis=2,
+        name="pad",
     )
     graph.node.extend([node])
     onnx.checker.check_model(model)

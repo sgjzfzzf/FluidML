@@ -33,9 +33,8 @@ void TanhKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 #ifdef DEBUG
         assert(inputs.size() == 2);
 #endif
-        mlir::Value input = inputs[0], output = inputs[1],
-                    tanh_op = b.create<mlir::math::TanhOp>(
-                        builder.getUnknownLoc(), input);
+        mlir::Value input = inputs[0], tanh_op = b.create<mlir::math::TanhOp>(
+                                           builder.getUnknownLoc(), input);
         b.create<mlir::linalg::YieldOp>(loc, tanh_op);
       });
 }

@@ -5,6 +5,7 @@
 #include "structure/graph/edge.h"
 #include "structure/graph/node.h"
 #include "utils/isa.hpp"
+#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <numeric>
@@ -35,6 +36,8 @@ private:
                        const graph::Node &node);
   void convertConcatNode(flow::Flow &flow, const graph::Graph &graph,
                          const graph::Node &node);
+  void convertConvNode(flow::Flow &flow, const graph::Graph &graph,
+                       const graph::Node &node);
   void convertCumSumNode(flow::Flow &flow, const graph::Graph &graph,
                          const graph::Node &node);
   void convertDivNode(flow::Flow &flow, const graph::Graph &graph,
@@ -59,6 +62,8 @@ private:
   void convertNegNode(flow::Flow &flow, const graph::Graph &graph,
                       const graph::Node &node);
   void convertNotNode(flow::Flow &flow, const graph::Graph &graph,
+                      const graph::Node &node);
+  void convertPadNode(flow::Flow &flow, const graph::Graph &graph,
                       const graph::Node &node);
   void convertPowNode(flow::Flow &flow, const graph::Graph &graph,
                       const graph::Node &node);
@@ -145,6 +150,9 @@ flow::Flow ConverterImpl::Run(const graph::Graph &graph) {
     case graph::Node::Op::Concat:
       convertConcatNode(flow, graph, *node);
       break;
+    case graph::Node::Op::Conv:
+      convertConvNode(flow, graph, *node);
+      break;
     case graph::Node::Op::CumSum:
       convertCumSumNode(flow, graph, *node);
       break;
@@ -180,6 +188,9 @@ flow::Flow ConverterImpl::Run(const graph::Graph &graph) {
       break;
     case graph::Node::Op::Not:
       convertNotNode(flow, graph, *node);
+      break;
+    case graph::Node::Op::Pad:
+      convertPadNode(flow, graph, *node);
       break;
     case graph::Node::Op::Pow:
       convertPowNode(flow, graph, *node);
@@ -559,6 +570,111 @@ void ConverterImpl::convertConcatNode(flow::Flow &flow,
   flow.PutNode(std::move(ptr));
 }
 
+void ConverterImpl::convertConvNode(flow::Flow &flow, const graph::Graph &graph,
+                                    const graph::Node &node) {
+#ifdef DEBUG
+  assert(node.GetOp() == graph::Node::Op::Conv);
+#endif
+  std::string name = node.GetName();
+  std::vector<std::shared_ptr<graph::Edge>> inputs = graph.GetNodeFrom(node),
+                                            outputs = graph.GetNodeTo(node);
+#ifdef DEBUG
+  assert(outputs.size() == 1);
+#endif
+  std::optional<Tensor> bias = std::nullopt;
+  if (inputs.size() == 3) {
+    std::shared_ptr<graph::Edge> bias_edge = inputs[2];
+#ifdef DEBUG
+    assert(bias_edge != nullptr);
+#endif
+    std::shared_ptr<graph::ConstantTensorEdge> bias_as_constant =
+        std::dynamic_pointer_cast<graph::ConstantTensorEdge>(bias_edge);
+#ifdef DEBUG
+    assert(bias_as_constant != nullptr);
+#endif
+    bias = bias_as_constant->GetValue();
+  } else {
+#ifdef DEBUG
+    assert(inputs.size() == 2);
+#endif
+  }
+  std::shared_ptr<graph::Edge> input = inputs[0], weight = inputs[1],
+                               output = outputs[0];
+#ifdef DEBUG
+  assert(input != nullptr);
+  assert(weight != nullptr);
+  assert(output != nullptr);
+#endif
+  std::shared_ptr<flow::ConvNode> ptr = nullptr;
+  std::shared_ptr<graph::NonConstantEdge>
+      input_as_non_constant =
+          std::dynamic_pointer_cast<graph::NonConstantEdge>(input),
+      output_as_non_constant =
+          std::dynamic_pointer_cast<graph::NonConstantEdge>(output);
+  std::shared_ptr<graph::ConstantTensorEdge> weight_as_constant =
+      std::dynamic_pointer_cast<graph::ConstantTensorEdge>(weight);
+#ifdef DEBUG
+  assert(input_as_non_constant != nullptr);
+  assert(weight_as_constant != nullptr);
+  assert(output_as_non_constant != nullptr);
+#endif
+  const std::string &input_name = input->GetName(),
+                    &weight_name = weight->GetName(),
+                    &output_name = output->GetName();
+  const Meta &input_meta = input_as_non_constant->GetMeta(),
+             &weight_meta = weight_as_constant->GetMeta(),
+             &output_meta = output_as_non_constant->GetMeta();
+  const std::vector<int64_t> &input_shape = input_meta.GetShape(),
+                             &weight_shape = weight_meta.GetShape(),
+                             &output_shape = output_meta.GetShape();
+  const size_t rank = input_shape.size();
+#ifdef DEBUG
+  assert(rank >= 3);
+  assert(weight_shape.size() == rank);
+  assert(output_shape.size() == rank);
+#endif
+  size_t group = 1;
+  if (node.HasAttribute(flow::ConvNode::kGroupAttrName)) {
+    group = node.GetAttribute(flow::ConvNode::kGroupAttrName).GetInt64();
+  }
+#ifdef DEBUG
+  assert(node.HasAttribute(flow::ConvNode::kDilationsAttrName));
+  assert(node.HasAttribute(flow::ConvNode::kKernelShapeAttrName));
+  assert(node.HasAttribute(flow::ConvNode::kPadsAttrName));
+  assert(node.HasAttribute(flow::ConvNode::kStridesAttrName));
+#endif
+  std::vector<int64_t>
+      dilations =
+          node.GetAttribute(flow::ConvNode::kDilationsAttrName).GetInt64Array(),
+      kernel_shape = node.GetAttribute(flow::ConvNode::kKernelShapeAttrName)
+                         .GetInt64Array(),
+      pads = node.GetAttribute(flow::ConvNode::kPadsAttrName).GetInt64Array(),
+      strides =
+          node.GetAttribute(flow::ConvNode::kStridesAttrName).GetInt64Array();
+  std::shared_ptr<flow::Region> input_region = flow.GetRegion(input_name),
+                                weight_region = flow.GetRegion(weight_name),
+                                output_region = flow.GetRegion(output_name);
+#ifdef DEBUG
+  assert(input_region != nullptr);
+  assert(weight_region != nullptr);
+  assert(output_region != nullptr);
+#endif
+  if (std::all_of(pads.begin(), pads.end(),
+                  [](int64_t pad) { return pad == 0; })) {
+    ptr = std::make_shared<flow::ConvWithoutPaddingNode>(
+        std::move(name), std::move(dilations), group, std::move(kernel_shape),
+        std::move(strides), std::move(bias), std::move(input_region),
+        std::move(weight_region), std::move(output_region));
+  } else {
+    ptr = std::make_shared<flow::ConvWithPaddingNode>(
+        std::move(name), std::move(dilations), group, std::move(kernel_shape),
+        std::move(pads), std::move(strides), std::move(bias),
+        std::move(input_region), std::move(weight_region),
+        std::move(output_region));
+  }
+  flow.PutNode(std::move(ptr));
+}
+
 void ConverterImpl::convertCumSumNode(flow::Flow &flow,
                                       const graph::Graph &graph,
                                       const graph::Node &node) {
@@ -829,6 +945,22 @@ void ConverterImpl::convertGatherNode(flow::Flow &flow,
       ptr = std::make_shared<flow::GatherConstantIndexScalarNode>(
           std::move(name), std::move(input_region), std::move(output_region),
           std::lround(input_rhs_as_constant_scalar->GetValue()), axis);
+    } else if (std::shared_ptr<graph::ConstantTensorEdge>
+                   input_rhs_as_constant_tensor =
+                       std::dynamic_pointer_cast<graph::ConstantTensorEdge>(
+                           input_rhs)) {
+      const std::string &input_name = input_lhs_as_non_constant->GetName();
+      const std::string &output_name = output->GetName();
+      std::shared_ptr<flow::Region> input_region = flow.GetRegion(input_name);
+      std::shared_ptr<flow::Region> output_region = flow.GetRegion(output_name);
+#ifdef DEBUG
+      assert(input_region != nullptr);
+      assert(output_region != nullptr);
+#endif
+      Tensor tensor = input_rhs_as_constant_tensor->GetValue();
+      ptr = std::make_shared<flow::GatherConstantIndicesTensorNode>(
+          std::move(name), std::move(input_region), std::move(output_region),
+          std::move(tensor), axis);
     } else {
 #ifdef DEBUG
       assert(false && "unreachable");
@@ -1267,6 +1399,68 @@ void ConverterImpl::convertNotNode(flow::Flow &flow, const graph::Graph &graph,
 #endif
   std::shared_ptr<flow::NotNode> ptr = std::make_shared<flow::NotNode>(
       std::move(name), std::move(input_region), std::move(output_region));
+  flow.PutNode(std::move(ptr));
+}
+
+void ConverterImpl::convertPadNode(flow::Flow &flow, const graph::Graph &graph,
+                                   const graph::Node &node) {
+#ifdef DEBUG
+  assert(node.GetOp() == graph::Node::Op::Pad);
+#endif
+  std::string name = node.GetName();
+  std::vector<std::shared_ptr<graph::Edge>> inputs = graph.GetNodeFrom(node),
+                                            outputs = graph.GetNodeTo(node);
+#ifdef DEBUG
+  assert(inputs.size() == 2);
+  assert(outputs.size() == 1);
+#endif
+  std::shared_ptr<graph::Edge> input = inputs[0], pads = inputs[1],
+                               output = outputs[0];
+#ifdef DEBUG
+  assert(input != nullptr);
+  assert(pads != nullptr);
+  assert(output != nullptr);
+#endif
+  std::shared_ptr<flow::PadNode> ptr = nullptr;
+  std::shared_ptr<graph::NonConstantEdge>
+      input_as_non_constant =
+          std::dynamic_pointer_cast<graph::NonConstantEdge>(input),
+      output_as_non_constant =
+          std::dynamic_pointer_cast<graph::NonConstantEdge>(output);
+  std::shared_ptr<graph::ConstantTensorEdge> pads_as_constant_tensor =
+      std::dynamic_pointer_cast<graph::ConstantTensorEdge>(pads);
+#ifdef DEBUG
+  assert(input_as_non_constant != nullptr);
+  assert(pads_as_constant_tensor != nullptr);
+  assert(output_as_non_constant != nullptr);
+#endif
+  std::vector<std::tuple<int64_t, int64_t>> pads_vector;
+  Tensor pads_tensor = pads_as_constant_tensor->GetValue();
+  const std::vector<int64_t> &pads_shape = pads_tensor.GetShape();
+#ifdef DEBUG
+  assert(pads_tensor.GetType() == Type::kInt64);
+  assert(pads_shape.size() == 1);
+#endif
+  const size_t size = pads_shape[0];
+#ifdef DEBUG
+  assert(size % 2 == 0);
+#endif
+  for (size_t i = 0; i < size / 2; ++i) {
+    pads_vector.push_back(
+        {static_cast<int64_t>(pads_tensor.Get({i})),
+         static_cast<int64_t>(pads_tensor.Get({i + size / 2}))});
+  }
+  const std::string &input_name = input->GetName(),
+                    &output_name = output->GetName();
+  std::shared_ptr<flow::Region> input_region = flow.GetRegion(input_name),
+                                output_region = flow.GetRegion(output_name);
+#ifdef DEBUG
+  assert(input_region != nullptr);
+  assert(output_region != nullptr);
+#endif
+  ptr = std::make_shared<flow::PadNode>(std::move(name), std::move(pads_vector),
+                                        std::move(input_region),
+                                        std::move(output_region));
   flow.PutNode(std::move(ptr));
 }
 

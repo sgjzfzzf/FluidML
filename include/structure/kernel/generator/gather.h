@@ -25,6 +25,24 @@ protected:
       GatherConstantIndexScalarKernelGenerator &&) = default;
 };
 
+class GatherConstantIndicesTensorKernelGenerator
+    : public SingleInputWithoutBufferKernelGenerator {
+public:
+  virtual ~GatherConstantIndicesTensorKernelGenerator() override = default;
+  virtual std::shared_ptr<GatherConstantIndicesTensorKernel>
+  Yield(llvm::ArrayRef<size_t> input_layout,
+        llvm::ArrayRef<size_t> output_layout) = 0;
+  static std::unique_ptr<GatherConstantIndicesTensorKernelGenerator>
+  Make(Meta &&input_meta, Meta &&output_meta, Tensor &&indices, int64_t axis);
+
+protected:
+  GatherConstantIndicesTensorKernelGenerator() = default;
+  GatherConstantIndicesTensorKernelGenerator(
+      const GatherConstantIndicesTensorKernelGenerator &) = delete;
+  GatherConstantIndicesTensorKernelGenerator(
+      GatherConstantIndicesTensorKernelGenerator &&) = default;
+};
+
 class GatherConstantDataTensorKernelGenerator
     : public SingleInputWithoutBufferKernelGenerator {
 public:

@@ -22,7 +22,7 @@ Type GetType(std::int32_t type);
 
 Type GetType(mlir::Type type);
 
-size_t GetSizeFromType(Type type);
+size_t GetSize(Type type);
 
 const char *GetStringFromType(Type type);
 

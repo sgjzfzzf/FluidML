@@ -40,7 +40,7 @@ Type GetType(mlir::Type type) {
   }
 }
 
-size_t GetSizeFromType(Type type) {
+size_t GetSize(Type type) {
   switch (type) {
   case Type::kBool:
     return sizeof(bool);

@@ -43,7 +43,7 @@ void EqualKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 #ifdef DEBUG
         assert(inputs.size() == 2);
 #endif
-        mlir::Value input = inputs[0], output = inputs[1],
+        mlir::Value input = inputs[0],
                     equal_op = b.create<mlir::arith::CmpIOp>(
                         loc, mlir::arith::CmpIPredicate::eq, input, value);
         b.create<mlir::linalg::YieldOp>(loc, equal_op);
