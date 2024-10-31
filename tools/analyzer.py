@@ -201,6 +201,31 @@ if __name__ == "__main__":
             )
             m, n = table["Concat2Kernel"]
             table["Concat2Kernel"] = (m + default_time_cost, n + time_cost)
+        elif node.op_type == "Conv":
+            if all(
+                map(
+                    lambda attr: all(map(lambda elem: elem == 0, attr.ints)),
+                    (filter(lambda attr: attr.name == "pads", node.attribute)),
+                )
+            ):
+                name: str = "ConvWithoutPaddingKernel"
+            else:
+                name: str = "ConvWithPaddingKernel"
+            if len(node.input) == 2:
+                [input, weights] = node.input
+            elif len(node.input) == 3:
+                [input, weights, _] = node.input
+            else:
+                assert False, "unimplemented"
+            [output] = node.output
+            default_time_cost, time_cost = analyzer.find_double_inputs(
+                name, input, weights, output
+            )
+            m, n = table[name]
+            table[name] = (
+                m + default_time_cost,
+                n + time_cost,
+            )
         elif node.op_type == "CumSum":
             assert (
                 len(node.input) == 2
@@ -238,6 +263,19 @@ if __name__ == "__main__":
                 table["DivCommonKernel"] = (m + default_time_cost, n + time_cost)
             else:
                 assert False
+        elif node.op_type == "Dropout":
+            assert (
+                len(node.input) == 2
+                and node.input[0] in value_infos
+                and node.input[1] in initializers
+            )
+            [input, _] = node.input
+            [output] = node.output
+            default_time_cost, time_cost = analyzer.find_single_input(
+                "DropoutKernel", input, output
+            )
+            m, n = table["DropoutKernel"]
+            table["DropoutKernel"] = (m + default_time_cost, n + time_cost)
         elif node.op_type == "Equal":
             assert len(node.input) == 2 and node.input[0] in value_infos
             [input, _] = node.input
@@ -258,6 +296,17 @@ if __name__ == "__main__":
             )
             m, n = table["ErfKernel"]
             table["ErfKernel"] = (m + default_time_cost, n + time_cost)
+        elif node.op_type == "Flatten":
+            assert len(node.input) == 1 and all(
+                map(lambda input: input in value_infos, node.input)
+            )
+            [input] = node.input
+            [output] = node.output
+            default_time_cost, time_cost = analyzer.find_single_input(
+                "FlattenKernel", input, output
+            )
+            m, n = table["FlattenKernel"]
+            table["FlattenKernel"] = (m + default_time_cost, n + time_cost)
         elif node.op_type == "Gather":
             assert len(node.input) == 2
             if node.input[0] in initializers and node.input[1] in value_infos:
@@ -272,13 +321,18 @@ if __name__ == "__main__":
                     n + time_cost,
                 )
             elif node.input[0] in value_infos and node.input[1] in initializers:
+                indices = initializers[node.input[1]]
+                if len(indices) == 0:
+                    name: str = "GatherConstantIndexScalarKernel"
+                else:
+                    name: str = "GatherConstantIndicesTensorKernel"
                 [input, _] = node.input
                 [output] = node.output
                 default_time_cost, time_cost = analyzer.find_single_input(
-                    "GatherConstantIndexScalarKernel", input, output
+                    name, input, output
                 )
-                m, n = table["GatherConstantIndexScalarKernel"]
-                table["GatherConstantIndexScalarKernel"] = (
+                m, n = table[name]
+                table[name] = (
                     m + default_time_cost,
                     n + time_cost,
                 )
@@ -327,6 +381,26 @@ if __name__ == "__main__":
             )
             m, n = table["MatMulKernel"]
             table["MatMulKernel"] = (m + default_time_cost, n + time_cost)
+        elif node.op_type == "MaxPool":
+            if all(
+                map(
+                    lambda attr: all(map(lambda elem: elem == 0, attr.ints)),
+                    (filter(lambda attr: attr.name == "pads", node.attribute)),
+                )
+            ):
+                name: str = "MaxPoolWithoutPaddingKernel"
+            else:
+                name: str = "MaxPoolWithPaddingKernel"
+            [input] = node.input
+            [output] = node.output
+            default_time_cost, time_cost = analyzer.find_single_input(
+                name, input, output
+            )
+            m, n = table[name]
+            table[name] = (
+                m + default_time_cost,
+                n + time_cost,
+            )
         elif node.op_type == "Mul":
             assert len(node.input) == 2 and any(
                 map(
@@ -384,6 +458,19 @@ if __name__ == "__main__":
             )
             m, n = table["NotKernel"]
             table["NotKernel"] = (m + default_time_cost, n + time_cost)
+        elif node.op_type == "Pad":
+            assert (
+                len(node.input) == 2
+                and node.input[0] in value_infos
+                and node.input[1] in initializers
+            )
+            [input, _] = node.input
+            [output] = node.output
+            default_time_cost, time_cost = analyzer.find_single_input(
+                "PadKernel", input, output
+            )
+            m, n = table["PadKernel"]
+            table["PadKernel"] = (m + default_time_cost, n + time_cost)
         elif node.op_type == "Pow":
             assert (
                 len(node.input) == 2
@@ -408,6 +495,17 @@ if __name__ == "__main__":
             )
             m, n = table["ReduceMeanKernel"]
             table["ReduceMeanKernel"] = (m + default_time_cost, n + time_cost)
+        elif node.op_type == "Relu":
+            assert len(node.input) == 1 and all(
+                map(lambda input: input in value_infos, node.input)
+            )
+            [input] = node.input
+            [output] = node.output
+            default_time_cost, time_cost = analyzer.find_single_input(
+                "ReluKernel", input, output
+            )
+            m, n = table["ReluKernel"]
+            table["ReluKernel"] = (m + default_time_cost, n + time_cost)
         elif node.op_type == "Reshape":
             assert (
                 len(node.input) == 2
