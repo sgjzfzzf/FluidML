@@ -3,7 +3,7 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace memory {
 size_t Index::Get(const std::string &name) const {
   auto it = indices_.find(name);
@@ -27,4 +27,4 @@ void Index::Set(const std::string &name, size_t index, size_t size) {
   indices_.insert({name, std::make_tuple(index, size)});
 }
 } // namespace memory
-} // namespace cpu_transformers
+} // namespace fluidml

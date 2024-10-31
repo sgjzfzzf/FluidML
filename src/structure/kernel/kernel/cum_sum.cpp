@@ -36,7 +36,7 @@ void createNestLoops(mlir::OpBuilder &builder, mlir::Location loc, size_t i,
 
 } // namespace
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 CumSumKernel::CumSumKernel(int64_t axis, bool exclusive, bool reverse)
@@ -87,4 +87,4 @@ void CumSumKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

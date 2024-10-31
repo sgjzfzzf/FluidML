@@ -1,7 +1,7 @@
 #include "structure/tensor/meta.h"
 #include "gtest/gtest.h"
 
-using namespace cpu_transformers;
+using namespace fluidml;
 
 TEST(MetaTest, BroadcastTest) {
   Meta meta0(Type::kFloat32, {1, 1, 3});

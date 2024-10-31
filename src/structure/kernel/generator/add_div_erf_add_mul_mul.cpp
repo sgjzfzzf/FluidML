@@ -3,7 +3,7 @@
 #include "utils/hash.h"
 #include "utils/type.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 class AddDivErfAddMulMulKernelGeneratorImpl
     : public AddDivErfAddMulMulKernelGenerator {
@@ -128,4 +128,4 @@ bool AddDivErfAddMulMulKernelGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

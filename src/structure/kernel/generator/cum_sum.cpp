@@ -1,7 +1,7 @@
 #include "structure/kernel/generator/cum_sum.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class CumSumKernelGeneratorImpl : public CumSumKernelGenerator {
@@ -101,4 +101,4 @@ bool CumSumKernelGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

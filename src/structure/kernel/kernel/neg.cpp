@@ -9,7 +9,7 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 std::string NegKernel::GetKernelName() const { return kKernelName; }
@@ -40,4 +40,4 @@ void NegKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

@@ -5,7 +5,7 @@
 #include "mlir/IR/MLIRContext.h"
 #include <numeric>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 FlattenKernel::FlattenKernel(int64_t axis) : axis_(axis) {}
@@ -63,4 +63,4 @@ void FlattenKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

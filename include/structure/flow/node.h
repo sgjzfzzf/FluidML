@@ -1,5 +1,5 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_FLOW_NODE_H_
-#define CPU_TRANSFORMERS_STRUCTURE_FLOW_NODE_H_
+#ifndef FLUIDML_STRUCTURE_FLOW_NODE_H_
+#define FLUIDML_STRUCTURE_FLOW_NODE_H_
 
 #include "structure/flow/fwd.h"
 #include "structure/tensor/tensor.h"
@@ -14,7 +14,7 @@
 // to make it work on Bert and GPT-2. If new cases occur, it will throw an error
 // in the DEBUG mode, and we should consider implementing it.
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace flow {
 
 class Node {
@@ -1065,6 +1065,6 @@ private:
 };
 
 } // namespace flow
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

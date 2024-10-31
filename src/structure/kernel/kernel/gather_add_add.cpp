@@ -7,7 +7,7 @@
 #include "mlir/IR/BuiltinTypes.h"
 #include <cstdint>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 std::string
@@ -163,4 +163,4 @@ void GatherConstantDataTensorAddTensorLhsAddTensorLhsKernel::Run(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

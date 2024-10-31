@@ -1,10 +1,10 @@
-#ifndef CPU_TRANSFORMERS_KERNEL_GENERATOR_REDUCE_MEAN_H_
-#define CPU_TRANSFORMERS_KERNEL_GENERATOR_REDUCE_MEAN_H_
+#ifndef FLUIDML_KERNEL_GENERATOR_REDUCE_MEAN_H_
+#define FLUIDML_KERNEL_GENERATOR_REDUCE_MEAN_H_
 
 #include "structure/kernel/generator/generator.h"
 #include "structure/kernel/kernel/reduce_mean.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class ReduceMeanKernelGenerator
@@ -25,6 +25,6 @@ protected:
 };
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

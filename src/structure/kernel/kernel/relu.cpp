@@ -4,7 +4,7 @@
 #include "mlir/Dialect/Utils/StructuredOpsUtils.h"
 #include "mlir/IR/BuiltinTypes.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 std::string ReluKernel::GetKernelName() const { return kKernelName; }
@@ -46,4 +46,4 @@ void ReluKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

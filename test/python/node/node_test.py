@@ -1,4 +1,4 @@
-import cpu_transformers  # type: ignore
+import fluidml  # type: ignore
 import logging
 import numpy as np
 import onnxruntime
@@ -41,9 +41,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -78,9 +76,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -114,9 +110,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -152,9 +146,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -189,9 +181,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -225,9 +215,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -261,9 +249,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -297,9 +283,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -335,9 +319,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -372,9 +354,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -408,9 +388,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -444,9 +422,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -480,9 +456,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -516,9 +490,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -552,9 +524,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -588,9 +558,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -624,9 +592,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -660,9 +626,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -696,9 +660,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -732,9 +694,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -770,9 +730,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -807,9 +765,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -843,9 +799,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -881,9 +835,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -918,9 +870,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -954,9 +904,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -990,9 +938,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -1026,9 +972,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -1062,9 +1006,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -1098,9 +1040,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -1134,9 +1074,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -1170,9 +1108,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -1206,9 +1142,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -1242,9 +1176,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -1278,9 +1210,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -1316,9 +1246,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -1353,9 +1281,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -1389,9 +1315,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -1425,9 +1349,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -1461,9 +1383,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {
@@ -1497,9 +1417,7 @@ class NodeTest(unittest.TestCase):
         )
         (onnx_output,) = onnx_output_tuple
         end: int = time.time_ns()
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(onnx_path)
         timecost: int = executor.invoke(
             {

@@ -12,7 +12,7 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 SoftmaxKernel::SoftmaxKernel(int64_t axis) : axis_(axis) {}
@@ -139,4 +139,4 @@ void SoftmaxKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

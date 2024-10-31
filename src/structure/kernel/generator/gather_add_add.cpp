@@ -3,7 +3,7 @@
 #include "utils/hash.h"
 #include <utility>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl
@@ -132,4 +132,4 @@ bool GatherConstantDataTensorAddTensorLhsAddTensorLhsKernelGeneratorImpl::Equals
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

@@ -5,7 +5,7 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace utils {
 
 std::vector<uint8_t> FillBuffer(const Meta &meta) {
@@ -125,4 +125,4 @@ size_t GenIndex(const std::vector<size_t> &indices,
 }
 
 } // namespace utils
-} // namespace cpu_transformers
+} // namespace fluidml

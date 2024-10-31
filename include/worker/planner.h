@@ -1,5 +1,5 @@
-#ifndef CPU_TRANSFORMERS_WORKER_PLANNER_H_
-#define CPU_TRANSFORMERS_WORKER_PLANNER_H_
+#ifndef FLUIDML_WORKER_PLANNER_H_
+#define FLUIDML_WORKER_PLANNER_H_
 
 #include "nlohmann/json.hpp"
 #include "structure/context/context.h"
@@ -10,7 +10,7 @@
 #include <memory>
 #include <tuple>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace worker {
 
 class Planner {
@@ -32,6 +32,6 @@ protected:
 };
 
 } // namespace worker
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

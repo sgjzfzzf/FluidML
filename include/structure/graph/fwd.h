@@ -1,7 +1,7 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_GRAPH_FWD_H_
-#define CPU_TRANSFORMERS_STRUCTURE_GRAPH_FWD_H_
+#ifndef FLUIDML_STRUCTURE_GRAPH_FWD_H_
+#define FLUIDML_STRUCTURE_GRAPH_FWD_H_
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace graph {
 
 class Attribute;
@@ -20,6 +20,6 @@ class Graph;
 class Node;
 
 } // namespace graph
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

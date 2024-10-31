@@ -7,7 +7,7 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 
 Meta::Meta(Type type, std::vector<int64_t> &&shape)
     : type_(type), shape_(std::move(shape)) {}
@@ -36,7 +36,7 @@ size_t Meta::GetElementsNum() const {
 }
 
 size_t Meta::GetSize() const {
-  return GetElementsNum() * cpu_transformers::GetSize(type_);
+  return GetElementsNum() * fluidml::GetSize(type_);
 }
 
 size_t Meta::GetHashCode() const {
@@ -165,4 +165,4 @@ std::optional<Meta> ReshapeShapeInference(const Meta &shape, size_t items) {
   return Meta(shape.GetType(), std::move(real_shape_vec));
 }
 
-} // namespace cpu_transformers
+} // namespace fluidml

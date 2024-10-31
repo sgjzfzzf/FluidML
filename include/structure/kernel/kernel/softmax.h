@@ -1,12 +1,12 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_KERNEL_KERNEL_SOFTMAX_H_
-#define CPU_TRANSFORMERS_STRUCTURE_KERNEL_KERNEL_SOFTMAX_H_
+#ifndef FLUIDML_STRUCTURE_KERNEL_KERNEL_SOFTMAX_H_
+#define FLUIDML_STRUCTURE_KERNEL_KERNEL_SOFTMAX_H_
 
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/Value.h"
 #include "structure/kernel/kernel/kernel.h"
 #include <cstdint>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class SoftmaxKernel : public SingleInputWithBufferKernel {
@@ -25,6 +25,6 @@ private:
 };
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

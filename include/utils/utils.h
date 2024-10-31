@@ -1,12 +1,12 @@
-#ifndef CPU_TRANSFORMERS_UTILS_H_
-#define CPU_TRANSFORMERS_UTILS_H_
+#ifndef FLUIDML_UTILS_H_
+#define FLUIDML_UTILS_H_
 
 #include "structure/tensor/meta.h"
 #include <cstddef>
 #include <cstdint>
 #include <vector>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace utils {
 
 std::vector<uint8_t> FillBuffer(const Meta &meta);
@@ -25,6 +25,6 @@ size_t GenIndex(const std::vector<size_t> &indices,
                 const std::vector<int64_t> &strides);
 
 } // namespace utils
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

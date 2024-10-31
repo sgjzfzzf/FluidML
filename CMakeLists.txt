@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.17)
 
 project(CpuTransformers)
-set(PYTHON_PROJECT_NAME "cpu_transformers")
+set(PYTHON_PROJECT_NAME "fluidml")
 
 set(CMAKE_CXX_STANDARD_REQUIRED 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -82,5 +82,5 @@ add_custom_target(
 
 install(
     DIRECTORY ${CMAKE_SOURCE_DIR}/include/
-    DESTINATION include/cpu_transformers
+    DESTINATION include/fluidml
 )

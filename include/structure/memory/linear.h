@@ -1,9 +1,9 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_MEMORY_LINEAR_H_
-#define CPU_TRANSFORMERS_STRUCTURE_MEMORY_LINEAR_H_
+#ifndef FLUIDML_STRUCTURE_MEMORY_LINEAR_H_
+#define FLUIDML_STRUCTURE_MEMORY_LINEAR_H_
 
 #include "structure/memory/plan.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace memory {
 
 class LinearPlan : public Plan {
@@ -16,6 +16,6 @@ public:
 };
 
 } // namespace memory
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

@@ -1,5 +1,5 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_FLOW_FLOW_H_
-#define CPU_TRANSFORMERS_STRUCTURE_FLOW_FLOW_H_
+#ifndef FLUIDML_STRUCTURE_FLOW_FLOW_H_
+#define FLUIDML_STRUCTURE_FLOW_FLOW_H_
 
 #include "structure/flow/fwd.h"
 #include <memory>
@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace flow {
 
 class Flow {
@@ -43,6 +43,6 @@ private:
 };
 
 } // namespace flow
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

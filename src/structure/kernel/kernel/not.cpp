@@ -3,7 +3,7 @@
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/IR/BuiltinTypes.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 std::string NotKernel::GetKernelName() const { return kKernelName; }
@@ -41,4 +41,4 @@ void NotKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

@@ -1,11 +1,11 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_KERNEL_KERNEL_KERNEL_NEG_H_
-#define CPU_TRANSFORMERS_STRUCTURE_KERNEL_KERNEL_KERNEL_NEG_H_
+#ifndef FLUIDML_STRUCTURE_KERNEL_KERNEL_KERNEL_NEG_H_
+#define FLUIDML_STRUCTURE_KERNEL_KERNEL_KERNEL_NEG_H_
 
 #include "mlir/IR/Builders.h"
 #include "structure/kernel/kernel/kernel.h"
 #include <string>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class NegKernel : public SingleInputWithoutBufferKernel {
@@ -21,6 +21,6 @@ public:
 };
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

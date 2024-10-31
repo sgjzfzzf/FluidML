@@ -1,7 +1,7 @@
 #include "structure/kernel/generator/softmax.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class SoftmaxKernelGeneratorImpl : public SoftmaxKernelGenerator {
@@ -91,4 +91,4 @@ bool SoftmaxKernelGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

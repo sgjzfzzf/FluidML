@@ -2,7 +2,7 @@
 #include "structure/kernel/kernel/kernel.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class PadKernelGeneratorImpl : public PadKernelGenerator {
@@ -90,4 +90,4 @@ bool PadKernelGeneratorImpl::Equals(const PadKernelGeneratorImpl &other) const {
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

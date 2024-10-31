@@ -1,12 +1,12 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_KERNEL_KERNEL_UTILS_H_
-#define CPU_TRANSFORMERS_STRUCTURE_KERNEL_KERNEL_UTILS_H_
+#ifndef FLUIDML_STRUCTURE_KERNEL_KERNEL_UTILS_H_
+#define FLUIDML_STRUCTURE_KERNEL_KERNEL_UTILS_H_
 
 #include "mlir/Dialect/Utils/StructuredOpsUtils.h"
 #include "mlir/IR/AffineMap.h"
 #include "mlir/IR/Builders.h"
 #include "llvm/ADT/SmallVector.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 enum Axis : size_t { i, j, k };
@@ -32,6 +32,6 @@ GetBroadcastMatMul(mlir::MLIRContext *context, const mlir::MemRefType &lhs_type,
                    llvm::ArrayRef<Axis> axes);
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

@@ -9,7 +9,7 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 UnsqueezeKernel::UnsqueezeKernel(std::vector<int64_t> &&axes)
@@ -63,4 +63,4 @@ void UnsqueezeKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

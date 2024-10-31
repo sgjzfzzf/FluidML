@@ -1,7 +1,7 @@
 #include "structure/flow/sequence.h"
 #include "structure/flow/node.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace flow {
 
 void Sequence::PutNode(std::shared_ptr<Node> &&node) {
@@ -44,4 +44,4 @@ const std::vector<std::shared_ptr<Region>> &Sequence::GetRegions() const {
 }
 
 } // namespace flow
-} // namespace cpu_transformers
+} // namespace fluidml

@@ -7,7 +7,7 @@
 #include "utils/utils.h"
 #include <numeric>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 MaxPoolKernel::MaxPoolKernel(std::vector<int64_t> &&kernel_shape,
@@ -94,4 +94,4 @@ void MaxPoolWithoutPaddingKernel::Run(mlir::OpBuilder &builder,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

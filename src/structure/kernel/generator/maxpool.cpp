@@ -2,7 +2,7 @@
 #include "structure/kernel/kernel/maxpool.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class MaxPoolKernelWithoutPaddingGeneratorImpl
@@ -113,4 +113,4 @@ bool MaxPoolKernelWithoutPaddingGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

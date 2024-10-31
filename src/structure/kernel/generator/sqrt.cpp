@@ -1,6 +1,6 @@
 #include "structure/kernel/generator/sqrt.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class SqrtKernelGeneratorImpl : public SqrtKernelGenerator {
@@ -86,4 +86,4 @@ bool SqrtKernelGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

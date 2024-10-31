@@ -22,7 +22,7 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace evaluation {
 
 class SubFlowsBuilder {
@@ -1018,4 +1018,4 @@ DynamicProgrammingTableImpl::getEvaluator(const flow::Flow &flow) {
 }
 
 } // namespace evaluation
-} // namespace cpu_transformers
+} // namespace fluidml

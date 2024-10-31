@@ -1,12 +1,12 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_KERNEL_KERNEL_ADD_H_
-#define CPU_TRANSFORMERS_STRUCTURE_KERNEL_KERNEL_ADD_H_
+#ifndef FLUIDML_STRUCTURE_KERNEL_KERNEL_ADD_H_
+#define FLUIDML_STRUCTURE_KERNEL_KERNEL_ADD_H_
 
 #include "mlir/IR/Builders.h"
 #include "structure/kernel/kernel/kernel.h"
 #include "utils/float.h"
 #include "utils/type.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class AddKernel : virtual public Kernel {
@@ -47,6 +47,6 @@ public:
 };
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

@@ -1,9 +1,9 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_KERNEL_KERNEL_KERNEL_H_
-#define CPU_TRANSFORMERS_STRUCTURE_KERNEL_KERNEL_KERNEL_H_
+#ifndef FLUIDML_STRUCTURE_KERNEL_KERNEL_KERNEL_H_
+#define FLUIDML_STRUCTURE_KERNEL_KERNEL_KERNEL_H_
 
 #include "mlir/IR/Builders.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class Kernel {
@@ -88,6 +88,6 @@ protected:
 };
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

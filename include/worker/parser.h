@@ -1,11 +1,11 @@
-#ifndef CPU_TRANSFORMERS_WORKER_PARSER_H_
-#define CPU_TRANSFORMERS_WORKER_PARSER_H_
+#ifndef FLUIDML_WORKER_PARSER_H_
+#define FLUIDML_WORKER_PARSER_H_
 
 #include "onnx/onnx_pb.h"
 #include "structure/graph/graph.h"
 #include "worker/fwd.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace worker {
 
 class Parser {
@@ -23,6 +23,6 @@ protected:
 };
 
 } // namespace worker
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

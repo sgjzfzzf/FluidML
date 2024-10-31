@@ -1,11 +1,11 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_KERNEL_GENERATOR_GENERATOR_H_
-#define CPU_TRANSFORMERS_STRUCTURE_KERNEL_GENERATOR_GENERATOR_H_
+#ifndef FLUIDML_STRUCTURE_KERNEL_GENERATOR_GENERATOR_H_
+#define FLUIDML_STRUCTURE_KERNEL_GENERATOR_GENERATOR_H_
 
 #include "structure/kernel/kernel/kernel.h"
 #include "structure/tensor/meta.h"
 #include <memory>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class KernelGenerator {
@@ -141,6 +141,6 @@ protected:
 };
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

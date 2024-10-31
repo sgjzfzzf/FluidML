@@ -9,7 +9,7 @@
 #endif
 
 static void BM_RunGptNeoxModel(benchmark::State &state) {
-  using namespace cpu_transformers;
+  using namespace fluidml;
   for (auto _ : state) {
     std::string name = "gptneox";
     std::string input = GPTNEOX_MODEL_PATH, mlir = fmt::format("{}.mlir", name),

@@ -1,11 +1,11 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_FLOW_SEQUENCE_H_
-#define CPU_TRANSFORMERS_STRUCTURE_FLOW_SEQUENCE_H_
+#ifndef FLUIDML_STRUCTURE_FLOW_SEQUENCE_H_
+#define FLUIDML_STRUCTURE_FLOW_SEQUENCE_H_
 
 #include "structure/flow/fwd.h"
 #include <memory>
 #include <vector>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace flow {
 
 class Sequence {
@@ -28,6 +28,6 @@ private:
 };
 
 } // namespace flow
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

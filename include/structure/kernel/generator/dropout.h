@@ -1,11 +1,11 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_KERNEL_GENERATOR_DROPOUT_H
-#define CPU_TRANSFORMERS_STRUCTURE_KERNEL_GENERATOR_DROPOUT_H
+#ifndef FLUIDML_STRUCTURE_KERNEL_GENERATOR_DROPOUT_H
+#define FLUIDML_STRUCTURE_KERNEL_GENERATOR_DROPOUT_H
 
 #include "structure/kernel/generator/generator.h"
 #include "structure/kernel/kernel/dropout.h"
 #include "utils/float.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class DropoutKernelGenerator : public SingleInputWithoutBufferKernelGenerator {
@@ -24,6 +24,6 @@ protected:
 };
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

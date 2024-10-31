@@ -1,5 +1,5 @@
-#ifndef CPU_TRANSFORMERS_WORKER_BUILDERS_H_
-#define CPU_TRANSFORMERS_WORKER_BUILDERS_H_
+#ifndef FLUIDML_WORKER_BUILDERS_H_
+#define FLUIDML_WORKER_BUILDERS_H_
 
 #include "structure/context/context.h"
 #include "structure/flow/sequence.h"
@@ -9,7 +9,7 @@
 #include "worker/fwd.h"
 #include <memory>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace worker {
 
 class Builder {
@@ -87,6 +87,6 @@ protected:
 };
 
 } // namespace worker
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

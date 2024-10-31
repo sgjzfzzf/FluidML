@@ -4,7 +4,7 @@
 #include "mlir/IR/BuiltinTypes.h"
 #include <string>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 std::string CastKernel::GetKernelName() const { return kKernelName; }
@@ -62,4 +62,4 @@ void CastKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

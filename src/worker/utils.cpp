@@ -64,7 +64,7 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace worker {
 
 std::string GetBufferName(std::string_view name) {
@@ -904,4 +904,4 @@ SelectKernelGenerator(const flow::Node *node) {
 }
 
 } // namespace worker
-} // namespace cpu_transformers
+} // namespace fluidml

@@ -9,7 +9,7 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace flow {
 
 void Flow::PutNode(std::shared_ptr<Node> &&node) {
@@ -338,4 +338,4 @@ bool Flow::IsNoOverlapFlow() const {
 #endif
 
 } // namespace flow
-} // namespace cpu_transformers
+} // namespace fluidml

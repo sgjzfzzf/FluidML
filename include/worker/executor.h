@@ -1,5 +1,5 @@
-#ifndef CPU_TRANSFORMERS_WORKER_EXECUTOR_H_
-#define CPU_TRANSFORMERS_WORKER_EXECUTOR_H_
+#ifndef FLUIDML_WORKER_EXECUTOR_H_
+#define FLUIDML_WORKER_EXECUTOR_H_
 
 #ifdef BUILD_PYTHON
 #include "pybind11/numpy.h"
@@ -9,7 +9,7 @@
 #include <optional>
 #include <unordered_map>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace worker {
 
 class Executor {
@@ -42,6 +42,6 @@ protected:
 };
 
 } // namespace worker
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

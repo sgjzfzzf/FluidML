@@ -1,5 +1,5 @@
-#ifndef CPU_TRANSFORMERS_WORKER_RUNNER_H_
-#define CPU_TRANSFORMERS_WORKER_RUNNER_H_
+#ifndef FLUIDML_WORKER_RUNNER_H_
+#define FLUIDML_WORKER_RUNNER_H_
 
 #ifdef BUILD_PYTHON
 #include "pybind11/numpy.h"
@@ -7,7 +7,7 @@
 #include "structure/context/context.h"
 #include "worker/fwd.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace worker {
 
 class Runner {
@@ -30,6 +30,6 @@ protected:
 };
 
 } // namespace worker
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

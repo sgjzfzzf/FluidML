@@ -2,7 +2,7 @@
 #include "structure/tensor/tensor.h"
 #include "utils/utils.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace flow {
 
 Region::Region(std::string &&name, std::vector<size_t> &&layout)
@@ -94,4 +94,4 @@ const Tensor &ConstantRegion::GetTensor() const { return tensor_; }
 bool ConstantRegion::NeedMemoryAllocation() const { return false; }
 
 } // namespace flow
-} // namespace cpu_transformers
+} // namespace fluidml

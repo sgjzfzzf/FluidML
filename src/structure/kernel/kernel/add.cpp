@@ -11,7 +11,7 @@
 #include "utils/float.h"
 #include "utils/type.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 AddConstantKernel::AddConstantKernel(Type type, float64_t constant)
@@ -124,4 +124,4 @@ void AddCommonKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

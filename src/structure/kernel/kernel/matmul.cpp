@@ -13,7 +13,7 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 MatMulKernel::MatMulKernel() : axes_({Axis::i, Axis::j, Axis::k}) {}
@@ -59,4 +59,4 @@ void MatMulKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

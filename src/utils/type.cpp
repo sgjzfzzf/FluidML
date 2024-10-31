@@ -4,7 +4,7 @@
 #include "utils/float.h"
 
 // TODO: add more types
-namespace cpu_transformers {
+namespace fluidml {
 Type GetType(std::int32_t type) {
   switch (type) {
   case 1:
@@ -104,4 +104,4 @@ mlir::Type GetMLIRType(Type type, mlir::OpBuilder &builder) {
 #endif
   }
 }
-} // namespace cpu_transformers
+} // namespace fluidml

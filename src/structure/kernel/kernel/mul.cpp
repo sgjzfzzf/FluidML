@@ -8,7 +8,7 @@
 #include "mlir/IR/MLIRContext.h"
 #include "structure/kernel/kernel/utils.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 MulConstantKernel::MulConstantKernel(Type type, float64_t constant)
@@ -101,4 +101,4 @@ void MulCommonKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
 std::string MulCommonKernel::GetKernelName() const { return kKernelName; }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

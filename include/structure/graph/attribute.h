@@ -1,5 +1,5 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_GRAPH_ATTRIBUTE_H_
-#define CPU_TRANSFORMERS_STRUCTURE_GRAPH_ATTRIBUTE_H_
+#ifndef FLUIDML_STRUCTURE_GRAPH_ATTRIBUTE_H_
+#define FLUIDML_STRUCTURE_GRAPH_ATTRIBUTE_H_
 
 #include "structure/graph/fwd.h"
 #include "structure/tensor/tensor.h"
@@ -9,7 +9,7 @@
 #include <variant>
 #include <vector>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace graph {
 class Attribute {
 public:
@@ -21,7 +21,7 @@ public:
     Tensor,
   };
 
-  Attribute(cpu_transformers::Type data);
+  Attribute(fluidml::Type data);
   Attribute(int64_t data);
   Attribute(float32_t data);
   Attribute(std::vector<int64_t> &&data);
@@ -29,7 +29,7 @@ public:
   Attribute(const Attribute &attribute) = default;
   Attribute(Attribute &&attribute) = default;
   Type GetType() const;
-  cpu_transformers::Type GetDataType() const;
+  fluidml::Type GetDataType() const;
   int64_t GetInt64() const;
   float32_t GetFloat32() const;
   const std::vector<int64_t> &GetInt64Array() const;
@@ -38,11 +38,11 @@ public:
 
 private:
   const Type type_;
-  const std::variant<cpu_transformers::Type, int64_t, float32_t,
-                     std::vector<int64_t>, Tensor>
+  const std::variant<fluidml::Type, int64_t, float32_t, std::vector<int64_t>,
+                     Tensor>
       data_;
 };
 } // namespace graph
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

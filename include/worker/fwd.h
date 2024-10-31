@@ -1,7 +1,7 @@
-#ifndef CPU_TRANSFORMERS_WORKER_FWD_H_
-#define CPU_TRANSFORMERS_WORKER_FWD_H_
+#ifndef FLUIDML_WORKER_FWD_H_
+#define FLUIDML_WORKER_FWD_H_
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace worker {
 
 class Builder;
@@ -23,6 +23,6 @@ class Planner;
 class Runner;
 
 } // namespace worker
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

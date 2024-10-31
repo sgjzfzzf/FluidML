@@ -1,12 +1,12 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_GRAPH_NODE_H_
-#define CPU_TRANSFORMERS_STRUCTURE_GRAPH_NODE_H_
+#ifndef FLUIDML_STRUCTURE_GRAPH_NODE_H_
+#define FLUIDML_STRUCTURE_GRAPH_NODE_H_
 
 #include "structure/graph/attribute.h"
 #include "structure/graph/fwd.h"
 #include <string>
 #include <unordered_map>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace graph {
 
 class Node {
@@ -83,6 +83,6 @@ protected:
 };
 
 } // namespace graph
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

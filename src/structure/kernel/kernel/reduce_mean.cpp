@@ -4,7 +4,7 @@
 #include "mlir/Dialect/Utils/StructuredOpsUtils.h"
 #include "mlir/IR/BuiltinTypes.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 ReduceMeanKernel::ReduceMeanKernel(llvm::SmallVector<int64_t> &&axes,
@@ -98,4 +98,4 @@ void ReduceMeanKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

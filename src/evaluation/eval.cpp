@@ -15,14 +15,13 @@
 
 namespace ns {
 
-void to_json(nlohmann::json &j,
-             const cpu_transformers::evaluation::KernelEval &eval) {
+void to_json(nlohmann::json &j, const fluidml::evaluation::KernelEval &eval) {
   j = eval.ToJson();
 }
 
 } // namespace ns
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace evaluation {
 
 KernelEval::KernelEval(size_t epoch) : epoch(epoch) {}
@@ -444,4 +443,4 @@ void DoubleInputsWithBufferKernelEval::runKernel(
 }
 
 } // namespace evaluation
-} // namespace cpu_transformers
+} // namespace fluidml

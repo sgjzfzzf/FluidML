@@ -10,7 +10,7 @@
 #include <vector>
 
 namespace {
-using namespace cpu_transformers::graph;
+using namespace fluidml::graph;
 class NodeEdgeNotMatchException : public std::exception {
 public:
   NodeEdgeNotMatchException(const std::string &from, const std::string &to);
@@ -67,7 +67,7 @@ const char *UnknownNodeException::what() const noexcept {
 }
 } // namespace
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace graph {
 
 Graph::Graph(Graph &&graph) : edges_(graph.edges_), nodes_(graph.nodes_) {
@@ -629,4 +629,4 @@ bool Graph::Check() const {
 }
 
 } // namespace graph
-} // namespace cpu_transformers
+} // namespace fluidml

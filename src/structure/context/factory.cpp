@@ -5,7 +5,7 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace context {
 
 class FactoryImpl : public Factory {
@@ -61,4 +61,4 @@ bool FactoryImpl::KeyEqual::operator()(
 }
 
 } // namespace context
-} // namespace cpu_transformers
+} // namespace fluidml

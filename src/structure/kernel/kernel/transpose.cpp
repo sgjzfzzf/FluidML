@@ -8,7 +8,7 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 TransposeKernel::TransposeKernel(std::vector<int64_t> &&perms)
@@ -48,4 +48,4 @@ void TransposeKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

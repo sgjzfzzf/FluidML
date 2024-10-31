@@ -6,7 +6,7 @@
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/ValueRange.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 ConcatKernel::ConcatKernel(int64_t axis) : axis_(axis) {}
@@ -68,4 +68,4 @@ void Concat2Kernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

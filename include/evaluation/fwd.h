@@ -1,7 +1,7 @@
-#ifndef CPU_TRANSFORMERS_EVALUATION_FWD_H_
-#define CPU_TRANSFORMERS_EVALUATION_FWD_H_
+#ifndef FLUIDML_EVALUATION_FWD_H_
+#define FLUIDML_EVALUATION_FWD_H_
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace evaluation {
 
 class DynamicProgrammingPlan;
@@ -17,6 +17,6 @@ class DoubleInputsWithoutBufferKernelEval;
 class Factory;
 
 } // namespace evaluation
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

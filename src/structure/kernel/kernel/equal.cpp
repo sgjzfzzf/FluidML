@@ -3,7 +3,7 @@
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/Utils/StructuredOpsUtils.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 EqualKernel::EqualKernel(Type type, float64_t value)
@@ -51,4 +51,4 @@ void EqualKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

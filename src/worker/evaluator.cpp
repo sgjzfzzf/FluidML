@@ -11,9 +11,8 @@ namespace {
 
 struct KeyKernelEvalHash {
   std::size_t operator()(
-      const std::shared_ptr<cpu_transformers::evaluation::KernelEval> &eval)
-      const {
-    const cpu_transformers::kernel::KernelGenerator &generator =
+      const std::shared_ptr<fluidml::evaluation::KernelEval> &eval) const {
+    const fluidml::kernel::KernelGenerator &generator =
         eval->GetKernelGenerator();
     return generator.GetShapeHashCode();
   }
@@ -21,12 +20,12 @@ struct KeyKernelEvalHash {
 
 struct KeyKernelEvalEqual {
   bool operator()(
-      const std::shared_ptr<cpu_transformers::evaluation::KernelEval> &lhs,
-      const std::shared_ptr<cpu_transformers::evaluation::KernelEval> &rhs)
-      const {
-    const cpu_transformers::kernel::KernelGenerator
-        &lhs_generator = lhs->GetKernelGenerator(),
-        &rhs_generator = rhs->GetKernelGenerator();
+      const std::shared_ptr<fluidml::evaluation::KernelEval> &lhs,
+      const std::shared_ptr<fluidml::evaluation::KernelEval> &rhs) const {
+    const fluidml::kernel::KernelGenerator &lhs_generator =
+                                               lhs->GetKernelGenerator(),
+                                           &rhs_generator =
+                                               rhs->GetKernelGenerator();
     return lhs_generator.ShapeEquals(rhs_generator);
   }
 };
@@ -35,14 +34,13 @@ struct KeyKernelEvalEqual {
 
 namespace ns {
 
-void to_json(nlohmann::json &j,
-             const cpu_transformers::worker::Evaluator &evaluator) {
+void to_json(nlohmann::json &j, const fluidml::worker::Evaluator &evaluator) {
   j = evaluator.ToJson();
 }
 
 } // namespace ns
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace worker {
 
 class EvaluatorImpl : public Evaluator {
@@ -140,4 +138,4 @@ nlohmann::json EvaluatorImpl::ToJson() const {
 }
 
 } // namespace worker
-} // namespace cpu_transformers
+} // namespace fluidml

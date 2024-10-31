@@ -1,11 +1,11 @@
-#ifndef CPU_TRANSFORMERS_UTILS_FLOAT_H_
-#define CPU_TRANSFORMERS_UTILS_FLOAT_H_
+#ifndef FLUIDML_UTILS_FLOAT_H_
+#define FLUIDML_UTILS_FLOAT_H_
 
-namespace cpu_transformers {
+namespace fluidml {
 
 using float32_t = float;
 using float64_t = double;
 
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

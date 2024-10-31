@@ -1,5 +1,5 @@
-#ifndef CPU_TRANSFORMERS_WORKER_EVALUATOR_H_
-#define CPU_TRANSFORMERS_WORKER_EVALUATOR_H_
+#ifndef FLUIDML_WORKER_EVALUATOR_H_
+#define FLUIDML_WORKER_EVALUATOR_H_
 
 #include "evaluation/eval.h"
 #include "nlohmann/json_fwd.hpp"
@@ -7,11 +7,10 @@
 #include <memory>
 
 namespace ns {
-void to_json(nlohmann::json &json,
-             const cpu_transformers::worker::Evaluator &evaluator);
+void to_json(nlohmann::json &json, const fluidml::worker::Evaluator &evaluator);
 }
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace worker {
 
 class Evaluator {
@@ -35,6 +34,6 @@ protected:
 };
 
 } // namespace worker
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

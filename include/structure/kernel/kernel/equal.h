@@ -1,11 +1,11 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_KERNEL_EQUAL_H_
-#define CPU_TRANSFORMERS_STRUCTURE_KERNEL_EQUAL_H_
+#ifndef FLUIDML_STRUCTURE_KERNEL_EQUAL_H_
+#define FLUIDML_STRUCTURE_KERNEL_EQUAL_H_
 
 #include "structure/kernel/kernel/kernel.h"
 #include "utils/float.h"
 #include "utils/type.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class EqualKernel : public SingleInputWithoutBufferKernel {
@@ -25,6 +25,6 @@ private:
 };
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

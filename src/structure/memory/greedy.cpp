@@ -233,7 +233,7 @@ bool Memory::Check() const {
 
 } // namespace
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace memory {
 
 Index GreedyPlan::Run(Infos &info) const {
@@ -270,4 +270,4 @@ Index GreedyPlan::Run(Infos &info) const {
 }
 
 } // namespace memory
-} // namespace cpu_transformers
+} // namespace fluidml

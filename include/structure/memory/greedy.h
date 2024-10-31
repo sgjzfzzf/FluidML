@@ -1,10 +1,10 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_MEMORY_GREEDY_H_
-#define CPU_TRANSFORMERS_STRUCTURE_MEMORY_GREEDY_H_
+#ifndef FLUIDML_STRUCTURE_MEMORY_GREEDY_H_
+#define FLUIDML_STRUCTURE_MEMORY_GREEDY_H_
 
 #include "structure/memory/info.h"
 #include "structure/memory/plan.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace memory {
 
 class GreedyPlan : public Plan {
@@ -17,6 +17,6 @@ public:
 };
 
 } // namespace memory
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

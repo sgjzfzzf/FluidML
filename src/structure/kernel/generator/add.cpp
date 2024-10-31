@@ -1,7 +1,7 @@
 #include "structure/kernel/generator/add.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class AddConstantKernelGeneratorImpl : public AddConstantKernelGenerator {
@@ -191,4 +191,4 @@ bool AddCommonKernelGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

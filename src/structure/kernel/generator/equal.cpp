@@ -1,7 +1,7 @@
 #include "structure/kernel/generator/equal.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class EqualKernelGeneratorImpl : public EqualKernelGenerator {
@@ -96,4 +96,4 @@ bool EqualKernelGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

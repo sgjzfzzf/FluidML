@@ -1,7 +1,7 @@
 #include "structure/kernel/generator/reduce_mean.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class ReduceMeanKernelGeneratorImpl : public ReduceMeanKernelGenerator {
@@ -97,4 +97,4 @@ bool ReduceMeanKernelGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

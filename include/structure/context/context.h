@@ -1,5 +1,5 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_CONTEXT_CONTEXT_H_
-#define CPU_TRANSFORMERS_STRUCTURE_CONTEXT_CONTEXT_H_
+#ifndef FLUIDML_STRUCTURE_CONTEXT_CONTEXT_H_
+#define FLUIDML_STRUCTURE_CONTEXT_CONTEXT_H_
 
 #include "evaluation/fwd.h"
 #include "mlir/ExecutionEngine/ExecutionEngine.h"
@@ -11,7 +11,7 @@
 #include "worker/fwd.h"
 #include <memory>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace context {
 
 class Context {
@@ -72,6 +72,6 @@ private:
 };
 
 } // namespace context
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

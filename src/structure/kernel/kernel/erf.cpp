@@ -10,7 +10,7 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 std::string ErfKernel::GetKernelName() const { return kKernelName; }
@@ -45,4 +45,4 @@ void ErfKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

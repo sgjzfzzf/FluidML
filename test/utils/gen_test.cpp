@@ -4,8 +4,7 @@
 
 TEST(GenTest, OrderTest) {
   constexpr size_t num = 8;
-  std::vector<std::vector<size_t>> arrays =
-      cpu_transformers::utils::GenAllOrders(num);
+  std::vector<std::vector<size_t>> arrays = fluidml::utils::GenAllOrders(num);
   size_t expected_elem_num = 1;
   for (size_t i = 0; i < num; ++i) {
     expected_elem_num *= num - i;
@@ -28,7 +27,7 @@ TEST(GenTest, IndexTest) {
   std::vector<int64_t> shape = {2, 3, 4};
   const size_t shape_len = shape.size();
   std::vector<std::vector<size_t>> indices =
-      cpu_transformers::utils::GenAllIndicesInOrder(shape);
+      fluidml::utils::GenAllIndicesInOrder(shape);
   ASSERT_EQ(indices.size(), 2 * 3 * 4);
   int64_t cur_index = -1;
   for (const std::vector<size_t> &indices : indices) {
@@ -44,7 +43,7 @@ TEST(GenTest, IndexTest) {
 
 TEST(GenTest, StrideTest) {
   std::vector<int64_t> shape = {2, 3, 4};
-  std::vector<int64_t> strides = cpu_transformers::utils::GenStrides(shape);
+  std::vector<int64_t> strides = fluidml::utils::GenStrides(shape);
   ASSERT_EQ(strides.size(), shape.size());
   ASSERT_EQ(strides[0], 12);
   ASSERT_EQ(strides[1], 4);

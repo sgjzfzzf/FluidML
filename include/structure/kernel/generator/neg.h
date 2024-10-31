@@ -1,10 +1,10 @@
-#ifndef CPU_TRANSFORMERS_KERNEL_GENERATOR_NEG_H_
-#define CPU_TRANSFORMERS_KERNEL_GENERATOR_NEG_H_
+#ifndef FLUIDML_KERNEL_GENERATOR_NEG_H_
+#define FLUIDML_KERNEL_GENERATOR_NEG_H_
 
 #include "structure/kernel/generator/generator.h"
 #include "structure/kernel/kernel/neg.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class NegKernelGenerator : public SingleInputWithoutBufferKernelGenerator {
@@ -23,6 +23,6 @@ protected:
 };
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

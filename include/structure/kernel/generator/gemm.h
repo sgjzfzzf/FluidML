@@ -1,11 +1,11 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_KERNEL_GENERATOR_GEMM_H_
-#define CPU_TRANSFORMERS_STRUCTURE_KERNEL_GENERATOR_GEMM_H_
+#ifndef FLUIDML_STRUCTURE_KERNEL_GENERATOR_GEMM_H_
+#define FLUIDML_STRUCTURE_KERNEL_GENERATOR_GEMM_H_
 
 #include "structure/kernel/generator/generator.h"
 #include "structure/kernel/kernel/gemm.h"
 #include "llvm/ADT/ArrayRef.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class GemmConstantBiasKernelGenerator
@@ -27,6 +27,6 @@ protected:
 };
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

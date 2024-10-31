@@ -3,7 +3,7 @@
 #include "utils/hash.h"
 #include <memory>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class Concat2KernelGeneratorImpl : public Concat2KernelGenerator {
@@ -100,4 +100,4 @@ bool Concat2KernelGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

@@ -1,10 +1,10 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_KERNEL_KERNEL_KERNEL_ADD_DIV_ERF_ADD_MUL_MUL_H_
-#define CPU_TRANSFORMERS_STRUCTURE_KERNEL_KERNEL_KERNEL_ADD_DIV_ERF_ADD_MUL_MUL_H_
+#ifndef FLUIDML_STRUCTURE_KERNEL_KERNEL_KERNEL_ADD_DIV_ERF_ADD_MUL_MUL_H_
+#define FLUIDML_STRUCTURE_KERNEL_KERNEL_KERNEL_ADD_DIV_ERF_ADD_MUL_MUL_H_
 
 #include "structure/kernel/kernel/kernel.h"
 #include "structure/tensor/tensor.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class AddDivErfAddMulMulKernel : public SingleInputWithoutBufferKernel {
@@ -32,6 +32,6 @@ private:
 };
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

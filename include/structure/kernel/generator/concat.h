@@ -1,10 +1,10 @@
-#ifndef CPU_TRANSFORMERS_KERNEL_GENERATOR_CONCAT_H_
-#define CPU_TRANSFORMERS_KERNEL_GENERATOR_CONCAT_H_
+#ifndef FLUIDML_KERNEL_GENERATOR_CONCAT_H_
+#define FLUIDML_KERNEL_GENERATOR_CONCAT_H_
 
 #include "structure/kernel/generator/generator.h"
 #include "structure/kernel/kernel/concat.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class Concat2KernelGenerator : public DoubleInputsWithoutBufferKernelGenerator {
@@ -23,6 +23,6 @@ protected:
 };
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

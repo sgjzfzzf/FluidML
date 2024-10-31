@@ -8,14 +8,14 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace optimization {
 
 std::shared_ptr<AddDivErfAddMulFusionPass> AddDivErfAddMulFusionPass::Make() {
   return std::make_shared<AddDivErfAddMulFusionPass>();
 }
 
-void AddDivErfAddMulFusionPass::Run(cpu_transformers::graph::Node &node) const {
+void AddDivErfAddMulFusionPass::Run(fluidml::graph::Node &node) const {
   graph::Graph *graph = node.GetGraph();
   if (graph == nullptr) {
     return;
@@ -246,4 +246,4 @@ void AddDivErfAddMulFusionPass::Run(cpu_transformers::graph::Node &node) const {
 }
 
 } // namespace optimization
-} // namespace cpu_transformers
+} // namespace fluidml

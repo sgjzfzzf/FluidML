@@ -1,4 +1,4 @@
-import cpu_transformers  # type: ignore
+import fluidml  # type: ignore
 import logging
 import numpy as np
 import onnxruntime
@@ -24,9 +24,7 @@ class ModelTest(unittest.TestCase):
         self.assertIsNotNone(input)
         mlir: str = f"{name}.mlir"
         llvm: str = f"{name}-llvm.mlir"
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(input, mlir, llvm)
         input_ids: np.ndarray = np.random.randint(0, 30522, (1, 128), dtype=np.int64)
         attention_mask: np.ndarray = np.ones((1, 128), dtype=np.float32)
@@ -69,9 +67,7 @@ class ModelTest(unittest.TestCase):
         self.assertIsNotNone(input)
         mlir: str = f"{name}.mlir"
         llvm: str = f"{name}-llvm.mlir"
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(input, mlir, llvm)
         input_ids: np.ndarray = np.random.randint(0, 30522, (1, 128), dtype=np.int64)
         attention_mask: np.ndarray = np.ones((1, 128), dtype=np.float32)
@@ -111,9 +107,7 @@ class ModelTest(unittest.TestCase):
         self.assertIsNotNone(input)
         mlir: str = f"{name}.mlir"
         llvm: str = f"{name}-llvm.mlir"
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(input, mlir, llvm)
         input_ids: np.ndarray = np.random.randint(0, 1024, (1, 128), dtype=np.int64)
         attention_mask: np.ndarray = np.ones((1, 128), dtype=np.float32)
@@ -183,9 +177,7 @@ class ModelTest(unittest.TestCase):
         self.assertIsNotNone(input)
         mlir: str = f"{name}.mlir"
         llvm: str = f"{name}-llvm.mlir"
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(input, mlir, llvm)
         input_ids: np.ndarray = np.random.randint(0, 50265, (1, 128), dtype=np.int64)
         attention_mask: np.ndarray = np.ones((1, 128), dtype=np.float32)
@@ -228,9 +220,7 @@ class ModelTest(unittest.TestCase):
         self.assertIsNotNone(input)
         mlir: str = f"{name}.mlir"
         llvm: str = f"{name}-llvm.mlir"
-        executor: cpu_transformers.Executor = (
-            cpu_transformers.Executor.make_plain_greedy(name)
-        )
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
         executor.compile(input, mlir, llvm)
         data: np.ndarray = np.random.random((1, 3, 224, 224)).astype(np.float32)
         output: np.ndarray = np.zeros((1, 1000), dtype=np.float32)

@@ -18,7 +18,7 @@
 
 namespace {
 
-using namespace cpu_transformers;
+using namespace fluidml;
 flow::Sequence TopologicalSort(
     const flow::Flow
         &flow) { // Run the topological sort algorithm to get the sequence.
@@ -109,7 +109,7 @@ flow::Sequence TopologicalSort(
 
 } // namespace
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace worker {
 
 class PlannerImpl : public Planner {
@@ -350,4 +350,4 @@ DPGreedyPlannerImpl::DPGreedyPlannerImpl(context::Context &&context)
       DynamicProgrammingPlannerImpl(std::move(context)) {}
 
 } // namespace worker
-} // namespace cpu_transformers
+} // namespace fluidml

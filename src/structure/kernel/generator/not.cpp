@@ -2,7 +2,7 @@
 #include "structure/kernel/kernel/not.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class NotKernelGeneratorImpl : public NotKernelGenerator {
@@ -85,4 +85,4 @@ bool NotKernelGeneratorImpl::Equals(const NotKernelGeneratorImpl &other) const {
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

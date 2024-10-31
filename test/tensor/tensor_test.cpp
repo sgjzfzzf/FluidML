@@ -1,7 +1,7 @@
 #include "structure/tensor/tensor.h"
 #include "gtest/gtest.h"
 
-using namespace cpu_transformers;
+using namespace fluidml;
 
 TEST(TensorTest, BasicTest) {
   Tensor tensor(Type::kFloat32, {1, 2, 3}, {0, 1, 2, 3, 4, 5});

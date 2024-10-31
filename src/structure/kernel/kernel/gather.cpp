@@ -86,7 +86,7 @@ void createNestLoops(mlir::OpBuilder &builder, mlir::Location loc, size_t i,
 }
 } // namespace
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 std::string GatherConstantIndexScalarKernel::GetKernelName() const {
@@ -272,4 +272,4 @@ void GatherConstantDataTensorKernel::Run(mlir::OpBuilder &builder,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

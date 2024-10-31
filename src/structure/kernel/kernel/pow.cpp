@@ -5,7 +5,7 @@
 #include "mlir/Dialect/Utils/StructuredOpsUtils.h"
 #include "mlir/IR/BuiltinTypes.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 PowKernel::PowKernel(Type type, float64_t exp) : type_(type), exp_(exp) {}
@@ -61,4 +61,4 @@ void PowKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

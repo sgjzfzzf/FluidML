@@ -1,5 +1,5 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_FLOW_REGION_H_
-#define CPU_TRANSFORMERS_STRUCTURE_FLOW_REGION_H_
+#ifndef FLUIDML_STRUCTURE_FLOW_REGION_H_
+#define FLUIDML_STRUCTURE_FLOW_REGION_H_
 
 #include "structure/flow/fwd.h"
 #include "structure/tensor/meta.h"
@@ -7,7 +7,7 @@
 #include "utils/float.h"
 #include <string>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace flow {
 class Region {
 public:
@@ -99,6 +99,6 @@ private:
 };
 
 } // namespace flow
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

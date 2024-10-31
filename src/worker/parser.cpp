@@ -20,8 +20,8 @@
 #endif
 
 namespace {
-using namespace cpu_transformers;
-using namespace cpu_transformers::graph;
+using namespace fluidml;
+using namespace fluidml::graph;
 template <typename E,
           typename = std::enable_if_t<std::is_base_of<Edge, E>::value>>
 void createEdge(Graph &graph, const onnx::ValueInfoProto &proto) {
@@ -163,7 +163,7 @@ void createNode(Graph &graph, const onnx::NodeProto &node_proto, Node::Op op) {
 }
 } // namespace
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace worker {
 
 class ParserImpl : public Parser {
@@ -326,4 +326,4 @@ Graph ParserImpl::Run(onnx::ModelProto &model_proto) {
 }
 
 } // namespace worker
-} // namespace cpu_transformers
+} // namespace fluidml

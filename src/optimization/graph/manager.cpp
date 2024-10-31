@@ -6,7 +6,7 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace optimization {
 
 GraphPassesManager::GraphPassesManager(
@@ -34,4 +34,4 @@ void GraphPassesManager::RegisterAllPasses() {
 }
 
 } // namespace optimization
-} // namespace cpu_transformers
+} // namespace fluidml

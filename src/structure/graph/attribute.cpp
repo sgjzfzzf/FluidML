@@ -3,11 +3,10 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace graph {
 
-Attribute::Attribute(cpu_transformers::Type data)
-    : type_(Type::DataType), data_(data) {}
+Attribute::Attribute(fluidml::Type data) : type_(Type::DataType), data_(data) {}
 
 Attribute::Attribute(int64_t data) : type_(Type::Int64), data_(data) {}
 
@@ -20,12 +19,12 @@ Attribute::Attribute(Tensor &&data) : type_(Type::Tensor), data_(data) {}
 
 Attribute::Type Attribute::GetType() const { return type_; }
 
-cpu_transformers::Type Attribute::GetDataType() const {
+fluidml::Type Attribute::GetDataType() const {
 #ifdef DEBUG
   assert(type_ == Type::DataType);
-  assert(std::holds_alternative<cpu_transformers::Type>(data_));
+  assert(std::holds_alternative<fluidml::Type>(data_));
 #endif
-  return std::get<cpu_transformers::Type>(data_);
+  return std::get<fluidml::Type>(data_);
 }
 
 int64_t Attribute::GetInt64() const {
@@ -82,4 +81,4 @@ const char *Attribute::TypeToString(Type type) {
 }
 } // namespace graph
 
-} // namespace cpu_transformers
+} // namespace fluidml

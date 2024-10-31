@@ -1,7 +1,7 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_CONTEXT_FWD_H_
-#define CPU_TRANSFORMERS_STRUCTURE_CONTEXT_FWD_H_
+#ifndef FLUIDML_STRUCTURE_CONTEXT_FWD_H_
+#define FLUIDML_STRUCTURE_CONTEXT_FWD_H_
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace context {
 
 class ArgumentAttr;
@@ -13,6 +13,6 @@ class ContextImpl;
 class Factory;
 
 } // namespace context
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

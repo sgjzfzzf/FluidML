@@ -1,7 +1,7 @@
 #include "structure/kernel/generator/conv.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class ConvWithoutPaddingKernelGeneratorImpl
@@ -261,4 +261,4 @@ bool ConvWithPaddingKernelGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

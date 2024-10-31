@@ -16,7 +16,7 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 WhereConstantCondConstantScalarYKernel::WhereConstantCondConstantScalarYKernel(
@@ -150,4 +150,4 @@ void WhereConstantCondConstantTensorYKernel::Run(mlir::OpBuilder &builder,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

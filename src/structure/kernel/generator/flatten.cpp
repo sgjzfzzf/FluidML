@@ -1,7 +1,7 @@
 #include "structure/kernel/generator/flatten.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class FlattenKernelGeneratorImpl : public FlattenKernelGenerator {
@@ -93,4 +93,4 @@ bool FlattenKernelGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

@@ -1,7 +1,7 @@
 #include "structure/kernel/generator/layer_normalization.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class LayerNormalizationConstantScaleBiasKernelGeneratorImpl
@@ -122,4 +122,4 @@ bool LayerNormalizationConstantScaleBiasKernelGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

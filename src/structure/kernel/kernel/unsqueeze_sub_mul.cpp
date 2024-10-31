@@ -2,7 +2,7 @@
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 UnsqueezeSubLhsScalarMulRhsScalarKernel::
@@ -70,4 +70,4 @@ void UnsqueezeSubLhsScalarMulRhsScalarKernel::Run(mlir::OpBuilder &builder,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

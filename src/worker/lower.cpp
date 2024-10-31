@@ -14,7 +14,7 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace worker {
 
 class LowerImpl : public Lower {
@@ -59,4 +59,4 @@ void LowerImpl::Run() {
 }
 
 } // namespace worker
-} // namespace cpu_transformers
+} // namespace fluidml

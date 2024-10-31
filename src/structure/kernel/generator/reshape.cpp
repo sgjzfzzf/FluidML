@@ -1,7 +1,7 @@
 #include "structure/kernel/generator/reshape.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class ReshapeKernelGeneratorImpl : public ReshapeKernelGenerator {
@@ -85,4 +85,4 @@ bool ReshapeKernelGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

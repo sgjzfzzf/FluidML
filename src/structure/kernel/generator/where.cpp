@@ -2,7 +2,7 @@
 #include "utils/hash.h"
 #include <cstddef>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class WhereConstantCondConstantScalarYKernelGeneratorImpl
@@ -231,4 +231,4 @@ bool WhereConstantCondConstantTensorYKernelGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

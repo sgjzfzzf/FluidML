@@ -29,7 +29,7 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace worker {
 
 class GeneralBuilderImpl : public GeneralBuilder {
@@ -961,4 +961,4 @@ void KernelBuilderImpl::RunOnDoubleInputsWithBuffer(
 }
 
 } // namespace worker
-} // namespace cpu_transformers
+} // namespace fluidml

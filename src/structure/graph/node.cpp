@@ -3,7 +3,7 @@
 #include "structure/graph/graph.h"
 #include <unordered_map>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace graph {
 
 Node::Node(std::string &&name, Op op,
@@ -125,4 +125,4 @@ void Node::PutOutput(Edge &edge) {
 }
 
 } // namespace graph
-} // namespace cpu_transformers
+} // namespace fluidml

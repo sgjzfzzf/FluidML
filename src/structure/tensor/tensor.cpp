@@ -8,7 +8,7 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 
 Tensor::Tensor(Meta &&meta) : meta_(meta) {
   data_.resize(std::accumulate(meta_.GetShape().begin(), meta_.GetShape().end(),
@@ -76,4 +76,4 @@ const float64_t &Tensor::getImpl(const std::vector<size_t> &indices) const {
   return data_[index];
 }
 
-} // namespace cpu_transformers
+} // namespace fluidml

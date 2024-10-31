@@ -5,7 +5,7 @@
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/ValueRange.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 SliceKernel::SliceKernel(
@@ -55,4 +55,4 @@ void SliceKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

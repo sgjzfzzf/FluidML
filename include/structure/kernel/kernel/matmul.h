@@ -1,10 +1,10 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_KERNEL_KERNEL_MATMUL_H_
-#define CPU_TRANSFORMERS_STRUCTURE_KERNEL_KERNEL_MATMUL_H_
+#ifndef FLUIDML_STRUCTURE_KERNEL_KERNEL_MATMUL_H_
+#define FLUIDML_STRUCTURE_KERNEL_KERNEL_MATMUL_H_
 
 #include "structure/kernel/kernel/kernel.h"
 #include "structure/kernel/kernel/utils.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class MatMulKernel : public DoubleInputsWithoutBufferKernel {
@@ -25,6 +25,6 @@ private:
 };
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

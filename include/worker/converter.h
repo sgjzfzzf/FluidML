@@ -1,11 +1,11 @@
-#ifndef CPU_TRANSFORMERS_WORKER_CONVERTER_H_
-#define CPU_TRANSFORMERS_WORKER_CONVERTER_H_
+#ifndef FLUIDML_WORKER_CONVERTER_H_
+#define FLUIDML_WORKER_CONVERTER_H_
 
 #include "structure/flow/flow.h"
 #include "structure/graph/graph.h"
 #include "worker/fwd.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace worker {
 
 class Converter {
@@ -21,6 +21,6 @@ protected:
 };
 
 } // namespace worker
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

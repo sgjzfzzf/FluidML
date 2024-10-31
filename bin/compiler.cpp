@@ -10,7 +10,7 @@ static const std::string mode_desc =
     fmt::format("the mode of compiler, availabe with {}", kAllowedModes);
 
 int main(int argc, char *argv[]) {
-  using namespace cpu_transformers;
+  using namespace fluidml;
   try {
     boost::program_options::options_description desc("Allowed options");
     desc.add_options()("help,h", "print the help information")(

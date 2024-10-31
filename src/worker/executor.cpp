@@ -8,7 +8,7 @@
 #include "worker/runner.h"
 #include <memory>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace worker {
 
 class ExecutorImpl : public Executor {
@@ -177,4 +177,4 @@ std::unique_ptr<worker::Planner> DPGreedyExecutor::makePlanner() {
 }
 
 } // namespace worker
-} // namespace cpu_transformers
+} // namespace fluidml

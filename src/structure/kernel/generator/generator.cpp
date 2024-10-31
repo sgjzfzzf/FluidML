@@ -1,6 +1,6 @@
 #include "structure/kernel/generator/generator.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 static constexpr size_t kHashSeed = 0x9e3779b9;
@@ -113,4 +113,4 @@ DoubleInputsWithBufferKernelGenerator::YieldDoubleInputsKernel(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

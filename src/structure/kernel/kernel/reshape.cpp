@@ -10,7 +10,7 @@
 #include <numeric>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 std::string ReshapeKernel::GetKernelName() const { return kKernelName; }
@@ -64,4 +64,4 @@ void ReshapeKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

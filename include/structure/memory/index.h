@@ -1,11 +1,11 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_MEMORY_INDEX_H_
-#define CPU_TRANSFORMERS_STRUCTURE_MEMORY_INDEX_H_
+#ifndef FLUIDML_STRUCTURE_MEMORY_INDEX_H_
+#define FLUIDML_STRUCTURE_MEMORY_INDEX_H_
 
 #include <cstddef>
 #include <string>
 #include <unordered_map>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace memory {
 
 class Index {
@@ -23,6 +23,6 @@ private:
 };
 
 } // namespace memory
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

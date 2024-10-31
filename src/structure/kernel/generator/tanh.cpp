@@ -1,7 +1,7 @@
 #include "structure/kernel/generator/tanh.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class TanhKernelGeneratorImpl : public TanhKernelGenerator {
@@ -86,4 +86,4 @@ bool TanhKernelGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

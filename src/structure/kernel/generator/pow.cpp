@@ -1,7 +1,7 @@
 #include "structure/kernel/generator/pow.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class PowKernelGeneratorImpl : public PowKernelGenerator {
@@ -95,4 +95,4 @@ bool PowKernelGeneratorImpl::Equals(const PowKernelGeneratorImpl &other) const {
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

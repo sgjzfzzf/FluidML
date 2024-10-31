@@ -7,7 +7,7 @@
 #include "structure/kernel/kernel/utils.h"
 #include "utils/type.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 DivConstantRhsKernel::DivConstantRhsKernel(Type type, float64_t constant)
@@ -105,4 +105,4 @@ void DivCommonKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

@@ -1,12 +1,12 @@
-#ifndef CPU_TRANSFORMERS_UTILS_TYPE_H_
-#define CPU_TRANSFORMERS_UTILS_TYPE_H_
+#ifndef FLUIDML_UTILS_TYPE_H_
+#define FLUIDML_UTILS_TYPE_H_
 
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/Types.h"
 #include <cstddef>
 #include <cstdint>
 
-namespace cpu_transformers {
+namespace fluidml {
 
 enum class Type {
   kUnknown,
@@ -28,6 +28,6 @@ const char *GetStringFromType(Type type);
 
 mlir::Type GetMLIRType(Type type, mlir::OpBuilder &builder);
 
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

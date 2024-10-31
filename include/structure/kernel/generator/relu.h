@@ -1,10 +1,10 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_KERNEL_GENERATOR_RELU_H
-#define CPU_TRANSFORMERS_STRUCTURE_KERNEL_GENERATOR_RELU_H
+#ifndef FLUIDML_STRUCTURE_KERNEL_GENERATOR_RELU_H
+#define FLUIDML_STRUCTURE_KERNEL_GENERATOR_RELU_H
 
 #include "structure/kernel/generator/generator.h"
 #include "structure/kernel/kernel/relu.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class ReluKernelGenerator : public SingleInputWithoutBufferKernelGenerator {
@@ -23,6 +23,6 @@ protected:
 };
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

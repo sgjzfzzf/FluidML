@@ -9,7 +9,7 @@
 #endif
 
 static void BM_RunBertModel(benchmark::State &state) {
-  using namespace cpu_transformers;
+  using namespace fluidml;
   for (auto _ : state) {
     std::string name = "bert";
     std::string input = BERT_MODEL_PATH, mlir = fmt::format("{}.mlir", name),

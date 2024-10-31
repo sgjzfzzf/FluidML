@@ -13,7 +13,7 @@
 #include "utils/type.h"
 #include <cstdint>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 ConvKernel::ConvKernel(std::vector<int64_t> &&dilations, int64_t group,
@@ -280,4 +280,4 @@ void ConvWithPaddingKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

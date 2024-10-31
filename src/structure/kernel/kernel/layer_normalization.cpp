@@ -17,7 +17,7 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 std::string LayerNormalizationConstantScaleBiasKernel::GetKernelName() const {
@@ -220,4 +220,4 @@ void LayerNormalizationConstantScaleBiasKernel::Run(mlir::OpBuilder &builder,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

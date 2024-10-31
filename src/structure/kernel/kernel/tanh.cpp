@@ -4,7 +4,7 @@
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Location.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 std::string TanhKernel::GetKernelName() const { return kKernelName; }
@@ -40,4 +40,4 @@ void TanhKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

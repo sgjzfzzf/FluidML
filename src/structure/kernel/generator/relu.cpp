@@ -1,7 +1,7 @@
 #include "structure/kernel/generator/relu.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class ReluKernelGeneratorImpl : public ReluKernelGenerator {
@@ -87,4 +87,4 @@ bool ReluKernelGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

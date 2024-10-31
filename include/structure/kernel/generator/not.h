@@ -1,10 +1,10 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_KERNEL_GENERATOR_NOT_H
-#define CPU_TRANSFORMERS_STRUCTURE_KERNEL_GENERATOR_NOT_H
+#ifndef FLUIDML_STRUCTURE_KERNEL_GENERATOR_NOT_H
+#define FLUIDML_STRUCTURE_KERNEL_GENERATOR_NOT_H
 
 #include "structure/kernel/generator/generator.h"
 #include "structure/kernel/kernel/not.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class NotKernelGenerator : public SingleInputWithoutBufferKernelGenerator {
@@ -23,6 +23,6 @@ protected:
 };
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

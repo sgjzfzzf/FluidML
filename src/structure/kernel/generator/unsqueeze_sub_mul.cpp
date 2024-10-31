@@ -1,7 +1,7 @@
 #include "structure/kernel/generator/unsqueeze_sub_mul.h"
 #include <cstdint>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl
@@ -131,4 +131,4 @@ bool UnsqueezeSubLhsScalarMulRhsScalarKernelGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

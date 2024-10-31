@@ -1,5 +1,5 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_GRAPH_EDGE_H_
-#define CPU_TRANSFORMERS_STRUCTURE_GRAPH_EDGE_H_
+#ifndef FLUIDML_STRUCTURE_GRAPH_EDGE_H_
+#define FLUIDML_STRUCTURE_GRAPH_EDGE_H_
 
 #include "structure/graph/fwd.h"
 #include "structure/tensor/meta.h"
@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace graph {
 
 class Edge {
@@ -109,6 +109,6 @@ public:
 };
 } // namespace graph
 
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

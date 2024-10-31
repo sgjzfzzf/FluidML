@@ -26,7 +26,7 @@ public:
 } // namespace
 
 TEST(IsaTest, RawPointerTest) {
-  using namespace cpu_transformers;
+  using namespace fluidml;
   Derived0 derived;
   Base *base = &derived;
   ASSERT_TRUE(isa<Derived0>(base));
@@ -34,7 +34,7 @@ TEST(IsaTest, RawPointerTest) {
 }
 
 TEST(IsaTest, UniquePointerTest) {
-  using namespace cpu_transformers;
+  using namespace fluidml;
 
   std::unique_ptr<Base> derived = std::make_unique<Derived0>();
   ASSERT_TRUE(isa<Derived0>(derived));
@@ -42,7 +42,7 @@ TEST(IsaTest, UniquePointerTest) {
 }
 
 TEST(IsaTest, SharedPointerTest) {
-  using namespace cpu_transformers;
+  using namespace fluidml;
 
   std::shared_ptr<Base> derived = std::make_shared<Derived0>();
   ASSERT_TRUE(isa<Derived0>(derived));

@@ -1,11 +1,11 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_KERNEL_GENERATOR_MAXPOOL_H
-#define CPU_TRANSFORMERS_STRUCTURE_KERNEL_GENERATOR_MAXPOOL_H
+#ifndef FLUIDML_STRUCTURE_KERNEL_GENERATOR_MAXPOOL_H
+#define FLUIDML_STRUCTURE_KERNEL_GENERATOR_MAXPOOL_H
 
 #include "structure/kernel/generator/generator.h"
 #include "structure/kernel/kernel/maxpool.h"
 #include <cstdint>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class MaxPoolWithoutPaddingKernelGenerator
@@ -28,6 +28,6 @@ protected:
 };
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

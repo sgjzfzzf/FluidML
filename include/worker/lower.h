@@ -1,11 +1,11 @@
-#ifndef CPU_TRANSFORMERS_WORKER_LOWER_H_
-#define CPU_TRANSFORMERS_WORKER_LOWER_H_
+#ifndef FLUIDML_WORKER_LOWER_H_
+#define FLUIDML_WORKER_LOWER_H_
 
 #include "structure/context/context.h"
 #include "worker/fwd.h"
 #include <memory>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace worker {
 
 class Lower {
@@ -21,6 +21,6 @@ protected:
 };
 
 } // namespace worker
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

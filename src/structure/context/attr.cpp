@@ -1,6 +1,6 @@
 #include "structure/context/attr.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace context {
 
 ArgumentAttr::ArgumentAttr(Type type, std::string &&name,
@@ -32,4 +32,4 @@ void FuncAttr::PutArgument(ArgumentAttr &&argument_attr) {
 }
 
 } // namespace context
-} // namespace cpu_transformers
+} // namespace fluidml

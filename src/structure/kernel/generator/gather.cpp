@@ -1,7 +1,7 @@
 #include "structure/kernel/generator/gather.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class GatherConstantIndexScalarKernelGeneratorImpl
@@ -309,4 +309,4 @@ bool GatherConstantDataTensorKernelGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

@@ -1,7 +1,7 @@
 #include "structure/kernel/generator/erf.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class ErfKernelGeneratorImpl : public ErfKernelGenerator {
@@ -83,4 +83,4 @@ bool ErfKernelGeneratorImpl::Equals(const ErfKernelGeneratorImpl &other) const {
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

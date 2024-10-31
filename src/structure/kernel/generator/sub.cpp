@@ -1,7 +1,7 @@
 #include "structure/kernel/generator/sub.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class SubConstantLhsKernelGeneratorImpl : public SubConstantLhsKernelGenerator {
@@ -194,4 +194,4 @@ bool SubCommonKernelGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

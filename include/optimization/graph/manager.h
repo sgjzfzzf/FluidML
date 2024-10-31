@@ -1,5 +1,5 @@
-#ifndef CPU_TRANSFORMERS_OPTIMIZATION_GRAPH_MANAGER_H_
-#define CPU_TRANSFORMERS_OPTIMIZATION_GRAPH_MANAGER_H_
+#ifndef FLUIDML_OPTIMIZATION_GRAPH_MANAGER_H_
+#define FLUIDML_OPTIMIZATION_GRAPH_MANAGER_H_
 
 #include "optimization/graph/pass.h"
 #include "optimization/manager.h"
@@ -7,7 +7,7 @@
 #include <initializer_list>
 #include <list>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace optimization {
 
 class GraphPassesManager : public PassesManager {
@@ -24,6 +24,6 @@ private:
 };
 
 } // namespace optimization
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

@@ -1,11 +1,11 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_FLOW_EDGE_H_
-#define CPU_TRANSFORMERS_STRUCTURE_FLOW_EDGE_H_
+#ifndef FLUIDML_STRUCTURE_FLOW_EDGE_H_
+#define FLUIDML_STRUCTURE_FLOW_EDGE_H_
 
 #include "structure/flow/fwd.h"
 #include "structure/tensor/meta.h"
 #include <string>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace flow {
 
 class Edge {
@@ -90,6 +90,6 @@ public:
 };
 
 } // namespace flow
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

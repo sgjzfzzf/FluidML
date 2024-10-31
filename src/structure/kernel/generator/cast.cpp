@@ -1,7 +1,7 @@
 #include "structure/kernel/generator/cast.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class CastKernelGeneratorImpl : public CastKernelGenerator {
@@ -87,4 +87,4 @@ bool CastKernelGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

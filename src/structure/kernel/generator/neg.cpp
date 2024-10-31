@@ -2,7 +2,7 @@
 #include "structure/kernel/kernel/neg.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class NegKernelGeneratorImpl : public NegKernelGenerator {
@@ -85,4 +85,4 @@ bool NegKernelGeneratorImpl::Equals(const NegKernelGeneratorImpl &other) const {
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

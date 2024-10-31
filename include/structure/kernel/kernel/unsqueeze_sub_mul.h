@@ -1,11 +1,11 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_KERNEL_KERNEL_UNSQUEEZE_SUB_MUL_H_
-#define CPU_TRANSFORMERS_STRUCTURE_KERNEL_KERNEL_UNSQUEEZE_SUB_MUL_H_
+#ifndef FLUIDML_STRUCTURE_KERNEL_KERNEL_UNSQUEEZE_SUB_MUL_H_
+#define FLUIDML_STRUCTURE_KERNEL_KERNEL_UNSQUEEZE_SUB_MUL_H_
 
 #include "structure/kernel/kernel/kernel.h"
 #include "utils/float.h"
 #include "utils/type.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class UnsqueezeSubLhsScalarMulRhsScalarKernel
@@ -36,6 +36,6 @@ private:
 };
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

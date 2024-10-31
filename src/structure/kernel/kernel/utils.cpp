@@ -3,7 +3,7 @@
 #include "mlir/IR/BuiltinTypes.h"
 #include "structure/kernel/kernel/utils.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 llvm::SmallVector<llvm::SmallVector<Axis, 3>> GetAxesInAllOrders() {
@@ -146,4 +146,4 @@ GetBroadcastMatMul(mlir::MLIRContext *context, const mlir::MemRefType &lhs_type,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

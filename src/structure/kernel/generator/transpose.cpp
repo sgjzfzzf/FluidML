@@ -1,7 +1,7 @@
 #include "structure/kernel/generator/transpose.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class TransposeKernelGeneratorImpl : public TransposeKernelGenerator {
@@ -94,4 +94,4 @@ bool TransposeKernelGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

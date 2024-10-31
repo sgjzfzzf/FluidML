@@ -1,11 +1,11 @@
-#ifndef CPU_TRANSFORMER_STRUCTURE_CONTEXT_FACTORY_H_
-#define CPU_TRANSFORMER_STRUCTURE_CONTEXT_FACTORY_H_
+#ifndef FLUIDML_STRUCTURE_CONTEXT_FACTORY_H_
+#define FLUIDML_STRUCTURE_CONTEXT_FACTORY_H_
 
 #include "structure/flow/node.h"
 #include "structure/kernel/generator/generator.h"
 #include <memory>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace context {
 
 class Factory {
@@ -22,6 +22,6 @@ protected:
 };
 
 } // namespace context
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

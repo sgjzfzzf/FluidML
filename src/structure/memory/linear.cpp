@@ -1,6 +1,6 @@
 #include "structure/memory/linear.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace memory {
 Index LinearPlan::Run(Infos &infos) const {
   Index index;
@@ -14,4 +14,4 @@ Index LinearPlan::Run(Infos &infos) const {
   return std::move(index);
 }
 } // namespace memory
-} // namespace cpu_transformers
+} // namespace fluidml

@@ -3,7 +3,7 @@
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinTypes.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 DropoutKernel::DropoutKernel(float64_t ratio) : ratio_(ratio) {}
@@ -33,4 +33,4 @@ void DropoutKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

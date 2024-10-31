@@ -7,14 +7,14 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace optimization {
 
 std::shared_ptr<UnsqueezeSubMulPass> UnsqueezeSubMulPass::Make() {
   return std::make_shared<UnsqueezeSubMulPass>();
 }
 
-void UnsqueezeSubMulPass::Run(cpu_transformers::graph::Node &node) const {
+void UnsqueezeSubMulPass::Run(fluidml::graph::Node &node) const {
   graph::Graph *graph = node.GetGraph();
   if (graph == nullptr) {
     return;
@@ -148,4 +148,4 @@ void UnsqueezeSubMulPass::Run(cpu_transformers::graph::Node &node) const {
 }
 
 } // namespace optimization
-} // namespace cpu_transformers
+} // namespace fluidml

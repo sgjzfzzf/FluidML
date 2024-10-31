@@ -1,12 +1,12 @@
-#ifndef CPU_TRANSFORMERS_TENSOR_TENSOR_H_
-#define CPU_TRANSFORMERS_TENSOR_TENSOR_H_
+#ifndef FLUIDML_TENSOR_TENSOR_H_
+#define FLUIDML_TENSOR_TENSOR_H_
 
 #include "structure/tensor/meta.h"
 #include "utils/float.h"
 #include "utils/type.h"
 #include <vector>
 
-namespace cpu_transformers {
+namespace fluidml {
 class Tensor {
 
 public:
@@ -37,6 +37,6 @@ private:
   std::vector<float64_t> data_;
 };
 
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

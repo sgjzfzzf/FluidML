@@ -1,9 +1,9 @@
-#ifndef CPU_TRANSFORMERS_UTILS_HASH_H_
-#define CPU_TRANSFORMERS_UTILS_HASH_H_
+#ifndef FLUIDML_UTILS_HASH_H_
+#define FLUIDML_UTILS_HASH_H_
 
 #include <cstddef>
 
-namespace cpu_transformers {
+namespace fluidml {
 
 constexpr size_t kHashSeed = 0;
 

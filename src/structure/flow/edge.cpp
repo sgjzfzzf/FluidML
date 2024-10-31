@@ -2,7 +2,7 @@
 #include "structure/flow/region.h"
 #include <memory>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace flow {
 
 Edge::Edge(std::shared_ptr<Region> &&region) : region_(region) {}
@@ -56,4 +56,4 @@ ConstantEdge::ConstantEdge(std::shared_ptr<Region> &&region,
     : Edge(std::move(region)), OwnToEdge(std::move(region), std::move(to)) {}
 
 } // namespace flow
-} // namespace cpu_transformers
+} // namespace fluidml

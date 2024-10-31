@@ -3,7 +3,7 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace memory {
 Info::Info(std::string &&name, size_t start, size_t end, size_t size)
     : name_(std::move(name)), start_(start), end_(end), size_(size) {
@@ -51,4 +51,4 @@ Info GreedyInfos::Pop() {
   return std::move(info);
 }
 } // namespace memory
-} // namespace cpu_transformers
+} // namespace fluidml

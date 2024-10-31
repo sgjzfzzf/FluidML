@@ -15,7 +15,7 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 GemmConstantBiasKernel::GemmConstantBiasKernel(float64_t alpha, float64_t beta,
@@ -182,4 +182,4 @@ void GemmConstantBiasKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

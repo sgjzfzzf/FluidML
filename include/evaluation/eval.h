@@ -1,5 +1,5 @@
-#ifndef CPU_TRANSFORMERS_EVALUATION_EVAL_H_
-#define CPU_TRANSFORMERS_EVALUATION_EVAL_H_
+#ifndef FLUIDML_EVALUATION_EVAL_H_
+#define FLUIDML_EVALUATION_EVAL_H_
 
 #include "evaluation/fwd.h"
 #include "nlohmann/json_fwd.hpp"
@@ -12,12 +12,11 @@
 
 namespace ns {
 
-void to_json(nlohmann::json &j,
-             const cpu_transformers::evaluation::KernelEval &eval);
+void to_json(nlohmann::json &j, const fluidml::evaluation::KernelEval &eval);
 
 } // namespace ns
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace evaluation {
 
 class KernelEval {
@@ -231,6 +230,6 @@ private:
 };
 
 } // namespace evaluation
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

@@ -12,7 +12,7 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 std::string AddDivErfAddMulMulKernel::GetKernelName() const {
@@ -132,4 +132,4 @@ void AddDivErfAddMulMulKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

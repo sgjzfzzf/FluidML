@@ -9,7 +9,7 @@
 #include "worker/lower.h"
 #include "worker/runner.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class GemmConstantBiasKernelGeneratorImpl
@@ -230,4 +230,4 @@ bool GemmConstantBiasKernelGeneratorImpl::KeyEqual::operator()(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

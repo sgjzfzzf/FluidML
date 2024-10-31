@@ -1,11 +1,11 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_MEMORY_INFO_H_
-#define CPU_TRANSFORMERS_STRUCTURE_MEMORY_INFO_H_
+#ifndef FLUIDML_STRUCTURE_MEMORY_INFO_H_
+#define FLUIDML_STRUCTURE_MEMORY_INFO_H_
 
 #include <list>
 #include <queue>
 #include <string>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace memory {
 
 class Info {
@@ -71,6 +71,6 @@ private:
 };
 
 } // namespace memory
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

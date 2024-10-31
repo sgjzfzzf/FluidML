@@ -1,7 +1,7 @@
-#ifndef CPU_TRANSFORMERS_OPTIMIZATION_PASS_H_
-#define CPU_TRANSFORMERS_OPTIMIZATION_PASS_H_
+#ifndef FLUIDML_OPTIMIZATION_PASS_H_
+#define FLUIDML_OPTIMIZATION_PASS_H_
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace optimization {
 
 class Pass {
@@ -12,6 +12,6 @@ public:
 };
 
 } // namespace optimization
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

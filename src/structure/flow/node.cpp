@@ -14,7 +14,7 @@
 #include <optional>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace flow {
 
 Node::Node(std::string &&name) : name_(std::move(name)) {}
@@ -1605,4 +1605,4 @@ const Tensor &WhereConstantCondConstantTensorYNode::GetY() const noexcept {
 }
 
 } // namespace flow
-} // namespace cpu_transformers
+} // namespace fluidml

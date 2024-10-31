@@ -26,7 +26,7 @@ extern "C" struct MemRefDescriptor {
 static_assert(std::is_trivial_v<MemRefDescriptor>);
 } // namespace
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace worker {
 
 class RunnerImpl : public Runner {
@@ -136,4 +136,4 @@ RunnerImpl::Run(const std::unordered_map<std::string, pybind11::array> &args,
 #endif
 
 } // namespace worker
-} // namespace cpu_transformers
+} // namespace fluidml

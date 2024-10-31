@@ -2,7 +2,7 @@
 #include "utils/float.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class DropoutKernelGeneratorImpl : public DropoutKernelGenerator {
@@ -94,4 +94,4 @@ bool DropoutKernelGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

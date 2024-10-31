@@ -4,7 +4,7 @@
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/MLIRContext.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 PadKernel::PadKernel(std::vector<std::tuple<int64_t, int64_t>> &&pads)
@@ -51,4 +51,4 @@ void PadKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

@@ -1,5 +1,5 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_GRAPH_GRAPH_H_
-#define CPU_TRANSFORMERS_STRUCTURE_GRAPH_GRAPH_H_
+#ifndef FLUIDML_STRUCTURE_GRAPH_GRAPH_H_
+#define FLUIDML_STRUCTURE_GRAPH_GRAPH_H_
 
 #include "structure/graph/fwd.h"
 #include <memory>
@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace graph {
 class Graph {
 public:
@@ -82,6 +82,6 @@ private:
   std::unordered_map<std::string, NodeContainer> nodes_;
 };
 } // namespace graph
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

@@ -1,9 +1,9 @@
-#ifndef CPU_TRANSFORM_KERNEL_KERNEL_SLICE_H_
-#define CPU_TRANSFORM_KERNEL_KERNEL_SLICE_H_
+#ifndef FLUIDML_KERNEL_KERNEL_SLICE_H_
+#define FLUIDML_KERNEL_KERNEL_SLICE_H_
 
 #include "structure/kernel/kernel/kernel.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class SliceKernel : public SingleInputWithoutBufferKernel {
@@ -22,6 +22,6 @@ private:
 };
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

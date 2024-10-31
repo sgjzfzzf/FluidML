@@ -1,7 +1,7 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_FLOW_FWD_H_
-#define CPU_TRANSFORMERS_STRUCTURE_FLOW_FWD_H_
+#ifndef FLUIDML_STRUCTURE_FLOW_FWD_H_
+#define FLUIDML_STRUCTURE_FLOW_FWD_H_
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace flow {
 
 class Edge;
@@ -85,6 +85,6 @@ class ConstantRegion;
 class Sequence;
 
 } // namespace flow
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

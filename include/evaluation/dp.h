@@ -1,5 +1,5 @@
-#ifndef CPU_TRANSFORMERS_EVALUATION_DP_H_
-#define CPU_TRANSFORMERS_EVALUATION_DP_H_
+#ifndef FLUIDML_EVALUATION_DP_H_
+#define FLUIDML_EVALUATION_DP_H_
 
 #include "nlohmann/json_fwd.hpp"
 #include "structure/context/context.h"
@@ -7,7 +7,7 @@
 #include <ostream>
 #include <string>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace evaluation {
 
 class DynamicProgrammingPlan {
@@ -48,6 +48,6 @@ protected:
 };
 
 } // namespace evaluation
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

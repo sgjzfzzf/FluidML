@@ -3,7 +3,7 @@
 #include "structure/tensor/meta.h"
 #include "utils/type.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace graph {
 
 Edge::Edge(std::string &&name, Graph *graph) : name_(name), graph_(graph) {}
@@ -134,4 +134,4 @@ OutputEdge::OutputEdge(std::string &&name, Type type,
     : NonConstantEdge(std::move(name), type, std::move(shape)) {}
 
 } // namespace graph
-} // namespace cpu_transformers
+} // namespace fluidml

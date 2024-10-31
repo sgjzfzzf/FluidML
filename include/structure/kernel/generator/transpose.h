@@ -1,11 +1,11 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_KERNEL_GENERATOR_TRANSPOSE_H_
-#define CPU_TRANSFORMERS_STRUCTURE_KERNEL_GENERATOR_TRANSPOSE_H_
+#ifndef FLUIDML_STRUCTURE_KERNEL_GENERATOR_TRANSPOSE_H_
+#define FLUIDML_STRUCTURE_KERNEL_GENERATOR_TRANSPOSE_H_
 
 #include "structure/kernel/generator/generator.h"
 #include "structure/kernel/kernel/transpose.h"
 #include "structure/tensor/meta.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class TransposeKernelGenerator
@@ -25,6 +25,6 @@ protected:
 };
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

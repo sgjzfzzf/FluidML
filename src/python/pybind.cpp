@@ -17,10 +17,10 @@
 #include <optional>
 #include <string_view>
 
-using namespace cpu_transformers;
+using namespace fluidml;
 
 // TODO: rewrite python library part later
-PYBIND11_MODULE(cpu_transformers, m) {
+PYBIND11_MODULE(fluidml, m) {
   pybind11::class_<context::Context>(m, "Context")
       .def(pybind11::init<>())
       .def("make_plain_general_builder",

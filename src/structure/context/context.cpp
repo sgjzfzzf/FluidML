@@ -34,7 +34,7 @@
 #include <cassert>
 #endif
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace context {
 
 Context::Context() : impl_(ContextImpl::Make()) {}
@@ -258,4 +258,4 @@ ContextImpl::ContextImpl() : module_(nullptr), func_attr_opt_(std::nullopt) {
 }
 
 } // namespace context
-} // namespace cpu_transformers
+} // namespace fluidml

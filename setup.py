@@ -73,7 +73,7 @@ class CMakeBuild(setuptools.command.build_ext.build_ext):
 
 
 if __name__ == "__main__":
-    name: str = "cpu_transformers"
+    name: str = "fluidml"
     setuptools.setup(
         name=name,
         packages=setuptools.find_packages(),

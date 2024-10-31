@@ -5,7 +5,7 @@
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/MLIRContext.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 std::string SqrtKernel::GetKernelName() const { return kKernelName; }
@@ -36,4 +36,4 @@ void SqrtKernel::Run(mlir::OpBuilder &builder, mlir::Value &input,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

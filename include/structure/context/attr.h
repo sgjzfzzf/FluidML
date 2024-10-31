@@ -1,10 +1,10 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_CONTEXT_ATTR_H_
-#define CPU_TRANSFORMERS_STRUCTURE_CONTEXT_ATTR_H_
+#ifndef FLUIDML_STRUCTURE_CONTEXT_ATTR_H_
+#define FLUIDML_STRUCTURE_CONTEXT_ATTR_H_
 
 #include "mlir/IR/BuiltinTypes.h"
 #include <string>
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace context {
 
 class ArgumentAttr {
@@ -49,6 +49,6 @@ protected:
 };
 
 } // namespace context
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

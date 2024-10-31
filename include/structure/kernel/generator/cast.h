@@ -1,10 +1,10 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_KERNEL_GENERATOR_CAST_H_
-#define CPU_TRANSFORMERS_STRUCTURE_KERNEL_GENERATOR_CAST_H_
+#ifndef FLUIDML_STRUCTURE_KERNEL_GENERATOR_CAST_H_
+#define FLUIDML_STRUCTURE_KERNEL_GENERATOR_CAST_H_
 
 #include "structure/kernel/generator/generator.h"
 #include "structure/kernel/kernel/cast.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class CastKernelGenerator : public SingleInputWithoutBufferKernelGenerator {
@@ -23,6 +23,6 @@ protected:
 };
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

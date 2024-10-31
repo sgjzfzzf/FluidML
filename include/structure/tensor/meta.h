@@ -1,5 +1,5 @@
-#ifndef CPU_TRANSFORMERS_STRUCTURE_TENSOR_META_H_
-#define CPU_TRANSFORMERS_STRUCTURE_TENSOR_META_H_
+#ifndef FLUIDML_STRUCTURE_TENSOR_META_H_
+#define FLUIDML_STRUCTURE_TENSOR_META_H_
 
 #include "utils/float.h"
 #include "utils/type.h"
@@ -7,7 +7,7 @@
 #include <optional>
 #include <vector>
 
-namespace cpu_transformers {
+namespace fluidml {
 class Meta {
 public:
   Meta(Type type, std::vector<int64_t> &&shape);
@@ -35,6 +35,6 @@ private:
   Type type_;
   std::vector<int64_t> shape_;
 };
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

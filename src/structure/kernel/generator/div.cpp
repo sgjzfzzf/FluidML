@@ -1,7 +1,7 @@
 #include "structure/kernel/generator/div.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class DivConstantRhsKernelGeneratorImpl : public DivConstantRhsKernelGenerator {
@@ -193,4 +193,4 @@ bool DivCommonKernelGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

@@ -5,7 +5,7 @@
 #include "mlir/IR/BuiltinTypes.h"
 #include "structure/kernel/kernel/utils.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 SubConstantLhsKernel::SubConstantLhsKernel(Type type, float64_t value)
@@ -99,4 +99,4 @@ void SubCommonKernel::Run(mlir::OpBuilder &builder, mlir::Value &lhs,
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml

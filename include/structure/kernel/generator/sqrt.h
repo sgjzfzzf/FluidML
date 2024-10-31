@@ -1,10 +1,10 @@
-#ifndef CPU_TRANSFORMERS_KERNEL_GENERATOR_SQRT_H_
-#define CPU_TRANSFORMERS_KERNEL_GENERATOR_SQRT_H_
+#ifndef FLUIDML_KERNEL_GENERATOR_SQRT_H_
+#define FLUIDML_KERNEL_GENERATOR_SQRT_H_
 
 #include "structure/kernel/generator/generator.h"
 #include "structure/kernel/kernel/sqrt.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class SqrtKernelGenerator : public SingleInputWithoutBufferKernelGenerator {
@@ -23,6 +23,6 @@ protected:
 };
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml
 
 #endif

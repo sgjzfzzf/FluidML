@@ -1,7 +1,7 @@
 #include "structure/kernel/generator/mul.h"
 #include "utils/hash.h"
 
-namespace cpu_transformers {
+namespace fluidml {
 namespace kernel {
 
 class MulConstantKernelGeneratorImpl : public MulConstantKernelGenerator {
@@ -192,4 +192,4 @@ bool MulCommonKernelGeneratorImpl::Equals(
 }
 
 } // namespace kernel
-} // namespace cpu_transformers
+} // namespace fluidml
