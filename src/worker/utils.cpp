@@ -1,4 +1,5 @@
 #include "worker/utils.h"
+#include "fmt/core.h"
 #include "structure/flow/node.h"
 #include "structure/flow/region.h"
 #include "structure/kernel/generator/add.h"
@@ -8,19 +9,23 @@
 #include "structure/kernel/generator/conv.h"
 #include "structure/kernel/generator/cum_sum.h"
 #include "structure/kernel/generator/div.h"
+#include "structure/kernel/generator/dropout.h"
 #include "structure/kernel/generator/equal.h"
 #include "structure/kernel/generator/erf.h"
+#include "structure/kernel/generator/flatten.h"
 #include "structure/kernel/generator/gather.h"
 #include "structure/kernel/generator/gather_add_add.h"
 #include "structure/kernel/generator/gemm.h"
 #include "structure/kernel/generator/layer_normalization.h"
 #include "structure/kernel/generator/matmul.h"
+#include "structure/kernel/generator/maxpool.h"
 #include "structure/kernel/generator/mul.h"
 #include "structure/kernel/generator/neg.h"
 #include "structure/kernel/generator/not.h"
 #include "structure/kernel/generator/pad.h"
 #include "structure/kernel/generator/pow.h"
 #include "structure/kernel/generator/reduce_mean.h"
+#include "structure/kernel/generator/relu.h"
 #include "structure/kernel/generator/reshape.h"
 #include "structure/kernel/generator/slice.h"
 #include "structure/kernel/generator/softmax.h"
@@ -37,12 +42,16 @@
 #include "structure/kernel/kernel/conv.h"
 #include "structure/kernel/kernel/cum_sum.h"
 #include "structure/kernel/kernel/div.h"
+#include "structure/kernel/kernel/dropout.h"
 #include "structure/kernel/kernel/equal.h"
+#include "structure/kernel/kernel/flatten.h"
+#include "structure/kernel/kernel/maxpool.h"
 #include "structure/kernel/kernel/mul.h"
 #include "structure/kernel/kernel/neg.h"
 #include "structure/kernel/kernel/not.h"
 #include "structure/kernel/kernel/pad.h"
 #include "structure/kernel/kernel/reduce_mean.h"
+#include "structure/kernel/kernel/relu.h"
 #include "structure/kernel/kernel/slice.h"
 #include "structure/kernel/kernel/sqrt.h"
 #include "structure/kernel/kernel/sub.h"
@@ -57,6 +66,10 @@
 
 namespace cpu_transformers {
 namespace worker {
+
+std::string GetBufferName(std::string_view name) {
+  return fmt::format("{}-buffer", name);
+}
 
 std::unique_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
   std::unique_ptr<kernel::Kernel> kernel = nullptr;
@@ -84,7 +97,7 @@ std::unique_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
     kernel = std::make_unique<kernel::CastKernel>();
   } else if (const flow::Concat2CommonNode *ptr =
                  dynamic_cast<const flow::Concat2CommonNode *>(node)) {
-    int64_t axis = ptr->GetAxis();
+    const int64_t axis = ptr->GetAxis();
     kernel = std::make_unique<kernel::Concat2Kernel>(axis);
   } else if (const flow::ConvWithoutPaddingNode *ptr =
                  dynamic_cast<const flow::ConvWithoutPaddingNode *>(node)) {
@@ -108,7 +121,7 @@ std::unique_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
         std::move(strides), std::move(bias));
   } else if (const flow::CumSumNode *ptr =
                  dynamic_cast<const flow::CumSumNode *>(node)) {
-    int64_t axis = ptr->GetAxis();
+    const int64_t axis = ptr->GetAxis();
     bool exclusive = ptr->GetExclusive();
     bool reverse = ptr->GetReverse();
     kernel = std::make_unique<kernel::CumSumKernel>(axis, exclusive, reverse);
@@ -120,6 +133,10 @@ std::unique_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
   } else if (const flow::DivCommonNode *ptr =
                  dynamic_cast<const flow::DivCommonNode *>(node)) {
     kernel = std::make_unique<kernel::DivCommonKernel>();
+  } else if (const flow::DropoutNode *ptr =
+                 dynamic_cast<const flow::DropoutNode *>(node)) {
+    float64_t ratio = ptr->GetRatio();
+    kernel = std::make_unique<kernel::DropoutKernel>(ratio);
   } else if (const flow::EqualNode *ptr =
                  dynamic_cast<const flow::EqualNode *>(node)) {
     Type type = ptr->GetType();
@@ -128,17 +145,21 @@ std::unique_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
   } else if (const flow::ErfNode *ptr =
                  dynamic_cast<const flow::ErfNode *>(node)) {
     kernel = std::make_unique<kernel::ErfKernel>();
+  } else if (const flow::FlattenNode *ptr =
+                 dynamic_cast<const flow::FlattenNode *>(node)) {
+    const int64_t axis = ptr->GetAxis();
+    kernel = std::make_unique<kernel::FlattenKernel>(axis);
   } else if (const flow::GatherConstantIndexScalarNode *ptr =
                  dynamic_cast<const flow::GatherConstantIndexScalarNode *>(
                      node)) {
-    int64_t axis = ptr->GetAxis(), index = ptr->GetIndex();
+    const int64_t axis = ptr->GetAxis(), index = ptr->GetIndex();
     kernel =
         std::make_unique<kernel::GatherConstantIndexScalarKernel>(axis, index);
   } else if (const flow::GatherConstantIndicesTensorNode *ptr =
                  dynamic_cast<const flow::GatherConstantIndicesTensorNode *>(
                      node)) {
     Tensor indices = ptr->GetIndices();
-    int64_t axis = ptr->GetAxis();
+    const int64_t axis = ptr->GetAxis();
     kernel = std::make_unique<kernel::GatherConstantIndicesTensorKernel>(
         std::move(indices), axis);
   } else if (const flow::GatherConstantDataTensorNode *ptr =
@@ -170,7 +191,7 @@ std::unique_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
                      const flow::LayerNormalizationConstantScaleBiasNode *>(
                      node)) {
     Tensor scale = ptr->GetScale(), bias = ptr->GetBias();
-    int64_t axis = ptr->GetAxis();
+    const int64_t axis = ptr->GetAxis();
     float64_t epsilon = ptr->GetEpsilon();
     kernel =
         std::make_unique<kernel::LayerNormalizationConstantScaleBiasKernel>(
@@ -178,6 +199,12 @@ std::unique_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
   } else if (const flow::MatMulNode *ptr =
                  dynamic_cast<const flow::MatMulNode *>(node)) {
     kernel = std::make_unique<kernel::MatMulKernel>();
+  } else if (const flow::MaxPoolWithoutPaddingNode *ptr =
+                 dynamic_cast<const flow::MaxPoolWithoutPaddingNode *>(node)) {
+    std::vector<int64_t> kernel_shape = ptr->GetKernelShape(),
+                         strides = ptr->GetStrides();
+    kernel = std::make_unique<kernel::MaxPoolWithoutPaddingKernel>(
+        std::move(kernel_shape), std::move(strides));
   } else if (const flow::MulConstantNode *ptr =
                  dynamic_cast<const flow::MulConstantNode *>(node)) {
     Type type = ptr->GetType();
@@ -208,6 +235,9 @@ std::unique_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
     const bool keep_dims = ptr->GetKeepDims();
     kernel =
         std::make_unique<kernel::ReduceMeanKernel>(std::move(axes), keep_dims);
+  } else if (const flow::ReluNode *ptr =
+                 dynamic_cast<const flow::ReluNode *>(node)) {
+    kernel = std::make_unique<kernel::ReluKernel>();
   } else if (const flow::ReshapeNode *ptr =
                  dynamic_cast<const flow::ReshapeNode *>(node)) {
     kernel = std::make_unique<kernel::ReshapeKernel>();
@@ -352,7 +382,7 @@ SelectKernelGenerator(const flow::Node *node) {
 #endif
     Meta lhs_meta = lhs->GetMeta(), rhs_meta = rhs->GetMeta(),
          output_meta = output->GetMeta();
-    int64_t axis = ptr->GetAxis();
+    const int64_t axis = ptr->GetAxis();
     generator = kernel::Concat2KernelGenerator::Make(
         std::move(lhs_meta), std::move(rhs_meta), std::move(output_meta), axis);
   } else if (const flow::CumSumNode *ptr =
@@ -363,7 +393,7 @@ SelectKernelGenerator(const flow::Node *node) {
     assert(input != nullptr);
     assert(output != nullptr);
 #endif
-    int64_t axis = ptr->GetAxis();
+    const int64_t axis = ptr->GetAxis();
     bool exclusive = ptr->GetExclusive();
     bool reverse = ptr->GetReverse();
     Meta input_meta = input->GetMeta(), output_meta = output->GetMeta();
@@ -436,6 +466,18 @@ SelectKernelGenerator(const flow::Node *node) {
          output_meta = output->GetMeta();
     generator = kernel::DivCommonKernelGenerator::Make(
         std::move(lhs_meta), std::move(rhs_meta), std::move(output_meta));
+  } else if (const flow::DropoutNode *ptr =
+                 dynamic_cast<const flow::DropoutNode *>(node)) {
+    std::shared_ptr<flow::Region> input = ptr->GetInput(),
+                                  output = ptr->GetOutput();
+#ifdef DEBUG
+    assert(input != nullptr);
+    assert(output != nullptr);
+#endif
+    float64_t ratio = ptr->GetRatio();
+    Meta input_meta = input->GetMeta(), output_meta = output->GetMeta();
+    generator = kernel::DropoutKernelGenerator::Make(
+        std::move(input_meta), std::move(output_meta), ratio);
   } else if (const flow::EqualNode *ptr =
                  dynamic_cast<const flow::EqualNode *>(node)) {
     std::shared_ptr<flow::Region> input = ptr->GetInput(),
@@ -460,6 +502,14 @@ SelectKernelGenerator(const flow::Node *node) {
     Meta input_meta = input->GetMeta(), output_meta = output->GetMeta();
     generator = kernel::ErfKernelGenerator::Make(std::move(input_meta),
                                                  std::move(output_meta));
+  } else if (const flow::FlattenNode *ptr =
+                 dynamic_cast<const flow::FlattenNode *>(node)) {
+    std::shared_ptr<flow::Region> input = ptr->GetInput(),
+                                  output = ptr->GetOutput();
+    Meta input_meta = input->GetMeta(), output_meta = output->GetMeta();
+    const int64_t axis = ptr->GetAxis();
+    generator = kernel::FlattenKernelGenerator::Make(
+        std::move(input_meta), std::move(output_meta), axis);
   } else if (const flow::GatherConstantIndexScalarNode *ptr =
                  dynamic_cast<const flow::GatherConstantIndexScalarNode *>(
                      node)) {
@@ -470,7 +520,7 @@ SelectKernelGenerator(const flow::Node *node) {
     assert(output != nullptr);
 #endif
     Meta input_meta = input->GetMeta(), output_meta = output->GetMeta();
-    int64_t axis = ptr->GetAxis(), index = ptr->GetIndex();
+    const int64_t axis = ptr->GetAxis(), index = ptr->GetIndex();
     generator = kernel::GatherConstantIndexScalarKernelGenerator::Make(
         std::move(input_meta), std::move(output_meta), axis, index);
   } else if (const flow::GatherConstantIndicesTensorNode *ptr =
@@ -484,7 +534,7 @@ SelectKernelGenerator(const flow::Node *node) {
 #endif
     Meta input_meta = input->GetMeta(), output_meta = output->GetMeta();
     Tensor indices = ptr->GetIndices();
-    int64_t axis = ptr->GetAxis();
+    const int64_t axis = ptr->GetAxis();
     generator = kernel::GatherConstantIndicesTensorKernelGenerator::Make(
         std::move(input_meta), std::move(output_meta), std::move(indices),
         axis);
@@ -549,7 +599,7 @@ SelectKernelGenerator(const flow::Node *node) {
 #endif
     Meta input_meta = input->GetMeta(), output_meta = output->GetMeta();
     Tensor scale = ptr->GetScale(), bias = ptr->GetBias();
-    int64_t axis = ptr->GetAxis();
+    const int64_t axis = ptr->GetAxis();
     float64_t epsilon = ptr->GetEpsilon();
     generator =
         kernel::LayerNormalizationConstantScaleBiasKernelGenerator::Make(
@@ -568,6 +618,20 @@ SelectKernelGenerator(const flow::Node *node) {
          output_meta = output->GetMeta();
     generator = kernel::MatMulKernelGenerator::Make(
         std::move(lhs_meta), std::move(rhs_meta), std::move(output_meta));
+  } else if (const flow::MaxPoolWithoutPaddingNode *ptr =
+                 dynamic_cast<const flow::MaxPoolWithoutPaddingNode *>(node)) {
+    std::shared_ptr<flow::Region> input = ptr->GetInput(),
+                                  output = ptr->GetOutput();
+#ifdef DEBUG
+    assert(input != nullptr);
+    assert(output != nullptr);
+#endif
+    Meta input_meta = input->GetMeta(), output_meta = output->GetMeta();
+    std::vector<int64_t> kernel_shape = ptr->GetKernelShape(),
+                         strides = ptr->GetStrides();
+    generator = kernel::MaxPoolWithoutPaddingKernelGenerator::Make(
+        std::move(input_meta), std::move(output_meta), std::move(kernel_shape),
+        std::move(strides));
   } else if (const flow::MulConstantNode *ptr =
                  dynamic_cast<const flow::MulConstantNode *>(node)) {
     std::shared_ptr<flow::Region> input = ptr->GetInput(),
@@ -656,6 +720,17 @@ SelectKernelGenerator(const flow::Node *node) {
     generator = kernel::ReduceMeanKernelGenerator::Make(
         std::move(input_meta), std::move(output_meta), std::move(axes),
         keep_dims);
+  } else if (const flow::ReluNode *ptr =
+                 dynamic_cast<const flow::ReluNode *>(node)) {
+    std::shared_ptr<flow::Region> input = ptr->GetInput(),
+                                  output = ptr->GetOutput();
+#ifdef DEBUG
+    assert(input != nullptr);
+    assert(output != nullptr);
+#endif
+    Meta input_meta = input->GetMeta(), output_meta = output->GetMeta();
+    generator = kernel::ReluKernelGenerator::Make(std::move(input_meta),
+                                                  std::move(output_meta));
   } else if (const flow::ReshapeNode *ptr =
                  dynamic_cast<const flow::ReshapeNode *>(node)) {
     std::shared_ptr<flow::Region> input = ptr->GetInput(),

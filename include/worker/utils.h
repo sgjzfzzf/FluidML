@@ -8,6 +8,8 @@
 namespace cpu_transformers {
 namespace worker {
 
+std::string GetBufferName(std::string_view name);
+
 std::unique_ptr<kernel::Kernel> SelectKernel(const flow::Node *node);
 
 std::unique_ptr<kernel::KernelGenerator>

@@ -222,6 +222,45 @@ class ModelTest(unittest.TestCase):
             f"{name}:\nTime cost: {time_cost} ns\nONNX time cost: {onnx_time_cost} ns"
         )
 
+    def test_vgg(self):
+        name: str = "vgg"
+        input: Optional[str] = os.environ.get("VGG_MODEL_PATH")
+        self.assertIsNotNone(input)
+        mlir: str = f"{name}.mlir"
+        llvm: str = f"{name}-llvm.mlir"
+        executor: cpu_transformers.Executor = (
+            cpu_transformers.Executor.make_plain_greedy(name)
+        )
+        executor.compile(input, mlir, llvm)
+        data: np.ndarray = np.random.random((1, 3, 224, 224)).astype(np.float32)
+        output: np.ndarray = np.zeros((1, 1000), dtype=np.float32)
+        session_options: onnxruntime.SessionOptions = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session: onnxruntime.InferenceSession = onnxruntime.InferenceSession(
+            input, session_options
+        )
+        start: int = time.time_ns()
+        session.run(
+            [
+                "vgg0_dense2_fwd",
+            ],
+            {
+                "data": data,
+            },
+        )
+        end: int = time.time_ns()
+        onnx_time_cost: int = end - start
+        time_cost: int = executor.invoke(
+            {
+                "data": data,
+                "vgg0_dense2_fwd": output,
+            }
+        )
+        self.logger.info(
+            f"{name}:\nTime cost: {time_cost} ns\nONNX time cost: {onnx_time_cost} ns"
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

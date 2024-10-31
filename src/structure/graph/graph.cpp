@@ -159,7 +159,7 @@ bool Graph::ExistNode(const std::string &name) const {
 
 bool Graph::PutNode(std::shared_ptr<Node> &&node) {
   std::string name = node->GetName();
-  if (ExistEdge(name)) {
+  if (ExistNode(name)) {
     return false;
   }
   node->graph_ = this;

@@ -382,6 +382,25 @@ public:
   std::shared_ptr<DivCommonNode> Clone() const;
 };
 
+class DropoutNode : public SingleInputWithoutBufferNode {
+public:
+  DropoutNode(std::string &&name, float64_t ratio,
+              std::shared_ptr<Region> &&input,
+              std::shared_ptr<Region> &&output);
+  DropoutNode(const DropoutNode &node) = delete;
+  DropoutNode(DropoutNode &&node) = default;
+  virtual ~DropoutNode() = default;
+  static constexpr float64_t kRatio = 0.5;
+  static constexpr const char *kRatioAttrName = "ratio";
+  std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<DropoutNode> Clone() const;
+  float64_t GetRatio() const noexcept;
+
+private:
+  const float64_t ratio_;
+};
+
 class EqualNode : public SingleInputWithoutBufferNode {
 public:
   EqualNode(std::string &&name, Type type, float64_t value,
@@ -410,6 +429,24 @@ public:
   std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
   std::shared_ptr<ErfNode> Clone() const;
+};
+
+class FlattenNode : public SingleInputWithoutBufferNode {
+public:
+  FlattenNode(std::string &&name, int64_t axis, std::shared_ptr<Region> &&input,
+              std::shared_ptr<Region> &&output);
+  FlattenNode(const FlattenNode &node) = delete;
+  FlattenNode(FlattenNode &&node) = default;
+  virtual ~FlattenNode() = default;
+  static constexpr int64_t kAxis = 1;
+  static constexpr const char *kAxisAttrName = "axis";
+  std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<FlattenNode> Clone() const;
+  int64_t GetAxis() const noexcept;
+
+private:
+  const int64_t axis_;
 };
 
 class GatherNode : virtual public Node {
@@ -621,6 +658,40 @@ public:
   std::shared_ptr<MatMulNode> Clone() const;
 };
 
+class MaxPoolNode : virtual public Node {
+public:
+  MaxPoolNode(std::string &&name, std::vector<int64_t> &&kernel_shape,
+              std::vector<int64_t> &&strides);
+  MaxPoolNode(const MaxPoolNode &node) = delete;
+  MaxPoolNode(MaxPoolNode &&node) = default;
+  virtual ~MaxPoolNode() = default;
+  static constexpr const char kKernelShapeAttrName[] = "kernel_shape";
+  static constexpr const char kPadsAttrName[] = "pads";
+  static constexpr const char kStridesAttrName[] = "strides";
+  const std::vector<int64_t> &GetKernelShape() const noexcept;
+  const std::vector<int64_t> &GetStrides() const noexcept;
+
+protected:
+  const std::vector<int64_t> kernel_shape_;
+  const std::vector<int64_t> strides_;
+};
+
+class MaxPoolWithoutPaddingNode : public MaxPoolNode,
+                                  public SingleInputWithoutBufferNode {
+public:
+  MaxPoolWithoutPaddingNode(std::string &&name,
+                            std::vector<int64_t> &&kernel_shape,
+                            std::vector<int64_t> &&strides,
+                            std::shared_ptr<Region> &&input,
+                            std::shared_ptr<Region> &&output);
+  MaxPoolWithoutPaddingNode(const MaxPoolWithoutPaddingNode &node) = delete;
+  MaxPoolWithoutPaddingNode(MaxPoolWithoutPaddingNode &&node) = default;
+  virtual ~MaxPoolWithoutPaddingNode() = default;
+  std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<MaxPoolWithoutPaddingNode> Clone() const;
+};
+
 class MulNode : virtual public Node {
 public:
   MulNode(std::string &&name);
@@ -735,6 +806,18 @@ public:
 private:
   const std::vector<int64_t> axes_;
   const bool keepdims_;
+};
+
+class ReluNode : public SingleInputWithoutBufferNode {
+public:
+  ReluNode(std::string &&name, std::shared_ptr<Region> &&input,
+           std::shared_ptr<Region> &&output);
+  ReluNode(const ReluNode &node) = delete;
+  ReluNode(ReluNode &&node) = default;
+  virtual ~ReluNode() = default;
+  std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<ReluNode> Clone() const;
 };
 
 class ReshapeNode : public SingleInputWithoutBufferNode {

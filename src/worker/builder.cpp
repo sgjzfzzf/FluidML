@@ -1,4 +1,5 @@
 #include "worker/builder.h"
+#include "fmt/format.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
@@ -23,6 +24,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <unistd.h>
 #ifdef DEBUG
 #include <cassert>
 #endif
@@ -373,7 +375,7 @@ void GeneralBuilderImpl::Run(const flow::Sequence &sequence,
       mlir::Value value = builder.create<mlir::memref::ViewOp>(
           builder.getUnknownLoc(), memref_type, buffer_arg, offset_constant,
           mlir::ValueRange{});
-      symbol_table.insert({std::move(name), std::move(value)});
+      symbol_table.insert({GetBufferName(name), std::move(value)});
     }
   }
   // Run the schedule.
@@ -381,8 +383,13 @@ void GeneralBuilderImpl::Run(const flow::Sequence &sequence,
   builder.create<mlir::func::ReturnOp>(builder.getUnknownLoc());
   module->push_back(function);
 #ifdef DEBUG
-  assert(mlir::verify(*module).succeeded());
+  assert(
 #endif
+      mlir::verify(*module).succeeded()
+#ifdef DEBUG
+  )
+#endif
+      ;
   context_->SetModule(std::move(module));
   context_->SetFuncAttr(std::move(func_attr));
 }
@@ -426,8 +433,8 @@ void PlainGeneralBuilderImpl::schedule(
       assert(kernel != nullptr);
 #endif
       const std::string &input_name = ptr->GetInputAsString(),
-                        &output_name = ptr->GetOutputAsString(),
-                        &buffer_name = ptr->GetName();
+                        &output_name = ptr->GetOutputAsString();
+      std::string buffer_name = GetBufferName(ptr->GetName());
       mlir::Value &input = symbol_table.at(input_name),
                   &output = symbol_table.at(output_name),
                   &buffer = symbol_table.at(buffer_name);
@@ -464,8 +471,8 @@ void PlainGeneralBuilderImpl::schedule(
 #endif
       const std::string &lhs_name = ptr->GetLhsAsString(),
                         &rhs_name = ptr->GetRhsAsString(),
-                        &output_name = ptr->GetOutputAsString(),
-                        &buffer_name = ptr->GetName();
+                        &output_name = ptr->GetOutputAsString();
+      std::string buffer_name = GetBufferName(ptr->GetName());
       mlir::Value &lhs = symbol_table.at(lhs_name),
                   &rhs = symbol_table.at(rhs_name),
                   &output = symbol_table.at(output_name),
@@ -526,8 +533,8 @@ void DynamicProgrammingGeneralBuilderImpl::schedule(
       assert(generator != nullptr);
 #endif
       const std::string &input_name = ptr->GetInputAsString(),
-                        &output_name = ptr->GetOutputAsString(),
-                        &buffer_name = ptr->GetName();
+                        &output_name = ptr->GetOutputAsString();
+      std::string buffer_name = GetBufferName(ptr->GetName());
       mlir::Value &input = symbol_table.at(input_name),
                   &output = symbol_table.at(output_name),
                   &buffer = symbol_table.at(buffer_name);
@@ -575,8 +582,8 @@ void DynamicProgrammingGeneralBuilderImpl::schedule(
 #endif
       const std::string &lhs_name = ptr->GetLhsAsString(),
                         &rhs_name = ptr->GetRhsAsString(),
-                        &output_name = ptr->GetOutputAsString(),
-                        &buffer_name = ptr->GetName();
+                        &output_name = ptr->GetOutputAsString();
+      std::string buffer_name = GetBufferName(ptr->GetName());
       mlir::Value &lhs = symbol_table.at(lhs_name),
                   &rhs = symbol_table.at(rhs_name),
                   &output = symbol_table.at(output_name),

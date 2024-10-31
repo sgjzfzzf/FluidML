@@ -37,13 +37,7 @@ void createEdge(Graph &graph, const onnx::ValueInfoProto &proto) {
   }
   std::shared_ptr<E> edge =
       std::make_shared<E>(std::move(name), type, std::move(shape));
-#ifdef DEBUG
-  std::shared_ptr<E> holder = edge;
-#endif
   graph.PutEdge(std::move(edge));
-#ifdef DEBUG
-  assert(holder->GetGraph() == &graph);
-#endif
 }
 
 template <typename T>
@@ -159,13 +153,7 @@ void createNode(Graph &graph, const onnx::NodeProto &node_proto, Node::Op op) {
   }
   std::shared_ptr<Node> node =
       std::make_shared<Node>(std::move(name), op, std::move(attributes));
-#ifdef DEBUG
-  std::shared_ptr<Node> holder = node;
-#endif
   graph.PutNode(std::move(node));
-#ifdef DEBUG
-  assert(holder->GetGraph() == &graph);
-#endif
   for (const std::string &input : node_proto.input()) {
     graph.EdgeToNode(input, node_proto.name());
   }
@@ -208,15 +196,6 @@ Graph ParserImpl::Run(onnx::ModelProto &model_proto) {
   onnx::checker::check_model(model_proto);
 #endif
   onnx::GraphProto graph_proto = model_proto.graph();
-  for (const onnx::ValueInfoProto &input : graph_proto.input()) {
-    createEdge<InputEdge>(graph, input);
-  }
-  for (const onnx::ValueInfoProto &output : graph_proto.output()) {
-    createEdge<OutputEdge>(graph, output);
-  }
-  for (const onnx::ValueInfoProto &value_info : graph_proto.value_info()) {
-    createEdge<PureEdge>(graph, value_info);
-  }
   for (const onnx::TensorProto &initializer : graph_proto.initializer()) {
     std::string name = initializer.name();
     Type type = GetType(initializer.data_type());
@@ -256,15 +235,17 @@ Graph ParserImpl::Run(onnx::ModelProto &model_proto) {
       edge =
           std::make_shared<ConstantScalarEdge>(std::move(name), type, data[0]);
     }
-#ifdef DEBUG
-    std::shared_ptr<ConstantEdge> holder = edge;
-#endif
     graph.PutEdge(std::move(edge));
-#ifdef DEBUG
-    assert(holder->GetGraph() == &graph);
-#endif
   }
-
+  for (const onnx::ValueInfoProto &input : graph_proto.input()) {
+    createEdge<InputEdge>(graph, input);
+  }
+  for (const onnx::ValueInfoProto &output : graph_proto.output()) {
+    createEdge<OutputEdge>(graph, output);
+  }
+  for (const onnx::ValueInfoProto &value_info : graph_proto.value_info()) {
+    createEdge<PureEdge>(graph, value_info);
+  }
   for (const onnx::NodeProto &node : graph_proto.node()) {
     if (node.op_type() == "Add") {
       createNode(graph, node, Node::Op::Add);
@@ -280,10 +261,14 @@ Graph ParserImpl::Run(onnx::ModelProto &model_proto) {
       createNode(graph, node, Node::Op::CumSum);
     } else if (node.op_type() == "Div") {
       createNode(graph, node, Node::Op::Div);
+    } else if (node.op_type() == "Dropout") {
+      createNode(graph, node, Node::Op::Dropout);
     } else if (node.op_type() == "Equal") {
       createNode(graph, node, Node::Op::Equal);
     } else if (node.op_type() == "Erf") {
       createNode(graph, node, Node::Op::Erf);
+    } else if (node.op_type() == "Flatten") {
+      createNode(graph, node, Node::Op::Flatten);
     } else if (node.op_type() == "Gather") {
       createNode(graph, node, Node::Op::Gather);
     } else if (node.op_type() == "Gemm") {
@@ -292,6 +277,8 @@ Graph ParserImpl::Run(onnx::ModelProto &model_proto) {
       createNode(graph, node, Node::Op::LayerNormalization);
     } else if (node.op_type() == "MatMul") {
       createNode(graph, node, Node::Op::MatMul);
+    } else if (node.op_type() == "MaxPool") {
+      createNode(graph, node, Node::Op::MaxPool);
     } else if (node.op_type() == "Mul") {
       createNode(graph, node, Node::Op::Mul);
     } else if (node.op_type() == "Neg") {
@@ -304,6 +291,8 @@ Graph ParserImpl::Run(onnx::ModelProto &model_proto) {
       createNode(graph, node, Node::Op::Pow);
     } else if (node.op_type() == "ReduceMean") {
       createNode(graph, node, Node::Op::ReduceMean);
+    } else if (node.op_type() == "Relu") {
+      createNode(graph, node, Node::Op::Relu);
     } else if (node.op_type() == "Reshape") {
       createNode(graph, node, Node::Op::Reshape);
     } else if (node.op_type() == "Slice") {

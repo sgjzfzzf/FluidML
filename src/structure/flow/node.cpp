@@ -535,6 +535,27 @@ std::shared_ptr<DivCommonNode> DivCommonNode::Clone() const {
                                          GetOutput());
 }
 
+DropoutNode::DropoutNode(std::string &&name, float64_t ratio,
+                         std::shared_ptr<Region> &&input,
+                         std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      ratio_(ratio) {}
+
+std::shared_ptr<SingleInputWithoutBufferNode>
+DropoutNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<DropoutNode> DropoutNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<DropoutNode>(std::move(name), GetRatio(), GetInput(),
+                                       GetOutput());
+}
+
+float64_t DropoutNode::GetRatio() const noexcept { return ratio_; }
+
 EqualNode::EqualNode(std::string &&name, Type type, float64_t value,
                      std::shared_ptr<Region> &&input,
                      std::shared_ptr<Region> &&output)
@@ -573,6 +594,27 @@ std::shared_ptr<ErfNode> ErfNode::Clone() const {
   std::string name = GetName();
   return std::make_shared<ErfNode>(std::move(name), GetInput(), GetOutput());
 }
+
+FlattenNode::FlattenNode(std::string &&name, int64_t axis,
+                         std::shared_ptr<Region> &&input,
+                         std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      axis_(axis) {}
+
+std::shared_ptr<SingleInputWithoutBufferNode>
+FlattenNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<FlattenNode> FlattenNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<FlattenNode>(std::move(name), GetAxis(), GetInput(),
+                                       GetOutput());
+}
+
+int64_t FlattenNode::GetAxis() const noexcept { return axis_; }
 
 GatherNode::GatherNode(std::string &&name) : Node(std::move(name)) {}
 
@@ -772,9 +814,10 @@ GemmConstantWeightsBiasNode::GemmConstantWeightsBiasNode(
   size_t bias_shape_len = bias_shape.size();
   assert(bias_shape_len == 1 || bias_shape_len == 2);
   assert(output_shape.size() == 2);
-  const size_t m = std::lround(lhs_shape[0]), k = std::lround(lhs_shape[1]),
-               n = std::lround(rhs_shape[1]);
-  assert(rhs_shape[0] == k);
+  const size_t m = std::lround(transA_ ? lhs_shape[1] : lhs_shape[0]),
+               k = std::lround(transA_ ? lhs_shape[0] : lhs_shape[1]),
+               n = std::lround(transB_ ? rhs_shape[0] : rhs_shape[1]);
+  assert(transB_ ? rhs_shape[1] == k : rhs_shape[0] == k);
   if (bias_shape_len == 1) {
     assert(bias_shape[0] == n);
   } else {
@@ -920,6 +963,43 @@ std::shared_ptr<MatMulNode> MatMulNode::Clone() const {
   std::string name = GetName();
   return std::make_shared<MatMulNode>(std::move(name), GetLhs(), GetRhs(),
                                       GetOutput());
+}
+
+MaxPoolNode::MaxPoolNode(std::string &&name,
+                         std::vector<int64_t> &&kernel_shape,
+                         std::vector<int64_t> &&strides)
+    : Node(std::move(name)), kernel_shape_(std::move(kernel_shape)),
+      strides_(std::move(strides)) {}
+
+const std::vector<int64_t> &MaxPoolNode::GetKernelShape() const noexcept {
+  return kernel_shape_;
+}
+
+const std::vector<int64_t> &MaxPoolNode::GetStrides() const noexcept {
+  return strides_;
+}
+
+MaxPoolWithoutPaddingNode::MaxPoolWithoutPaddingNode(
+    std::string &&name, std::vector<int64_t> &&kernel_shape,
+    std::vector<int64_t> &&strides, std::shared_ptr<Region> &&input,
+    std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      MaxPoolNode(std::move(name), std::move(kernel_shape), std::move(strides)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)) {}
+
+std::shared_ptr<SingleInputWithoutBufferNode>
+MaxPoolWithoutPaddingNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<MaxPoolWithoutPaddingNode>
+MaxPoolWithoutPaddingNode::Clone() const {
+  std::string name = GetName();
+  std::vector<int64_t> kernel_shape = GetKernelShape(), strides = GetStrides();
+  return std::make_shared<MaxPoolWithoutPaddingNode>(
+      std::move(name), std::move(kernel_shape), std::move(strides), GetInput(),
+      GetOutput());
 }
 
 MulNode::MulNode(std::string &&name) : Node(std::move(name)) {}
@@ -1079,6 +1159,22 @@ const std::vector<int64_t> &ReduceMeanNode::GetAxes() const noexcept {
 }
 
 bool ReduceMeanNode::GetKeepDims() const noexcept { return keepdims_; }
+
+ReluNode::ReluNode(std::string &&name, std::shared_ptr<Region> &&input,
+                   std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)) {}
+
+std::shared_ptr<SingleInputWithoutBufferNode>
+ReluNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<ReluNode> ReluNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<ReluNode>(std::move(name), GetInput(), GetOutput());
+}
 
 ReshapeNode::ReshapeNode(std::string &&name, std::shared_ptr<Region> &&input,
                          std::shared_ptr<Region> &&output)
