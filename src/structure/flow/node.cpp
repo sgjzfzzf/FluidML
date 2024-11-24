@@ -278,6 +278,59 @@ float64_t AddDivErfAddMulMulNode::GetMul1Weight() const noexcept {
   return mul1_weight_;
 }
 
+AveragePoolNode::AveragePoolNode(std::string &&name,
+                                 std::vector<int64_t> &&dilations,
+                                 std::vector<int64_t> &&kernel_shape,
+                                 std::vector<int64_t> &&strides,
+                                 std::shared_ptr<Region> &&input,
+                                 std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      dilations_(std::move(dilations)), kernel_shape_(std::move(kernel_shape)),
+      strides_(std::move(strides)) {}
+
+std::shared_ptr<SingleInputWithoutBufferNode>
+AveragePoolNode::CloneAsSingleInputWithoutBufferNode() const {
+  return CloneAsAveragePoolNode();
+}
+
+const std::vector<int64_t> &AveragePoolNode::GetDilations() const noexcept {
+  return dilations_;
+}
+
+const std::vector<int64_t> &AveragePoolNode::GetKernelShape() const noexcept {
+  return kernel_shape_;
+}
+
+const std::vector<int64_t> &AveragePoolNode::GetStrides() const noexcept {
+  return strides_;
+}
+
+AveragePoolWithoutPaddingNode::AveragePoolWithoutPaddingNode(
+    std::string &&name, std::vector<int64_t> &&dilations,
+    std::vector<int64_t> &&kernel_shape, std::vector<int64_t> &&strides,
+    std::shared_ptr<Region> &&input, std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      AveragePoolNode(std::move(name), std::move(dilations),
+                      std::move(kernel_shape), std::move(strides),
+                      std::move(input), std::move(output)) {}
+
+std::shared_ptr<AveragePoolNode>
+AveragePoolWithoutPaddingNode::CloneAsAveragePoolNode() const {
+  return Clone();
+}
+
+std::shared_ptr<AveragePoolWithoutPaddingNode>
+AveragePoolWithoutPaddingNode::Clone() const {
+  std::string name = GetName();
+  std::vector<int64_t> dilations = GetDilations(),
+                       kernel_shape = GetKernelShape(), strides = GetStrides();
+  return std::make_shared<AveragePoolWithoutPaddingNode>(
+      std::move(name), std::move(dilations), std::move(kernel_shape),
+      std::move(strides), GetInput(), GetOutput());
+}
+
 CastNode::CastNode(std::string &&name, std::shared_ptr<Region> &&input,
                    std::shared_ptr<Region> &&output)
     : Node(std::move(name)),
@@ -293,6 +346,29 @@ std::shared_ptr<CastNode> CastNode::Clone() const {
   std::string name = GetName();
   return std::make_shared<CastNode>(std::move(name), GetInput(), GetOutput());
 }
+
+ClipNode::ClipNode(std::string &&name, float32_t min, float32_t max,
+                   std::shared_ptr<Region> &&input,
+                   std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      min_(min), max_(max) {}
+
+std::shared_ptr<SingleInputWithoutBufferNode>
+ClipNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<ClipNode> ClipNode::Clone() const {
+  std::string name = GetName();
+  return std::make_shared<ClipNode>(std::move(name), GetMin(), GetMax(),
+                                    GetInput(), GetOutput());
+}
+
+float32_t ClipNode::GetMin() const noexcept { return min_; }
+
+float32_t ClipNode::GetMax() const noexcept { return max_; }
 
 ConcatNode::ConcatNode(std::string &&name) : Node(std::move(name)) {}
 
@@ -1318,6 +1394,30 @@ SqrtNode::CloneAsSingleInputWithoutBufferNode() const {
 std::shared_ptr<SqrtNode> SqrtNode::Clone() const {
   std::string name = GetName();
   return std::make_shared<SqrtNode>(std::move(name), GetInput(), GetOutput());
+}
+
+SqueezeNode::SqueezeNode(std::string &&name, std::vector<int64_t> &&axes,
+                         std::shared_ptr<Region> &&input,
+                         std::shared_ptr<Region> &&output)
+    : Node(std::move(name)),
+      SingleInputWithoutBufferNode(std::move(name), std::move(input),
+                                   std::move(output)),
+      axes_(std::move(axes)) {}
+
+std::shared_ptr<SingleInputWithoutBufferNode>
+SqueezeNode::CloneAsSingleInputWithoutBufferNode() const {
+  return Clone();
+}
+
+std::shared_ptr<SqueezeNode> SqueezeNode::Clone() const {
+  std::string name = GetName();
+  std::vector<int64_t> axes = GetAxes();
+  return std::make_shared<SqueezeNode>(std::move(name), std::move(axes),
+                                       GetInput(), GetOutput());
+}
+
+const std::vector<int64_t> &SqueezeNode::GetAxes() const noexcept {
+  return axes_;
 }
 
 SubNode::SubNode(std::string &&name) : Node(std::move(name)) {}

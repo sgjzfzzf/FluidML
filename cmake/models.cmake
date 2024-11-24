@@ -36,6 +36,20 @@ if(NOT TARGET prepare_convbert)
     add_dependencies(prepare prepare_convbert)
 endif()
 
+if(NOT TARGET prepare_efficientnet)
+    add_custom_command(
+        OUTPUT ${CMAKE_BINARY_DIR}/models/efficientnet-lite4-11.onnx
+        COMMAND ${WGET_EXECUTABLE} -q -O efficientnet-lite4-11.onnx "https://github.com/onnx/models/raw/refs/heads/main/validated/vision/classification/efficientnet-lite4/model/efficientnet-lite4-11.onnx"
+        COMMAND ${ONNXSIM} efficientnet-lite4-11.onnx efficientnet-lite4-11.onnx
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/models
+    )
+    add_custom_target(
+        prepare_efficientnet
+        DEPENDS ${CMAKE_BINARY_DIR}/models/efficientnet-lite4-11.onnx
+    )
+    add_dependencies(prepare prepare_efficientnet)
+endif()
+
 if(NOT TARGET prepare_gptneox)
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/models/gptneox_Opset18.onnx
@@ -80,7 +94,8 @@ endif()
 
 set(BERT_MODEL_PATH ${CMAKE_BINARY_DIR}/models/bert_Opset18.onnx)
 set(CONVBERT_MODEL_PATH ${CMAKE_BINARY_DIR}/models/convbert_Opset18.onnx)
+set(EFFICIENTNET_MODEL_PATH ${CMAKE_BINARY_DIR}/models/efficientnet-lite4-11.onnx)
 set(GPTNEOX_MODEL_PATH ${CMAKE_BINARY_DIR}/models/gptneox_Opset18.onnx)
 set(IBERT_MODEL_PATH ${CMAKE_BINARY_DIR}/models/ibert_Opset17.onnx)
 set(VGG_MODEL_PATH ${CMAKE_BINARY_DIR}/models/vgg16-12.onnx)
-add_compile_definitions(BERT_MODEL_PATH="${BERT_MODEL_PATH}" CONVBERT_MODEL_PATH="${CONVBERT_MODEL_PATH}" GPTNEOX_MODEL_PATH="${GPTNEOX_MODEL_PATH}" IBERT_MODEL_PATH="${IBERT_MODEL_PATH}" VGG_MODEL_PATH="${VGG_MODEL_PATH}")
+add_compile_definitions(BERT_MODEL_PATH="${BERT_MODEL_PATH}" CONVBERT_MODEL_PATH="${CONVBERT_MODEL_PATH}" EFFICIENTNET_MODEL_PATH="${EFFICIENTNET_MODEL_PATH}" GPTNEOX_MODEL_PATH="${GPTNEOX_MODEL_PATH}" IBERT_MODEL_PATH="${IBERT_MODEL_PATH}" VGG_MODEL_PATH="${VGG_MODEL_PATH}")

@@ -34,8 +34,12 @@ private:
   void convertAddDivErfAddMulMulNode(flow::Flow &flow,
                                      const graph::Graph &graph,
                                      const graph::Node &node);
+  void convertAveragePoolNode(flow::Flow &flow, const graph::Graph &graph,
+                              const graph::Node &node);
   void convertCastNode(flow::Flow &flow, const graph::Graph &graph,
                        const graph::Node &node);
+  void createClipNode(flow::Flow &flow, const graph::Graph &graph,
+                      const graph::Node &node);
   void convertConcatNode(flow::Flow &flow, const graph::Graph &graph,
                          const graph::Node &node);
   void convertConvNode(flow::Flow &flow, const graph::Graph &graph,
@@ -87,6 +91,8 @@ private:
                           const graph::Node &node);
   void convertSqrtNode(flow::Flow &flow, const graph::Graph &graph,
                        const graph::Node &node);
+  void convertSqueezeNode(flow::Flow &flow, const graph::Graph &graph,
+                          const graph::Node &node);
   void convertSubNode(flow::Flow &flow, const graph::Graph &graph,
                       const graph::Node &node);
   void convertTanhNode(flow::Flow &flow, const graph::Graph &graph,
@@ -154,8 +160,14 @@ flow::Flow ConverterImpl::Run(const graph::Graph &graph) {
     case graph::Node::Op::AddDivErfAddMulMul:
       convertAddDivErfAddMulMulNode(flow, graph, *node);
       break;
+    case graph::Node::Op::AveragePool:
+      convertAveragePoolNode(flow, graph, *node);
+      break;
     case graph::Node::Op::Cast:
       convertCastNode(flow, graph, *node);
+      break;
+    case graph::Node::Op::Clip:
+      createClipNode(flow, graph, *node);
       break;
     case graph::Node::Op::Concat:
       convertConcatNode(flow, graph, *node);
@@ -231,6 +243,9 @@ flow::Flow ConverterImpl::Run(const graph::Graph &graph) {
       break;
     case graph::Node::Op::Sqrt:
       convertSqrtNode(flow, graph, *node);
+      break;
+    case graph::Node::Op::Squeeze:
+      convertSqueezeNode(flow, graph, *node);
       break;
     case graph::Node::Op::Sub:
       convertSubNode(flow, graph, *node);
@@ -501,6 +516,83 @@ void ConverterImpl::convertAddDivErfAddMulMulNode(flow::Flow &flow,
   flow.PutNode(std::move(ptr));
 }
 
+void ConverterImpl::convertAveragePoolNode(flow::Flow &flow,
+                                           const graph::Graph &graph,
+                                           const graph::Node &node) {
+#ifdef DEBUG
+  assert(node.GetOp() == graph::Node::Op::AveragePool);
+#endif
+  std::string name = node.GetName();
+  std::vector<std::shared_ptr<graph::Edge>> inputs = graph.GetNodeFrom(node),
+                                            outputs = graph.GetNodeTo(node);
+#ifdef DEBUG
+  assert(inputs.size() >= 1);
+  assert(outputs.size() == 1);
+#endif
+  std::shared_ptr<graph::Edge> input = inputs[0], output = outputs[0];
+#ifdef DEBUG
+  assert(input != nullptr);
+  assert(output != nullptr);
+#endif
+  std::shared_ptr<flow::AveragePoolNode> ptr = nullptr;
+  std::shared_ptr<graph::NonConstantEdge>
+      input_as_non_constant =
+          std::dynamic_pointer_cast<graph::NonConstantEdge>(input),
+      output_as_non_constant =
+          std::dynamic_pointer_cast<graph::NonConstantEdge>(output);
+#ifdef DEBUG
+  assert(input_as_non_constant != nullptr);
+  assert(output_as_non_constant != nullptr);
+#endif
+  const std::vector<int64_t> &shape = input_as_non_constant->GetShape();
+#ifdef DEBUG
+  assert(shape.size() == output_as_non_constant->GetShape().size());
+#endif
+  const int64_t ndim = shape.size() - 2;
+#ifdef DEBUG
+  assert(ndim >= 1);
+  assert(node.HasAttribute(flow::AveragePoolNode::kKernelShapeAttrName));
+#endif
+  std::vector<int64_t> dilations(ndim, 1),
+      kernel_shape =
+          node.GetAttribute(flow::AveragePoolNode::kKernelShapeAttrName)
+              .GetInt64Array(),
+      pads(2 * ndim, 0), strides(ndim, 1);
+  if (node.HasAttribute(flow::AveragePoolNode::kDilationsAttrName)) {
+    dilations = node.GetAttribute(flow::AveragePoolNode::kDilationsAttrName)
+                    .GetInt64Array();
+  }
+  if (node.HasAttribute(flow::AveragePoolNode::kPadsAttrName)) {
+    pads =
+        node.GetAttribute(flow::AveragePoolNode::kPadsAttrName).GetInt64Array();
+  }
+  if (node.HasAttribute(flow::AveragePoolNode::kStridesAttrName)) {
+    strides = node.GetAttribute(flow::AveragePoolNode::kStridesAttrName)
+                  .GetInt64Array();
+  }
+  const std::string &input_name = input->GetName(),
+                    &output_name = output->GetName();
+  std::shared_ptr<flow::Region> input_region = flow.GetRegion(input_name),
+                                output_region = flow.GetRegion(output_name);
+#ifdef DEBUG
+  assert(input_region != nullptr);
+  assert(output_region != nullptr);
+#endif
+  if (std::all_of(pads.begin(), pads.end(),
+                  [](int64_t pad) { return pad == 0; })) {
+    ptr = std::make_shared<flow::AveragePoolWithoutPaddingNode>(
+        std::move(name), std::move(dilations), std::move(kernel_shape),
+        std::move(strides), std::move(input_region), std::move(output_region));
+  } else {
+#ifdef DEBUG
+    assert(false && "unimplemented");
+#else
+    __builtin_unreachable();
+#endif
+  }
+  flow.PutNode(std::move(ptr));
+}
+
 void ConverterImpl::convertCastNode(flow::Flow &flow, const graph::Graph &graph,
                                     const graph::Node &node) {
 #ifdef DEBUG
@@ -543,6 +635,77 @@ void ConverterImpl::convertCastNode(flow::Flow &flow, const graph::Graph &graph,
 #endif
   ptr = std::make_shared<flow::CastNode>(
       std::move(name), std::move(input_region), std::move(output_region));
+  flow.PutNode(std::move(ptr));
+}
+
+void ConverterImpl::createClipNode(flow::Flow &flow, const graph::Graph &graph,
+                                   const graph::Node &node) {
+#ifdef DEBUG
+  assert(node.GetOp() == graph::Node::Op::Clip);
+#endif
+  std::string name = node.GetName();
+  std::vector<std::shared_ptr<graph::Edge>> inputs = graph.GetNodeFrom(node),
+                                            outputs = graph.GetNodeTo(node);
+#ifdef DEBUG
+  assert(inputs.size() >= 1);
+  assert(outputs.size() == 1);
+#endif
+  std::shared_ptr<graph::Edge> input = inputs[0], output = outputs[0];
+#ifdef DEBUG
+  assert(input != nullptr);
+  assert(output != nullptr);
+#endif
+  std::shared_ptr<flow::ClipNode> ptr = nullptr;
+  std::shared_ptr<graph::NonConstantEdge>
+      input_as_non_constant =
+          std::dynamic_pointer_cast<graph::NonConstantEdge>(input),
+      output_as_non_constant =
+          std::dynamic_pointer_cast<graph::NonConstantEdge>(output);
+  float32_t min = 0, max = 0;
+  if (inputs.size() == 3) {
+    std::shared_ptr<graph::Edge> min_edge = inputs[1], max_edge = inputs[2];
+#ifdef DEBUG
+    assert(min_edge != nullptr);
+    assert(max_edge != nullptr);
+#endif
+    std::shared_ptr<graph::ConstantScalarEdge>
+        min_as_constant =
+            std::dynamic_pointer_cast<graph::ConstantScalarEdge>(min_edge),
+        max_as_constant =
+            std::dynamic_pointer_cast<graph::ConstantScalarEdge>(max_edge);
+#ifdef DEBUG
+    assert(min_as_constant != nullptr);
+    assert(max_as_constant != nullptr);
+#endif
+    min = min_as_constant->GetValue();
+    max = max_as_constant->GetValue();
+  } else {
+#ifdef DEBUG
+    assert(inputs.size() == 1);
+    assert(node.HasAttribute(flow::ClipNode::kMinAttrName));
+    assert(node.HasAttribute(flow::ClipNode::kMaxAttrName));
+#endif
+    min = node.GetAttribute(flow::ClipNode::kMinAttrName).GetFloat32();
+    max = node.GetAttribute(flow::ClipNode::kMaxAttrName).GetFloat32();
+  }
+  const std::string &input_name = input->GetName(),
+                    &output_name = output->GetName();
+  std::shared_ptr<flow::Region> input_region = flow.GetRegion(input_name),
+                                output_region = flow.GetRegion(output_name);
+#ifdef DEBUG
+  assert(input_region != nullptr);
+  assert(output_region != nullptr);
+#endif
+  const Meta &input_meta = input_region->GetMeta(),
+             &output_meta = output_region->GetMeta();
+  const std::vector<int64_t> &input_shape = input_meta.GetShape(),
+                             &output_shape = output_meta.GetShape();
+#ifdef DEBUG
+  assert(input_shape == output_shape);
+#endif
+  ptr = std::make_shared<flow::ClipNode>(std::move(name), min, max,
+                                         std::move(input_region),
+                                         std::move(output_region));
   flow.PutNode(std::move(ptr));
 }
 
@@ -2033,6 +2196,68 @@ void ConverterImpl::convertSqrtNode(flow::Flow &flow, const graph::Graph &graph,
 #endif
   ptr = std::make_shared<flow::SqrtNode>(
       std::move(name), std::move(input_region), std::move(output_region));
+  flow.PutNode(std::move(ptr));
+}
+
+void ConverterImpl::convertSqueezeNode(flow::Flow &flow,
+                                       const graph::Graph &graph,
+                                       const graph::Node &node) {
+#ifdef DEBUG
+  assert(node.GetOp() == graph::Node::Op::Squeeze);
+#endif
+  std::string name = node.GetName();
+  std::vector<std::shared_ptr<graph::Edge>> inputs = graph.GetNodeFrom(node),
+                                            outputs = graph.GetNodeTo(node);
+  std::vector<int64_t> axes;
+  if (inputs.size() == 2) {
+    std::shared_ptr<graph::Edge> axes_edge = inputs[1];
+    std::shared_ptr<graph::ConstantTensorEdge> axes_as_constant_tensor =
+        std::dynamic_pointer_cast<graph::ConstantTensorEdge>(axes_edge);
+#ifdef DEBUG
+    assert(axes_as_constant_tensor != nullptr);
+#endif
+    Tensor axes_tensor = axes_as_constant_tensor->GetValue();
+    const std::vector<int64_t> &axes_shape = axes_tensor.GetShape();
+#ifdef DEBUG
+    assert(axes_tensor.GetType() == Type::kInt64);
+    assert(axes_shape.size() == 1);
+#endif
+    const size_t size = axes_shape[0];
+    for (size_t i = 0; i < size; ++i) {
+      axes.push_back(static_cast<int64_t>(axes_tensor.Get({i})));
+    }
+  } else if (inputs.size() == 1) {
+    axes = node.GetAttribute("axes").GetInt64Array();
+  }
+#ifdef DEBUG
+  assert(outputs.size() == 1);
+#endif
+  std::shared_ptr<graph::Edge> input = inputs[0], output = outputs[0];
+#ifdef DEBUG
+  assert(input != nullptr);
+  assert(output != nullptr);
+#endif
+  std::shared_ptr<flow::SqueezeNode> ptr = nullptr;
+  std::shared_ptr<graph::NonConstantEdge>
+      input_as_non_constant =
+          std::dynamic_pointer_cast<graph::NonConstantEdge>(input),
+      output_as_non_constant =
+          std::dynamic_pointer_cast<graph::NonConstantEdge>(output);
+#ifdef DEBUG
+  assert(input_as_non_constant != nullptr);
+  assert(output_as_non_constant != nullptr);
+#endif
+  const std::string &input_name = input->GetName(),
+                    &output_name = output->GetName();
+  std::shared_ptr<flow::Region> input_region = flow.GetRegion(input_name),
+                                output_region = flow.GetRegion(output_name);
+#ifdef DEBUG
+  assert(input_region != nullptr);
+  assert(output_region != nullptr);
+#endif
+  ptr = std::make_shared<flow::SqueezeNode>(std::move(name), std::move(axes),
+                                            std::move(input_region),
+                                            std::move(output_region));
   flow.PutNode(std::move(ptr));
 }
 

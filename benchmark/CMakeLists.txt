@@ -5,7 +5,7 @@ include_directories(${CMAKE_BINARY_DIR}/external/include)
 
 link_directories(${CMAKE_BINARY_DIR}/external/lib)
 
-set(Models "bert" "convbert" "gptneox" "ibert" "vgg")
+set(Models "bert" "convbert" "efficientnet" "gptneox" "ibert" "vgg")
 
 foreach(Model IN LISTS Models)
     add_executable(${Model} ${Model}.cpp)

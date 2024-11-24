@@ -15,7 +15,9 @@ public:
   enum class Op {
     Add,
     AddDivErfAddMulMul,
+    AveragePool,
     Cast,
+    Clip,
     Concat,
     ConstantOfShape,
     Conv,
@@ -42,6 +44,7 @@ public:
     Slice,
     Softmax,
     Sqrt,
+    Squeeze,
     Sub,
     Tanh,
     Transpose,

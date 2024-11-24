@@ -4,7 +4,9 @@ set(
     TestIds
     "add0"
     "add1"
+    "averagepool"
     "cast"
+    "clip"
     "concat"
     "constant_of_shape"
     "conv0"
@@ -38,6 +40,7 @@ set(
     "slice"
     "softmax"
     "sqrt"
+    "squeeze"
     "sub0"
     "sub1"
     "tanh"

@@ -89,6 +89,40 @@ class NodeTest(unittest.TestCase):
             f"{name}, onnxruntime timecost: {end - start}, timecost: {timecost}"
         )
 
+    def test_averagepool(self):
+        name: str = "averagepool"
+        onnx_path: str = os.environ.get(f"ONNX_{name}_PATH")
+        self.assertIsNotNone(onnx_path)
+        session_options: onnxruntime.SessionOptions = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session: onnxruntime.InferenceSession = onnxruntime.InferenceSession(
+            onnx_path, session_options
+        )
+        input: np.ndarray = np.random.random((1, 1280, 7, 7)).astype(np.float32)
+        output: np.ndarray = np.zeros((1, 1280, 1, 1)).astype(np.float32)
+        start: int = time.time_ns()
+        onnx_output_tuple: Tuple[np.ndarray] = session.run(
+            ["output"],
+            {
+                "input": input,
+            },
+        )
+        (onnx_output,) = onnx_output_tuple
+        end: int = time.time_ns()
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
+        executor.compile(onnx_path)
+        timecost: int = executor.invoke(
+            {
+                "input": input,
+                "output": output,
+            }
+        )
+        self.assertTrue(np.allclose(onnx_output, output, rtol=1e-2))
+        self.logger.info(
+            f"{name}, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
+
     def test_cast(self):
         name: str = "cast"
         onnx_path: str = os.environ.get(f"ONNX_{name}_PATH")
@@ -101,6 +135,40 @@ class NodeTest(unittest.TestCase):
         )
         input: np.ndarray = np.random.randint(0, 2, (1, 128)).astype(np.bool)
         output: np.ndarray = np.zeros((1, 128)).astype(np.int32)
+        start: int = time.time_ns()
+        onnx_output_tuple: Tuple[np.ndarray] = session.run(
+            ["output"],
+            {
+                "input": input,
+            },
+        )
+        (onnx_output,) = onnx_output_tuple
+        end: int = time.time_ns()
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
+        executor.compile(onnx_path)
+        timecost: int = executor.invoke(
+            {
+                "input": input,
+                "output": output,
+            }
+        )
+        self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"{name}, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
+
+    def test_clip(self):
+        name: str = "clip"
+        onnx_path: str = os.environ.get(f"ONNX_{name}_PATH")
+        self.assertIsNotNone(onnx_path)
+        session_options: onnxruntime.SessionOptions = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session: onnxruntime.InferenceSession = onnxruntime.InferenceSession(
+            onnx_path, session_options
+        )
+        input: np.ndarray = np.random.random((1, 32, 112, 112)).astype(np.float32)
+        output: np.ndarray = np.zeros((1, 32, 112, 112)).astype(np.float32)
         start: int = time.time_ns()
         onnx_output_tuple: Tuple[np.ndarray] = session.run(
             ["output"],
@@ -1221,6 +1289,40 @@ class NodeTest(unittest.TestCase):
         self.assertTrue(np.allclose(onnx_output, output))
         self.logger.info(
             f"sqrt, onnxruntime timecost: {end - start}, timecost: {timecost}"
+        )
+
+    def test_squeeze(self):
+        name: str = "squeeze"
+        onnx_path: str = os.environ.get(f"ONNX_{name}_PATH")
+        self.assertIsNotNone(onnx_path)
+        session_options: onnxruntime.SessionOptions = onnxruntime.SessionOptions()
+        session_options.intra_op_num_threads = 1
+        session_options.inter_op_num_threads = 1
+        session: onnxruntime.InferenceSession = onnxruntime.InferenceSession(
+            onnx_path, session_options
+        )
+        input: np.ndarray = np.random.random((1, 1280, 1, 1)).astype(np.float32)
+        output: np.ndarray = np.zeros((1, 1280)).astype(np.float32)
+        start: int = time.time_ns()
+        onnx_output_tuple: Tuple[np.ndarray] = session.run(
+            ["output"],
+            {
+                "input": input,
+            },
+        )
+        (onnx_output,) = onnx_output_tuple
+        end: int = time.time_ns()
+        executor: fluidml.Executor = fluidml.Executor.make_plain_greedy(name)
+        executor.compile(onnx_path)
+        timecost: int = executor.invoke(
+            {
+                "input": input,
+                "output": output,
+            }
+        )
+        self.assertTrue(np.allclose(onnx_output, output))
+        self.logger.info(
+            f"{name}, onnxruntime timecost: {end - start}, timecost: {timecost}"
         )
 
     def test_sub0(self):

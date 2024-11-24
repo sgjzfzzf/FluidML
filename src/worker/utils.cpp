@@ -4,7 +4,9 @@
 #include "structure/flow/region.h"
 #include "structure/kernel/generator/add.h"
 #include "structure/kernel/generator/add_div_erf_add_mul_mul.h"
+#include "structure/kernel/generator/averagepool.h"
 #include "structure/kernel/generator/cast.h"
+#include "structure/kernel/generator/clip.h"
 #include "structure/kernel/generator/concat.h"
 #include "structure/kernel/generator/conv.h"
 #include "structure/kernel/generator/cum_sum.h"
@@ -30,6 +32,7 @@
 #include "structure/kernel/generator/slice.h"
 #include "structure/kernel/generator/softmax.h"
 #include "structure/kernel/generator/sqrt.h"
+#include "structure/kernel/generator/squeeze.h"
 #include "structure/kernel/generator/sub.h"
 #include "structure/kernel/generator/tanh.h"
 #include "structure/kernel/generator/transpose.h"
@@ -37,7 +40,9 @@
 #include "structure/kernel/generator/unsqueeze_sub_mul.h"
 #include "structure/kernel/generator/where.h"
 #include "structure/kernel/kernel/add.h"
+#include "structure/kernel/kernel/averagepool.h"
 #include "structure/kernel/kernel/cast.h"
+#include "structure/kernel/kernel/clip.h"
 #include "structure/kernel/kernel/concat.h"
 #include "structure/kernel/kernel/conv.h"
 #include "structure/kernel/kernel/cum_sum.h"
@@ -54,6 +59,7 @@
 #include "structure/kernel/kernel/relu.h"
 #include "structure/kernel/kernel/slice.h"
 #include "structure/kernel/kernel/sqrt.h"
+#include "structure/kernel/kernel/squeeze.h"
 #include "structure/kernel/kernel/sub.h"
 #include "structure/kernel/kernel/transpose.h"
 #include "structure/tensor/meta.h"
@@ -92,9 +98,21 @@ std::unique_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
     kernel = std::make_unique<kernel::AddDivErfAddMulMulKernel>(
         std::move(add0_weight), div_type, div_weight, add1_type, add1_weight,
         mul1_type, mul1_weight);
+  } else if (const flow::AveragePoolWithoutPaddingNode *ptr =
+                 dynamic_cast<const flow::AveragePoolWithoutPaddingNode *>(
+                     node)) {
+    std::vector<int64_t> dilations = ptr->GetDilations(),
+                         kernel_shape = ptr->GetKernelShape(),
+                         strides = ptr->GetStrides();
+    kernel = std::make_unique<kernel::AveragePoolWithoutPaddingKernel>(
+        std::move(dilations), std::move(kernel_shape), std::move(strides));
   } else if (const flow::CastNode *ptr =
                  dynamic_cast<const flow::CastNode *>(node)) {
     kernel = std::make_unique<kernel::CastKernel>();
+  } else if (const flow::ClipNode *ptr =
+                 dynamic_cast<const flow::ClipNode *>(node)) {
+    const float64_t min = ptr->GetMin(), max = ptr->GetMax();
+    kernel = std::make_unique<kernel::ClipKernel>(min, max);
   } else if (const flow::Concat2CommonNode *ptr =
                  dynamic_cast<const flow::Concat2CommonNode *>(node)) {
     const int64_t axis = ptr->GetAxis();
@@ -267,6 +285,10 @@ std::unique_ptr<kernel::Kernel> SelectKernel(const flow::Node *node) {
   } else if (const flow::SqrtNode *ptr =
                  dynamic_cast<const flow::SqrtNode *>(node)) {
     kernel = std::make_unique<kernel::SqrtKernel>();
+  } else if (const flow::SqueezeNode *ptr =
+                 dynamic_cast<const flow::SqueezeNode *>(node)) {
+    std::vector<int64_t> axes = ptr->GetAxes();
+    kernel = std::make_unique<kernel::SqueezeKernel>(std::move(axes));
   } else if (const flow::SubConstantLhsNode *ptr =
                  dynamic_cast<const flow::SubConstantLhsNode *>(node)) {
     Type type = ptr->GetType();
@@ -359,6 +381,22 @@ SelectKernelGenerator(const flow::Node *node) {
     generator = kernel::AddDivErfAddMulMulKernelGenerator::Make(
         std::move(input_meta), std::move(output_meta), std::move(add0_weight),
         div_type, div_weight, add1_type, add1_weight, mul1_type, mul1_weight);
+  } else if (const flow::AveragePoolWithoutPaddingNode *ptr =
+                 dynamic_cast<const flow::AveragePoolWithoutPaddingNode *>(
+                     node)) {
+    std::shared_ptr<flow::Region> input = ptr->GetInput(),
+                                  output = ptr->GetOutput();
+#ifdef DEBUG
+    assert(input != nullptr);
+    assert(output != nullptr);
+#endif
+    Meta input_meta = input->GetMeta(), output_meta = output->GetMeta();
+    std::vector<int64_t> dilations = ptr->GetDilations(),
+                         kernel_shape = ptr->GetKernelShape(),
+                         strides = ptr->GetStrides();
+    generator = kernel::AveragePoolWithoutPaddingKernelGenerator::Make(
+        std::move(input_meta), std::move(output_meta), std::move(dilations),
+        std::move(kernel_shape), std::move(strides));
   } else if (const flow::CastNode *ptr =
                  dynamic_cast<const flow::CastNode *>(node)) {
     std::shared_ptr<flow::Region> input = ptr->GetInput(),
@@ -371,6 +409,18 @@ SelectKernelGenerator(const flow::Node *node) {
     generator = kernel::CastKernelGenerator::Make(std::move(input_meta),
                                                   std::move(output_meta));
 
+  } else if (const flow::ClipNode *ptr =
+                 dynamic_cast<const flow::ClipNode *>(node)) {
+    std::shared_ptr<flow::Region> input = ptr->GetInput(),
+                                  output = ptr->GetOutput();
+#ifdef DEBUG
+    assert(input != nullptr);
+    assert(output != nullptr);
+#endif
+    const float64_t min = ptr->GetMin(), max = ptr->GetMax();
+    Meta input_meta = input->GetMeta(), output_meta = output->GetMeta();
+    generator = kernel::ClipKernelGenerator::Make(
+        std::move(input_meta), std::move(output_meta), min, max);
   } else if (const flow::Concat2CommonNode *ptr =
                  dynamic_cast<const flow::Concat2CommonNode *>(node)) {
     std::shared_ptr<flow::Region> lhs = ptr->GetLhs(), rhs = ptr->GetRhs(),
@@ -792,6 +842,18 @@ SelectKernelGenerator(const flow::Node *node) {
     Meta input_meta = input->GetMeta(), output_meta = output->GetMeta();
     generator = kernel::SqrtKernelGenerator::Make(std::move(input_meta),
                                                   std::move(output_meta));
+  } else if (const flow::SqueezeNode *ptr =
+                 dynamic_cast<const flow::SqueezeNode *>(node)) {
+    std::shared_ptr<flow::Region> input = ptr->GetInput(),
+                                  output = ptr->GetOutput();
+#ifdef DEBUG
+    assert(input != nullptr);
+    assert(output != nullptr);
+#endif
+    Meta input_meta = input->GetMeta(), output_meta = output->GetMeta();
+    std::vector<int64_t> axes = ptr->GetAxes();
+    generator = kernel::SqueezeKernelGenerator::Make(
+        std::move(input_meta), std::move(output_meta), std::move(axes));
   } else if (const flow::SubConstantLhsNode *ptr =
                  dynamic_cast<const flow::SubConstantLhsNode *>(node)) {
     std::shared_ptr<flow::Region> input = ptr->GetInput(),

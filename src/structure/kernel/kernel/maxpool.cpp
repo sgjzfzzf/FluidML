@@ -18,14 +18,12 @@ void MaxPoolKernel::run(mlir::OpBuilder &builder, mlir::Value &input,
                         mlir::Value &output) const {
   mlir::MemRefType input_type = input.getType().cast<mlir::MemRefType>(),
                    output_type = output.getType().cast<mlir::MemRefType>();
-  llvm::ArrayRef input_shape = input_type.getShape();
-  const size_t rank = input_type.getRank(), kernel_rank = kernel_shape_.size();
+  llvm::ArrayRef input_shape = input_type.getShape(),
+                 output_shape = output_type.getShape();
+  const size_t rank = input_type.getRank(), kernel_rank = kernel_shape_.size(),
+               batches = rank - kernel_rank;
 #ifdef DEBUG
-  llvm::ArrayRef output_shape = output_type.getShape();
   assert(rank == output_type.getRank());
-  assert(rank - 2 == kernel_rank);
-  assert(input_shape[0] == output_shape[0]);
-  assert(input_shape[1] == output_shape[1]);
 #endif
   std::vector<std::vector<size_t>> indices =
       utils::GenAllIndicesInOrder(kernel_shape_);
@@ -41,18 +39,22 @@ void MaxPoolKernel::run(mlir::OpBuilder &builder, mlir::Value &input,
 #endif
     llvm::SmallVector<int64_t> offsets(rank, 0), sizes(rank, 1),
         strides(rank, 1);
-    sizes[0] = input_shape[0];
-    sizes[1] = input_shape[1];
+    for (size_t i = 0; i < batches; ++i) {
+#ifdef DEBUG
+      assert(input_shape[i] == output_shape[i]);
+#endif
+      sizes[i] = input_shape[i];
+    }
     for (size_t i = 0; i < kernel_rank; ++i) {
-      const int64_t dim = input_shape[i + 2], offset = index[i],
+      const int64_t output_dim = output_shape[i + batches], offset = index[i],
                     stride = strides_[i];
-      offsets[i + 2] = offset;
-      sizes[i + 2] = (dim - offset + 1) / stride;
-      strides[i + 2] = stride;
+      offsets[i + batches] = offset;
+      sizes[i + batches] = output_dim;
+      strides[i + batches] = stride;
     }
     mlir::Value subview = builder.create<mlir::memref::SubViewOp>(
         builder.getUnknownLoc(), input, offsets, sizes, strides);
-    subviews.push_back(subview);
+    subviews.push_back(std::move(subview));
   }
   builder.create<mlir::linalg::GenericOp>(
       builder.getUnknownLoc(), mlir::TypeRange{}, subviews,

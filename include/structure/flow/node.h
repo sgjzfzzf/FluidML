@@ -207,6 +207,49 @@ private:
   const float64_t mul1_weight_;
 };
 
+class AveragePoolNode : public SingleInputWithoutBufferNode {
+public:
+  AveragePoolNode(std::string &&name, std::vector<int64_t> &&dilations,
+                  std::vector<int64_t> &&kernel_shape,
+                  std::vector<int64_t> &&strides,
+                  std::shared_ptr<Region> &&input,
+                  std::shared_ptr<Region> &&output);
+  static constexpr const char kDilationsAttrName[] = "dilations";
+  static constexpr const char kKernelShapeAttrName[] = "kernel_shape";
+  static constexpr const char kPadsAttrName[] = "pads";
+  static constexpr const char kStridesAttrName[] = "strides";
+  AveragePoolNode(const AveragePoolNode &node) = delete;
+  AveragePoolNode(AveragePoolNode &&node) = default;
+  virtual ~AveragePoolNode() = default;
+  const std::vector<int64_t> &GetDilations() const noexcept;
+  const std::vector<int64_t> &GetKernelShape() const noexcept;
+  const std::vector<int64_t> &GetStrides() const noexcept;
+  std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  virtual std::shared_ptr<AveragePoolNode> CloneAsAveragePoolNode() const = 0;
+
+protected:
+  const std::vector<int64_t> dilations_;
+  const std::vector<int64_t> kernel_shape_;
+  const std::vector<int64_t> strides_;
+};
+
+class AveragePoolWithoutPaddingNode : public AveragePoolNode {
+public:
+  AveragePoolWithoutPaddingNode(std::string &&name,
+                                std::vector<int64_t> &&dilations,
+                                std::vector<int64_t> &&kernel_shape,
+                                std::vector<int64_t> &&strides,
+                                std::shared_ptr<Region> &&input,
+                                std::shared_ptr<Region> &&output);
+  AveragePoolWithoutPaddingNode(const AveragePoolWithoutPaddingNode &node) =
+      delete;
+  AveragePoolWithoutPaddingNode(AveragePoolWithoutPaddingNode &&node) = default;
+  virtual ~AveragePoolWithoutPaddingNode() = default;
+  std::shared_ptr<AveragePoolNode> CloneAsAveragePoolNode() const override;
+  std::shared_ptr<AveragePoolWithoutPaddingNode> Clone() const;
+};
+
 class CastNode : public SingleInputWithoutBufferNode {
 public:
   CastNode(std::string &&name, std::shared_ptr<Region> &&input,
@@ -217,6 +260,26 @@ public:
   std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
   std::shared_ptr<CastNode> Clone() const;
+};
+
+class ClipNode : public SingleInputWithoutBufferNode {
+public:
+  ClipNode(std::string &&name, float32_t min, float32_t max,
+           std::shared_ptr<Region> &&input, std::shared_ptr<Region> &&output);
+  ClipNode(const ClipNode &node) = delete;
+  ClipNode(ClipNode &&node) = default;
+  virtual ~ClipNode() = default;
+  static constexpr const char kMinAttrName[] = "min";
+  static constexpr const char kMaxAttrName[] = "max";
+  std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<ClipNode> Clone() const;
+  float32_t GetMin() const noexcept;
+  float32_t GetMax() const noexcept;
+
+private:
+  const float32_t min_;
+  const float32_t max_;
 };
 
 class ConcatNode : virtual public Node {
@@ -886,6 +949,23 @@ public:
   std::shared_ptr<SingleInputWithoutBufferNode>
   CloneAsSingleInputWithoutBufferNode() const override;
   std::shared_ptr<SqrtNode> Clone() const;
+};
+
+class SqueezeNode : public SingleInputWithoutBufferNode {
+public:
+  SqueezeNode(std::string &&name, std::vector<int64_t> &&axes,
+              std::shared_ptr<Region> &&input,
+              std::shared_ptr<Region> &&output);
+  SqueezeNode(const SqueezeNode &node) = delete;
+  SqueezeNode(SqueezeNode &&node) = default;
+  virtual ~SqueezeNode() = default;
+  std::shared_ptr<SingleInputWithoutBufferNode>
+  CloneAsSingleInputWithoutBufferNode() const override;
+  std::shared_ptr<SqueezeNode> Clone() const;
+  const std::vector<int64_t> &GetAxes() const noexcept;
+
+private:
+  const std::vector<int64_t> axes_;
 };
 
 class SubNode : virtual public Node {

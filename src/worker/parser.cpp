@@ -249,8 +249,12 @@ Graph ParserImpl::Run(onnx::ModelProto &model_proto) {
   for (const onnx::NodeProto &node : graph_proto.node()) {
     if (node.op_type() == "Add") {
       createNode(graph, node, Node::Op::Add);
+    } else if (node.op_type() == "AveragePool") {
+      createNode(graph, node, Node::Op::AveragePool);
     } else if (node.op_type() == "Cast") {
       createNode(graph, node, Node::Op::Cast);
+    } else if (node.op_type() == "Clip") {
+      createNode(graph, node, Node::Op::Clip);
     } else if (node.op_type() == "Concat") {
       createNode(graph, node, Node::Op::Concat);
     } else if (node.op_type() == "ConstantOfShape") {
@@ -301,6 +305,8 @@ Graph ParserImpl::Run(onnx::ModelProto &model_proto) {
       createNode(graph, node, Node::Op::Softmax);
     } else if (node.op_type() == "Sqrt") {
       createNode(graph, node, Node::Op::Sqrt);
+    } else if (node.op_type() == "Squeeze") {
+      createNode(graph, node, Node::Op::Squeeze);
     } else if (node.op_type() == "Sub") {
       createNode(graph, node, Node::Op::Sub);
     } else if (node.op_type() == "Tanh") {
