@@ -15,8 +15,8 @@ public:
   Yield(llvm::ArrayRef<size_t> input_layout,
         llvm::ArrayRef<size_t> output_layout) = 0;
   static std::unique_ptr<AveragePoolWithoutPaddingKernelGenerator>
-  Make(Meta &&input_meta, Meta &&output_meta, std::vector<int64_t> &&dilations,std::vector<int64_t>&& kernel_shape,
-       std::vector<int64_t>&& strides);
+  Make(Meta &&input_meta, Meta &&output_meta, std::vector<int64_t> &&dilations,
+       std::vector<int64_t> &&kernel_shape, std::vector<int64_t> &&strides);
 
 protected:
   AveragePoolWithoutPaddingKernelGenerator() = default;

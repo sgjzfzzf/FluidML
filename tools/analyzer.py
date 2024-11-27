@@ -179,6 +179,25 @@ if __name__ == "__main__":
                 )
                 m, n = table["AddCommonKernel"]
                 table["AddCommonKernel"] = (m + default_time_cost, n + time_cost)
+        elif node.op_type == "AveragePool":
+            if all(
+                map(
+                    lambda attr: all(map(lambda elem: elem == 0, attr.ints)),
+                    (filter(lambda attr: attr.name == "pads", node.attribute)),
+                )
+            ):
+                [input] = node.input
+                [output] = node.output
+                default_time_cost, time_cost = analyzer.find_single_input(
+                    "AveragePoolWithoutPaddingKernel", input, output
+                )
+                m, n = table["AveragePoolWithoutPaddingKernel"]
+                table["AveragePoolWithoutPaddingKernel"] = (
+                    m + default_time_cost,
+                    n + time_cost,
+                )
+            else:
+                assert False, "unimplemented"
         elif node.op_type == "Cast":
             assert len(node.input) == 1 and all(
                 map(lambda input: input in value_infos, node.input)
@@ -190,6 +209,15 @@ if __name__ == "__main__":
             )
             m, n = table["CastKernel"]
             table["CastKernel"] = (m + default_time_cost, n + time_cost)
+        elif node.op_type == "Clip":
+            assert len(node.input) == 3 and node.input[0] in value_infos
+            [input, _, _] = node.input
+            [output] = node.output
+            default_time_cost, time_cost = analyzer.find_single_input(
+                "ClipKernel", input, output
+            )
+            m, n = table["ClipKernel"]
+            table["ClipKernel"] = (m + default_time_cost, n + time_cost)
         elif node.op_type == "Concat":
             assert len(node.input) == 2 and all(
                 map(lambda input: input in value_infos, node.input)
@@ -554,6 +582,17 @@ if __name__ == "__main__":
             )
             m, n = table["SqrtKernel"]
             table["SqrtKernel"] = (m + default_time_cost, n + time_cost)
+        elif node.op_type == "Squeeze":
+            assert len(node.input) == 1 and all(
+                map(lambda input: input in value_infos, node.input)
+            )
+            [input] = node.input
+            [output] = node.output
+            default_time_cost, time_cost = analyzer.find_single_input(
+                "SqueezeKernel", input, output
+            )
+            m, n = table["SqueezeKernel"]
+            table["SqueezeKernel"] = (m + default_time_cost, n + time_cost)
         elif node.op_type == "Sub":
             assert len(node.input) == 2 and any(
                 map(
